@@ -7,6 +7,10 @@ var tint := Color("#39d6c5")
 var life := 1.25
 var speed := 1050.0
 var shooter: Node2D
+var target: Node2D
+var homing_strength := 0.0
+var ricochets_left := 0
+var weapon_level := 0
 
 func configure(dir: Vector2, force: float, color: Color, source: Node2D) -> void:
     direction = dir.normalized()
@@ -15,6 +19,11 @@ func configure(dir: Vector2, force: float, color: Color, source: Node2D) -> void
     push_force = force
     tint = color
     shooter = source
+    target = source.get("target") as Node2D
+    homing_strength = float(source.get("homing_strength"))
+    ricochets_left = int(source.get("ricochet_count"))
+    speed = float(source.get("projectile_speed"))
+    weapon_level = int(source.get("weapon_level"))
 
 func _ready() -> void:
     collision_layer = 0
@@ -29,6 +38,10 @@ func _ready() -> void:
     body_entered.connect(_on_body_entered)
 
 func _physics_process(delta: float) -> void:
+    if homing_strength > 0.0 and is_instance_valid(target):
+        var to_target := (target.global_position - global_position).normalized()
+        var turn := clampf(direction.angle_to(to_target), -homing_strength * delta, homing_strength * delta)
+        direction = direction.rotated(turn).normalized()
     global_position += direction * speed * delta
     rotation = direction.angle()
     life -= delta
@@ -75,6 +88,18 @@ func _spawn_impact_particles() -> void:
 func _on_body_entered(body: Node2D) -> void:
     if body == shooter:
         return
+    if body is StaticBody2D and ricochets_left > 0:
+        ricochets_left -= 1
+        if body.name == "ArenaSideWall":
+            direction.x = -direction.x
+        else:
+            direction.y = -direction.y
+        direction = direction.normalized()
+        rotation = direction.angle()
+        global_position += direction * 10.0
+        speed *= 0.94
+        queue_redraw()
+        return
     if body is ArenaPlayer:
         body.velocity += direction * push_force
         body.apply_ragdoll_impulse(direction, push_force)
@@ -102,3 +127,8 @@ func _draw() -> void:
     draw_colored_polygon(core,tint.lightened(0.08))
     draw_line(Vector2(-7,0),Vector2(10,0),Color(1.0,1.0,1.0,0.9),2.4,true)
     draw_circle(Vector2(10,0),3.2,Color.WHITE)
+    if weapon_level >= 1:
+        draw_arc(Vector2.ZERO,13.0,0.0,TAU,24,Color(tint.lightened(0.4),0.85),1.8,true)
+    if weapon_level >= 2:
+        draw_line(Vector2(-18,-9),Vector2(13,-9),Color.WHITE,1.4,true)
+        draw_line(Vector2(-18,9),Vector2(13,9),Color.WHITE,1.4,true)
