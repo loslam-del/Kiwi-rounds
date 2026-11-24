@@ -91,11 +91,15 @@ func _ready() -> void:
     collision_layer = 1
     collision_mask = 3
     var shape := CollisionShape2D.new()
-    floor_snap_length = 8.0
-    safe_margin = 0.08
-    var core := CircleShape2D.new()
-    core.radius = 21.0
+    floor_snap_length = 10.0
+    safe_margin = 0.04
+    # One stable full-height capsule keeps the visible legs at floor level.
+    # The old torso-only circle let the drawn feet extend through platforms.
+    var core := CapsuleShape2D.new()
+    core.radius = 18.0
+    core.height = 82.0
     shape.shape = core
+    shape.position = Vector2(0.0, 8.0)
     add_child(shape)
 
 func set_move(value: Vector2) -> void:
@@ -450,7 +454,7 @@ func _draw() -> void:
     # Far-side limbs are drawn first so they emerge naturally from behind the torso.
     var hip_back := Vector2(-6.5, 8.0)
     var hip_front := Vector2(6.5, 8.0)
-    var leg_len := 17.0
+    var leg_len := 20.0
     var knee_back := hip_back + Vector2(sin(leg_back_angle) * leg_len, cos(leg_back_angle) * leg_len)
     var knee_front := hip_front + Vector2(sin(leg_front_angle) * leg_len, cos(leg_front_angle) * leg_len)
     var foot_back_angle := leg_back_angle + knee_back_angle
@@ -561,42 +565,75 @@ func _draw() -> void:
         draw_line(center+Vector2(-15,3),center+Vector2(-16,18),green_light,1.8,true)
         draw_line(center+Vector2(15,3),center+Vector2(16,18),green_light,1.8,true)
         draw_circle(center+Vector2(11,11),1.4,tie)
-        # Separate neck and face give Kiwi a real head silhouette, not eyes floating on the torso.
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-5,-10),center+Vector2(5,-10),center+Vector2(6,1),center+Vector2(-6,1)]),Color("#e9c9aa"))
+        # Round, compact Kiwi Araga hairstyle with a clean face opening.
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-14,-42),center+Vector2(-7,-49),center+Vector2(7,-49),
-            center+Vector2(15,-40),center+Vector2(16,-22),center+Vector2(11,-7),
-            center+Vector2(4,-1),center+Vector2(-5,-1),center+Vector2(-12,-8),
-            center+Vector2(-16,-23)
-        ]),Color("#f2d7bd"))
-        draw_arc(center+Vector2(-13,-24),4.0,0.0,TAU,20,Color("#d3aa91"),1.2,true)
-        draw_arc(center+Vector2(13,-24),4.0,0.0,TAU,20,Color("#d3aa91"),1.2,true)
-        # Eyes, eyebrows, nose and a small smile are deliberately high-contrast at phone scale.
-        draw_line(center+Vector2(-10,-31),center+Vector2(-4,-33),hair_shadow,1.8,true)
-        draw_line(center+Vector2(4,-33),center+Vector2(10,-31),hair_shadow,1.8,true)
-        draw_circle(center+Vector2(-7,-25),2.7,Color.WHITE)
-        draw_circle(center+Vector2(7,-25),2.7,Color.WHITE)
-        draw_circle(center+Vector2(-6.5,-24.5),1.7,Color("#684b4d"))
-        draw_circle(center+Vector2(7.5,-24.5),1.7,Color("#684b4d"))
-        draw_circle(center+Vector2(-6,-25.5),0.7,Color.WHITE)
-        draw_circle(center+Vector2(8,-25.5),0.7,Color.WHITE)
-        draw_line(center+Vector2(0,-22),center+Vector2(-1,-16),Color("#c49b83"),1.2,true)
-        draw_line(center+Vector2(-4,-10),center+Vector2(0,-8),Color("#a45e66"),1.6,true)
-        draw_line(center+Vector2(0,-8),center+Vector2(4,-10),Color("#a45e66"),1.6,true)
-        draw_circle(center+Vector2(-10,-14),2.4,Color("#e6a1a0",0.48))
-        draw_circle(center+Vector2(10,-14),2.4,Color("#e6a1a0",0.48))
-        # Darker outlined side locks and a fuller crown make Kiwi's hair readable at small scale.
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-22,-13),center+Vector2(-25,-29),center+Vector2(-15,-43),center+Vector2(0,-48),center+Vector2(17,-42),center+Vector2(25,-27),center+Vector2(22,-10),center+Vector2(16,5),center+Vector2(10,7),center+Vector2(12,-17),center+Vector2(0,-23),center+Vector2(-12,-17),center+Vector2(-13,7),center+Vector2(-20,4)]),hair_shadow)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-19,-13),center+Vector2(-19,-29),center+Vector2(-12,-39),center+Vector2(0,-44),center+Vector2(14,-39),center+Vector2(21,-25),center+Vector2(17,-12),center+Vector2(8,-21),center+Vector2(0,-17),center+Vector2(-8,-22)]),hair)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-18,-16),center+Vector2(-13,-31),center+Vector2(-5,-38),center+Vector2(-7,-21),center+Vector2(-12,-12)]),hair_light)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(2,-40),center+Vector2(13,-36),center+Vector2(20,-23),center+Vector2(12,-25),center+Vector2(5,-21)]),hair_shadow)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-10,-29),center+Vector2(-2,-35),center+Vector2(2,-27),center+Vector2(0,-18),center+Vector2(-7,-21)]),hair_light)
-        draw_line(center+Vector2(-19,-13),center+Vector2(-17,7),hair_shadow,5.0,true)
-        draw_line(center+Vector2(19,-14),center+Vector2(17,7),hair_shadow,5.0,true)
-        draw_line(center+Vector2(-2,-43),center+Vector2(5,-51),hair_light,3.2,true)
-        draw_line(center+Vector2(7,-41),center+Vector2(12,-46),hair_light,2.2,true)
-        draw_line(center+Vector2(-19,-13),center+Vector2(-17,9),hair_shadow,4.5,true)
-        draw_line(center+Vector2(19,-13),center+Vector2(17,9),hair_shadow,4.5,true)
+            center+Vector2(-5,-10),center+Vector2(5,-10),
+            center+Vector2(6,2),center+Vector2(-6,2)
+        ]),Color("#e9c9aa"))
+
+        # A circular bob silhouette is drawn behind the face.
+        draw_circle(center+Vector2(0,-29),25.0,hair_shadow)
+        draw_circle(center+Vector2(0,-29),22.5,hair)
+        draw_arc(center+Vector2(0,-29),23.0,PI*1.05,PI*1.95,36,hair_light,1.6,true)
+
+        # Soft rounded face, centered inside the hair.
+        draw_circle(center+Vector2(0,-23),15.5,Color("#f2d7bd"))
+        draw_arc(center+Vector2(0,-23),15.5,0.0,TAU,40,Color("#d3aa91"),1.0,true)
+
+        # Rounded fringe with three separated locks.
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(-23,-25),center+Vector2(-22,-39),
+            center+Vector2(-14,-50),center+Vector2(-2,-54),
+            center+Vector2(12,-50),center+Vector2(22,-39),
+            center+Vector2(23,-25),center+Vector2(14,-30),
+            center+Vector2(7,-32),center+Vector2(1,-27),
+            center+Vector2(-6,-32),center+Vector2(-14,-28)
+        ]),hair_shadow)
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(-20,-27),center+Vector2(-19,-39),
+            center+Vector2(-12,-47),center+Vector2(-1,-51),
+            center+Vector2(11,-47),center+Vector2(19,-38),
+            center+Vector2(20,-27),center+Vector2(12,-31),
+            center+Vector2(6,-34),center+Vector2(0,-29),
+            center+Vector2(-7,-33),center+Vector2(-13,-29)
+        ]),hair)
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(-16,-42),center+Vector2(-8,-49),
+            center+Vector2(-3,-48),center+Vector2(-8,-35),
+            center+Vector2(-15,-31)
+        ]),hair_light)
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(3,-49),center+Vector2(12,-45),
+            center+Vector2(18,-37),center+Vector2(11,-35),
+            center+Vector2(5,-39)
+        ]),hair_light)
+
+        # Side locks frame the cheeks instead of hiding the eyes.
+        draw_line(center+Vector2(-20,-27),center+Vector2(-18,1),hair_shadow,7.0,true)
+        draw_line(center+Vector2(-19,-27),center+Vector2(-17,0),hair,4.2,true)
+        draw_line(center+Vector2(20,-27),center+Vector2(18,1),hair_shadow,7.0,true)
+        draw_line(center+Vector2(19,-27),center+Vector2(17,0),hair,4.2,true)
+
+        # Clear anime-style eyes, brows and a small expression.
+        draw_line(center+Vector2(-10,-31),center+Vector2(-4,-33),hair_shadow,1.7,true)
+        draw_line(center+Vector2(4,-33),center+Vector2(10,-31),hair_shadow,1.7,true)
+        draw_circle(center+Vector2(-6.5,-25),3.0,Color.WHITE)
+        draw_circle(center+Vector2(6.5,-25),3.0,Color.WHITE)
+        draw_circle(center+Vector2(-6,-24.5),1.9,Color("#684b4d"))
+        draw_circle(center+Vector2(7,-24.5),1.9,Color("#684b4d"))
+        draw_circle(center+Vector2(-5.5,-25.5),0.8,Color.WHITE)
+        draw_circle(center+Vector2(7.5,-25.5),0.8,Color.WHITE)
+        draw_line(center+Vector2(0,-21),center+Vector2(-1,-16),Color("#c49b83"),1.1,true)
+        draw_line(center+Vector2(-4,-11),center+Vector2(0,-9),Color("#a45e66"),1.5,true)
+        draw_line(center+Vector2(0,-9),center+Vector2(4,-11),Color("#a45e66"),1.5,true)
+        draw_circle(center+Vector2(-10,-14),2.2,Color("#e6a1a0",0.45))
+        draw_circle(center+Vector2(10,-14),2.2,Color("#e6a1a0",0.45))
+        # A tiny green hair ornament ties the silhouette to Kiwi's outfit.
+        draw_circle(center+Vector2(17,-47),3.0,green_light)
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(17,-49),center+Vector2(23,-55),
+            center+Vector2(22,-47),center+Vector2(17,-45)
+        ]),green_light)
 
     if hit_flash > 0.0:
         draw_circle(center, 23.0, Color(1.0,0.45,0.34,hit_flash*0.24))
