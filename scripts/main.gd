@@ -718,7 +718,7 @@ func _show_main_menu() -> void:
 
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color("#080d19")
+    shade.color = Color(0, 0, 0, 0)
     shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
     ui.add_child(shade)
     overlay = shade
@@ -731,8 +731,8 @@ func _show_main_menu() -> void:
         var logo := TextureRect.new()
         logo.name = "MenuLogo"
         logo.texture = logo_texture
-        logo.position = Vector2(390, 22)
-        logo.size = Vector2(500, 145)
+        logo.position = Vector2(510, 18)
+        logo.size = Vector2(260, 78)
         logo.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
         logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
         logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -740,7 +740,7 @@ func _show_main_menu() -> void:
 
     var subtitle := Label.new()
     subtitle.text = "NEON BOT ARENA  •  RANDOM MAPS  •  RANDOM BUILDS"
-    subtitle.position = Vector2(300, 158)
+    subtitle.position = Vector2(300, 105)
     subtitle.size = Vector2(680, 24)
     subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     subtitle.add_theme_font_size_override("font_size", 13)
@@ -749,7 +749,7 @@ func _show_main_menu() -> void:
 
     # Centered translucent menu keeps the live fight visible around it.
     var menu_panel := Panel.new()
-    menu_panel.position = Vector2(425, 205)
+    menu_panel.position = Vector2(425, 155)
     menu_panel.size = Vector2(430, 390)
     var menu_style := StyleBoxFlat.new()
     menu_style.bg_color = Color("#091321", 0.78)
@@ -784,7 +784,7 @@ func _show_main_menu() -> void:
 
     var footer := Label.new()
     footer.text = "KIWI LABS   •   BUILD. FIGHT. REPEAT."
-    footer.position = Vector2(425, 558)
+    footer.position = Vector2(425, 508)
     footer.size = Vector2(430, 22)
     footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     footer.add_theme_font_size_override("font_size", 12)
@@ -853,8 +853,9 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_a.name = "MenuBotKiwi"
     bot_a.is_bot = true
     bot_a.menu_preview_mode = false
-    bot_a.body_color = Color("#36e6df")
-    bot_a.position = Vector2(360, 595)
+    bot_a.body_color = Color("#e8bd9c")
+    bot_a.skin_style = "kiwi_human"
+    bot_a.position = Vector2(360, 585)
     bot_a.bot_accuracy = 0.86
     bot_a.move_speed = 430.0
     bot_a.pulse_force = 610.0
@@ -871,7 +872,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_b.is_bot = true
     bot_b.menu_preview_mode = false
     bot_b.body_color = Color("#ff6fae")
-    bot_b.position = Vector2(920, 595)
+    bot_b.position = Vector2(920, 585)
     bot_b.bot_accuracy = 0.86
     bot_b.move_speed = 430.0
     bot_b.pulse_force = 610.0
