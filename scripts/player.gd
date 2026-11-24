@@ -67,12 +67,10 @@ var ragdoll_angles := {
     "leg_l": -0.12, "shin_l": -0.08,
     "leg_r": 0.12, "shin_r": 0.08
 }
-var ragdoll_speeds := {
-    "arm_l": 0.0, "forearm_l": 0.0,
-    "arm_r": 0.0, "forearm_r": 0.0,
-    "leg_l": 0.0, "shin_l": 0.0,
-    "leg_r": 0.0, "shin_r": 0.0
-}
+var ragdoll_parts: Array[RigidBody2D] = []
+var ragdoll_joints: Array[PinJoint2D] = []
+var ragdoll_root_joints: Array[PinJoint2D] = []
+var ragdoll_anchor_offsets: Array[Vector2] = []
 
 func _ready() -> void:
     collision_layer = 1
@@ -80,11 +78,11 @@ func _ready() -> void:
     var shape := CollisionShape2D.new()
     floor_snap_length = 8.0
     safe_margin = 0.08
-    var capsule := CapsuleShape2D.new()
-    capsule.radius = 20.0
-    capsule.height = 88.0
-    shape.shape = capsule
+    var core := CircleShape2D.new()
+    core.radius = 21.0
+    shape.shape = core
     add_child(shape)
+    call_deferred("_create_physics_ragdoll")
 
 func set_move(value: Vector2) -> void:
     move_stick = value
@@ -178,7 +176,7 @@ func _physics_process(delta: float) -> void:
         else:
             start_reload()
     move_and_slide()
-    _update_ragdoll(delta)
+    _sync_ragdoll_anchor_joints()
     if is_on_wall() and not is_on_floor() and velocity.y > 160.0:
         velocity.y = minf(velocity.y, 270.0)
     queue_redraw()
@@ -313,8 +311,100 @@ func reset_round(spawn: Vector2) -> void:
     hitstun_timer = 0.0
     bot_jump_hold_timer = 0.0
     air_jumps_left = 1 + extra_air_jumps
+    _rebuild_physics_ragdoll()
 
-func _update_ragdoll(delta: float) -> void:
+func _rebuild_physics_ragdoll() -> void:
+    for joint in ragdoll_joints:
+        if is_instance_valid(joint):
+            joint.queue_free()
+    for part in ragdoll_parts:
+        if is_instance_valid(part):
+            part.queue_free()
+    ragdoll_parts.clear()
+    ragdoll_joints.clear()
+    ragdoll_root_joints.clear()
+    ragdoll_anchor_offsets.clear()
+    call_deferred("_create_physics_ragdoll")
+
+func _create_physics_ragdoll() -> void:
+    if not is_inside_tree():
+        return
+    var world := get_tree().current_scene
+    if world == null:
+        return
+    _create_limb_chain(world, Vector2(-17.0, -5.0), -0.95, -0.72, 16.0, 15.0)
+    _create_limb_chain(world, Vector2(17.0, -5.0), 0.95, 0.72, 16.0, 15.0)
+    _create_limb_chain(world, Vector2(-7.5, 10.0), -0.12, -0.08, 15.0, 13.0)
+    _create_limb_chain(world, Vector2(7.5, 10.0), 0.12, 0.08, 15.0, 13.0)
+    _sync_ragdoll_anchor_joints()
+
+func _create_limb_chain(world: Node, anchor_local: Vector2, upper_angle: float, lower_relative_angle: float, upper_length: float, lower_length: float) -> void:
+    var anchor := global_position + Vector2(anchor_local.x * facing, anchor_local.y)
+    var upper_direction := _limb_vector(upper_angle, 1.0).normalized()
+    var upper_center := anchor + upper_direction * (upper_length * 0.5)
+    var upper := _make_ragdoll_part(world, upper_length, upper_center, upper_angle)
+    var elbow := anchor + upper_direction * upper_length
+    var lower_angle := upper_angle + lower_relative_angle
+    var lower_direction := _limb_vector(lower_angle, 1.0).normalized()
+    var lower_center := elbow + lower_direction * (lower_length * 0.5)
+    var lower := _make_ragdoll_part(world, lower_length, lower_center, lower_angle)
+    _connect_ragdoll_parts(world, self, upper, anchor, true, anchor_local)
+    _connect_ragdoll_parts(world, upper, lower, elbow, false, Vector2.ZERO)
+
+func _make_ragdoll_part(world: Node, segment_length: float, at: Vector2, segment_angle: float) -> RigidBody2D:
+    var part := RigidBody2D.new()
+    part.name = "RagdollLimb"
+    part.global_position = at
+    var direction := _limb_vector(segment_angle, 1.0).normalized()
+    part.rotation = Vector2.DOWN.angle_to(direction)
+    part.mass = 0.075
+    part.gravity_scale = 1.0
+    part.linear_damp = 0.65
+    part.angular_damp = 2.0
+    part.collision_layer = 4
+    part.collision_mask = 2
+    part.can_sleep = false
+    part.continuous_cd = true
+    var collision := CollisionShape2D.new()
+    var capsule := CapsuleShape2D.new()
+    capsule.radius = 2.2
+    capsule.height = segment_length + 4.4
+    collision.shape = capsule
+    part.add_child(collision)
+    var visual := Line2D.new()
+    visual.name = "LimbVisual"
+    visual.points = PackedVector2Array([Vector2(0.0, -segment_length * 0.5), Vector2(0.0, segment_length * 0.5)])
+    visual.width = 4.2
+    visual.default_color = body_color
+    visual.begin_cap_mode = Line2D.LINE_CAP_ROUND
+    visual.end_cap_mode = Line2D.LINE_CAP_ROUND
+    visual.antialiased = true
+    part.add_child(visual)
+    world.add_child(part)
+    ragdoll_parts.append(part)
+    return part
+
+func _connect_ragdoll_parts(world: Node, body_a: PhysicsBody2D, body_b: PhysicsBody2D, at: Vector2, root_joint: bool, anchor_local: Vector2) -> void:
+    var joint := PinJoint2D.new()
+    joint.name = "RagdollPin"
+    joint.global_position = at
+    joint.softness = 0.08
+    world.add_child(joint)
+    joint.node_a = joint.get_path_to(body_a)
+    joint.node_b = joint.get_path_to(body_b)
+    ragdoll_joints.append(joint)
+    if root_joint:
+        ragdoll_root_joints.append(joint)
+        ragdoll_anchor_offsets.append(anchor_local)
+
+func _sync_ragdoll_anchor_joints() -> void:
+    for i in range(mini(ragdoll_root_joints.size(), ragdoll_anchor_offsets.size())):
+        var joint := ragdoll_root_joints[i]
+        if is_instance_valid(joint):
+            var offset: Vector2 = ragdoll_anchor_offsets[i]
+            joint.global_position = global_position + Vector2(offset.x * facing, offset.y)
+
+func _limb_vector(angle: float, length: float) -> Vector2:
     var grounded := is_on_floor()
     var run_cycle := sin(animation_time) if absf(velocity.x) > 35.0 and grounded else 0.0
     var air := 0.0 if grounded else clampf(absf(velocity.y) / 850.0, 0.0, 1.0)
@@ -350,66 +440,16 @@ func _update_ragdoll(delta: float) -> void:
 func _limb_vector(angle: float, length: float) -> Vector2:
     return Vector2(sin(angle), cos(angle)) * length
 
-func _draw_limb(from_point: Vector2, to_point: Vector2, width: float, fill: Color, outline: Color) -> void:
-    draw_line(from_point, to_point, outline, width + 4.0, true)
-    draw_line(from_point, to_point, fill, width, true)
-    draw_circle(from_point, width * 0.53, outline)
-    draw_circle(from_point, width * 0.34, fill)
-    draw_circle(to_point, width * 0.48, outline)
-    draw_circle(to_point, width * 0.30, fill)
-
 func _draw() -> void:
-    # Compact, flat ROUNDS-like fighter silhouette: one colored ball and noodle limbs.
-    var bob := absf(sin(animation_time * 2.0)) * 1.1 if absf(velocity.x) > 35.0 and is_on_floor() else 0.0
-    var center := Vector2(0.0, -7.0 + bob)
-    var limb := body_color
+    var center := Vector2(0.0, -7.0)
     var face := Color("#102536")
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
-
-    # Legs: thin, soft-ended segments, with no shoes or clothing.
-    var hip_l := Vector2(-7.5, 10.0 + bob)
-    var hip_r := Vector2(7.5, 10.0 + bob)
-    var knee_l := hip_l + _limb_vector(ragdoll_angles["leg_l"], 15.0)
-    var knee_r := hip_r + _limb_vector(ragdoll_angles["leg_r"], 15.0)
-    var foot_l := knee_l + _limb_vector(ragdoll_angles["leg_l"] + ragdoll_angles["shin_l"], 13.0)
-    var foot_r := knee_r + _limb_vector(ragdoll_angles["leg_r"] + ragdoll_angles["shin_r"], 13.0)
-    draw_line(hip_l, knee_l, limb, 3.2, true)
-    draw_line(knee_l, foot_l, limb, 3.2, true)
-    draw_circle(knee_l, 1.6, limb)
-    draw_circle(foot_l, 1.6, limb)
-    draw_line(hip_r, knee_r, limb, 3.2, true)
-    draw_line(knee_r, foot_r, limb, 3.2, true)
-    draw_circle(knee_r, 1.6, limb)
-    draw_circle(foot_r, 1.6, limb)
-
-    # Arms: long, narrow, flexible noodles attached directly to the ball.
-    var shoulder_l := Vector2(-17.0, -5.0 + bob)
-    var shoulder_r := Vector2(17.0, -5.0 + bob)
-    var elbow_l := shoulder_l + _limb_vector(ragdoll_angles["arm_l"], 16.0)
-    var elbow_r := shoulder_r + _limb_vector(ragdoll_angles["arm_r"], 16.0)
-    var hand_l := elbow_l + _limb_vector(ragdoll_angles["arm_l"] + ragdoll_angles["forearm_l"], 15.0)
-    var hand_r := elbow_r + _limb_vector(ragdoll_angles["arm_r"] + ragdoll_angles["forearm_r"], 15.0)
-    draw_line(shoulder_l, elbow_l, limb, 3.3, true)
-    draw_line(elbow_l, hand_l, limb, 3.3, true)
-    draw_circle(elbow_l, 1.7, limb)
-    draw_circle(hand_l, 1.7, limb)
-    draw_line(shoulder_r, elbow_r, limb, 3.3, true)
-    draw_line(elbow_r, hand_r, limb, 3.3, true)
-    draw_circle(elbow_r, 1.7, limb)
-    draw_circle(hand_r, 1.7, limb)
-
-    # The body is a clean, unoutlined colored ball. Kiwi identity comes from its color.
     draw_circle(center, 21.0, body_color)
-
-    # Minimal face: two dark oval eyes and a short mouth, without glossy highlights.
-    draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
-    draw_set_transform(center, 0.0, Vector2.ONE)
-    draw_circle(Vector2(-6.0, -2.0), 1.9, face)
-    draw_circle(Vector2(6.0, -2.0), 1.9, face)
-    draw_line(Vector2(-3.0, 6.0), Vector2(3.0, 6.0), face, 1.8, true)
-
+    draw_circle(center + Vector2(-6.0, -2.0), 1.9, face)
+    draw_circle(center + Vector2(6.0, -2.0), 1.9, face)
+    draw_line(center + Vector2(-3.0, 6.0), center + Vector2(3.0, 6.0), face, 1.8, true)
     if hit_flash > 0.0:
-        draw_circle(Vector2.ZERO, 24.0, Color(1.0, 0.35, 0.28, hit_flash * 0.28))
+        draw_circle(center, 24.0, Color(1.0, 0.35, 0.28, hit_flash * 0.28))
     if reload_visual > 0.0:
-        draw_arc(Vector2.ZERO, 25.0, -PI / 2.0, -PI / 2.0 + TAU * (1.0 - reload_visual), 28, Color.WHITE, 2.0, true)
+        draw_arc(center, 25.0, -PI / 2.0, -PI / 2.0 + TAU * (1.0 - reload_visual), 28, Color.WHITE, 2.0, true)
     draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
