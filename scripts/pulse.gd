@@ -7,8 +7,8 @@ var tint := Color("#39d6c5")
 var life := 1.25
 var speed := 1050.0
 var projectile_velocity := Vector2.ZERO
-const PROJECTILE_GRAVITY := 180.0
-const PROJECTILE_DRAG := 0.015
+const PROJECTILE_GRAVITY := 1050.0
+const PROJECTILE_DRAG := 0.003
 var shooter: Node2D
 var target: Node2D
 var homing_strength := 0.0
