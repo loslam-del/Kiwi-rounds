@@ -38,6 +38,10 @@ var player: ArenaPlayer
 var rival: ArenaPlayer
 var ui: Control
 var hud: Label
+var player_health_bar: ProgressBar
+var rival_health_bar: ProgressBar
+var player_health_text: Label
+var rival_health_text: Label
 var overlay: Control
 var game_controls: Control
 var skin_button: Button
@@ -506,6 +510,10 @@ func _make_ui() -> void:
     hud.add_theme_font_size_override("font_size",22)
     hud.add_theme_color_override("font_color",Color("#f4f7ff"))
     ui.add_child(hud)
+    player_health_bar = _create_health_bar(ui, Vector2(24, 68), Color("#55dfb0"))
+    rival_health_bar = _create_health_bar(ui, Vector2(956, 68), Color("#ff7c86"))
+    player_health_text = _create_health_label(ui, Vector2(24, 43), "ТЫ")
+    rival_health_text = _create_health_label(ui, Vector2(956, 43), "СОПЕРНИК")
     game_controls = Control.new()
     game_controls.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     ui.add_child(game_controls)
@@ -556,6 +564,34 @@ func _make_ui() -> void:
     _apply_skin()
     _apply_control_layout()
     _apply_audio_settings()
+
+func _create_health_bar(parent: Control, at: Vector2, fill_color: Color) -> ProgressBar:
+    var bar := ProgressBar.new()
+    bar.position = at
+    bar.size = Vector2(300, 18)
+    bar.min_value = 0
+    bar.max_value = 100
+    bar.show_percentage = false
+    var bg := StyleBoxFlat.new()
+    bg.bg_color = Color("#111c2a", 0.94)
+    bg.set_corner_radius_all(8)
+    var fill := StyleBoxFlat.new()
+    fill.bg_color = fill_color
+    fill.set_corner_radius_all(8)
+    bar.add_theme_stylebox_override("background", bg)
+    bar.add_theme_stylebox_override("fill", fill)
+    parent.add_child(bar)
+    return bar
+
+func _create_health_label(parent: Control, at: Vector2, caption: String) -> Label:
+    var label := Label.new()
+    label.position = at
+    label.size = Vector2(300, 22)
+    label.text = caption
+    label.add_theme_font_size_override("font_size", 14)
+    label.add_theme_color_override("font_color", Color("#eaf2fb"))
+    parent.add_child(label)
+    return label
 
 func _request_reload() -> void:
     if online_in_match and not online_is_host:
@@ -713,6 +749,8 @@ func _process(delta: float) -> void:
     _poll_online_socket()
     _online_sync_tick(delta)
     background_time += delta
+    if is_instance_valid(menu_record_needle):
+        menu_record_needle.rotation = background_time * 2.8
     queue_redraw()
     impact_flash = maxf(0.0, impact_flash - delta * 2.8)
     if is_instance_valid(arena_camera):
@@ -735,6 +773,14 @@ func _process(delta: float) -> void:
         queue_redraw()
         return
     if phase != "fight":
+        if is_instance_valid(player_health_bar):
+            player_health_bar.visible = false
+        if is_instance_valid(rival_health_bar):
+            rival_health_bar.visible = false
+        if is_instance_valid(player_health_text):
+            player_health_text.visible = false
+        if is_instance_valid(rival_health_text):
+            rival_health_text.visible = false
         return
     if is_instance_valid(ammo_label):
         ammo_label.text = player.ammo_text()
@@ -813,6 +859,7 @@ func _show_main_menu() -> void:
 
     # Full-screen live arena is created first, so all menu controls render above it.
     _create_menu_bot_preview(shade)
+    _create_menu_record(shade)
 
     var logo := Label.new()
     logo.name = "MenuLogo"
@@ -881,6 +928,65 @@ func _show_main_menu() -> void:
     footer.add_theme_font_size_override("font_size", 12)
     footer.add_theme_color_override("font_color", Color("#9bb8c9"))
     shade.add_child(footer)
+
+func _create_menu_record(parent: Control) -> void:
+    var record := Panel.new()
+    record.name = "MenuVinylRecord"
+    record.position = Vector2(1120, 64)
+    record.size = Vector2(96, 96)
+    record.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var outer := StyleBoxFlat.new()
+    outer.bg_color = Color("#101923")
+    outer.border_color = Color("#526779")
+    outer.set_border_width_all(2)
+    outer.set_corner_radius_all(48)
+    record.add_theme_stylebox_override("panel", outer)
+    parent.add_child(record)
+
+    var ring := Panel.new()
+    ring.position = Vector2(12, 12)
+    ring.size = Vector2(72, 72)
+    ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var ring_style := StyleBoxFlat.new()
+    ring_style.bg_color = Color("#172536")
+    ring_style.border_color = Color("#526779", 0.8)
+    ring_style.set_border_width_all(2)
+    ring_style.set_corner_radius_all(36)
+    ring.add_theme_stylebox_override("panel", ring_style)
+    record.add_child(ring)
+
+    for i in range(3):
+        var groove := Panel.new()
+        var inset := 20.0 + float(i) * 10.0
+        groove.position = Vector2(inset, inset)
+        groove.size = Vector2(72.0 - inset * 2.0, 72.0 - inset * 2.0)
+        groove.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        var groove_style := StyleBoxFlat.new()
+        groove_style.bg_color = Color(0, 0, 0, 0)
+        groove_style.border_color = Color("#718095", 0.42)
+        groove_style.set_border_width_all(1)
+        groove_style.set_corner_radius_all(36)
+        groove.add_theme_stylebox_override("panel", groove_style)
+        ring.add_child(groove)
+
+    menu_record_needle = ColorRect.new()
+    menu_record_needle.name = "MenuRecordNeedle"
+    menu_record_needle.position = Vector2(47, 46)
+    menu_record_needle.size = Vector2(35, 4)
+    menu_record_needle.pivot_offset = Vector2(2, 2)
+    menu_record_needle.color = Color("#36e6df")
+    menu_record_needle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    record.add_child(menu_record_needle)
+
+    var hub := Panel.new()
+    hub.position = Vector2(39, 39)
+    hub.size = Vector2(18, 18)
+    hub.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var hub_style := StyleBoxFlat.new()
+    hub_style.bg_color = Color("#d9ef70")
+    hub_style.set_corner_radius_all(9)
+    hub.add_theme_stylebox_override("panel", hub_style)
+    record.add_child(hub)
 
 func _create_menu_bot_preview(parent: Control) -> void:
     # Full-screen background sparring match, independent from the real match state.
@@ -1743,8 +1849,8 @@ func _open_skins() -> void:
     var skin_color := Color.from_string(str(skin.get("color", "#39d6c5")), Color("#39d6c5"))
 
     var preview_panel := Panel.new()
-    preview_panel.position = Vector2(430, 112)
-    preview_panel.size = Vector2(420, 360)
+    preview_panel.position = Vector2(380, 105)
+    preview_panel.size = Vector2(520, 380)
     var preview_style := StyleBoxFlat.new()
     preview_style.bg_color = Color("#172333")
     preview_style.border_color = skin_color
@@ -1755,13 +1861,13 @@ func _open_skins() -> void:
 
     var preview_area := Control.new()
     preview_area.position = Vector2(10, 10)
-    preview_area.size = Vector2(400, 340)
-    preview_area.clip_contents = true
+    preview_area.size = Vector2(500, 360)
+    preview_area.clip_contents = false
     preview_panel.add_child(preview_area)
 
     var floor_line := ColorRect.new()
-    floor_line.position = Vector2(28, 290)
-    floor_line.size = Vector2(344, 3)
+    floor_line.position = Vector2(45, 325)
+    floor_line.size = Vector2(410, 3)
     floor_line.color = Color(skin_color, 0.75)
     preview_area.add_child(floor_line)
 
@@ -1770,8 +1876,8 @@ func _open_skins() -> void:
     fighter.skin_style = str(skin.get("style", "default"))
     fighter.facing = 1.0
     fighter.aim_input = Vector2(0.85, -0.16)
-    fighter.position = Vector2(200, 225)
-    fighter.scale = Vector2(1.4, 1.4)
+    fighter.position = Vector2(250, 235)
+    fighter.scale = Vector2(1.18, 1.18)
     fighter.set_physics_process(false)
     fighter.set_process(false)
     fighter.z_index = 2
@@ -1795,12 +1901,12 @@ func _open_skins() -> void:
     count_label.add_theme_color_override("font_color", Color("#9baabd"))
     shade.add_child(count_label)
 
-    var previous := _add_button("‹", Vector2(300, 245), Vector2(100, 76), shade)
+    var previous := _add_button("‹", Vector2(260, 245), Vector2(100, 76), shade)
     previous.add_theme_font_size_override("font_size", 42)
     previous.add_theme_stylebox_override("normal", _menu_button_style(Color("#253446"), Color("#b9e36c")))
     previous.pressed.connect(_select_skin.bind(posmod(skin_index - 1, skins.size())))
 
-    var next := _add_button("›", Vector2(880, 245), Vector2(100, 76), shade)
+    var next := _add_button("›", Vector2(920, 245), Vector2(100, 76), shade)
     next.add_theme_font_size_override("font_size", 42)
     next.add_theme_stylebox_override("normal", _menu_button_style(Color("#253446"), Color("#b9e36c")))
     next.pressed.connect(_select_skin.bind(posmod(skin_index + 1, skins.size())))
@@ -2505,12 +2611,26 @@ func _update_hud() -> void:
     var arena_name := "АРЕНА"
     if not all_maps.is_empty():
         arena_name = str(all_maps[clampi(map_index, 0, all_maps.size() - 1)].get("name", "АРЕНА"))
+    if is_instance_valid(player_health_bar):
+        player_health_bar.max_value = player.max_health
+        player_health_bar.value = player.health
+        player_health_bar.visible = phase == "fight"
+    if is_instance_valid(player_health_text):
+        player_health_text.text = "ТЫ  %d / %d HP" % [player.health, player.max_health]
+        player_health_text.visible = phase == "fight"
+    if is_instance_valid(rival_health_bar):
+        rival_health_bar.max_value = rival.max_health
+        rival_health_bar.value = rival.health
+        rival_health_bar.visible = phase == "fight" and game_mode != "training"
+    if is_instance_valid(rival_health_text):
+        rival_health_text.text = "БОТ  %d / %d HP" % [rival.health, rival.max_health]
+        rival_health_text.visible = phase == "fight" and game_mode != "training"
     if game_mode == "training":
-        hud.text = "ТРЕНИРОВКА  •  " + arena_name + "     HP %d/%d" % [player.health,player.max_health]
+        hud.text = "ТРЕНИРОВКА  •  " + arena_name
     elif game_mode == "online":
         hud.text = "%s     РАУНД %d     ТЫ  %d : %d  СОПЕРНИК" % [arena_name,round_index,score_player,score_bot]
     else:
-        hud.text = "%s     РАУНД %d     ТЫ  %d : %d  CPU     HP %d/%d" % [arena_name,round_index,score_player,score_bot,player.health,player.max_health]
+        hud.text = "%s     РАУНД %d     ТЫ  %d : %d  CPU" % [arena_name,round_index,score_player,score_bot]
 
 func _show_training_round_end() -> void:
     _show_panel("РАУНД ЗАВЕРШЁН",[

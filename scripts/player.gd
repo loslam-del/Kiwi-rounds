@@ -589,26 +589,26 @@ func _draw() -> void:
         var hair_sway := sin(animation_time * 0.8) * (2.0 if moving else 0.7)
         draw_colored_polygon(PackedVector2Array([
             center+Vector2(-21,-29), center+Vector2(-25,-13),
-            center+Vector2(-23,12), center+Vector2(-18,28),
-            center+Vector2(-12,23), center+Vector2(-15,4),
+            center+Vector2(-25,39), center+Vector2(-18,44),
+            center+Vector2(-12,34), center+Vector2(-15,4),
             center+Vector2(-14,-18)
         ]),hair_shadow)
         draw_colored_polygon(PackedVector2Array([
             center+Vector2(-19,-28), center+Vector2(-22,-12),
-            center+Vector2(-20,10), center+Vector2(-17,24),
-            center+Vector2(-14,18), center+Vector2(-17,2),
+            center+Vector2(-22,34), center+Vector2(-17,38),
+            center+Vector2(-14,29), center+Vector2(-17,2),
             center+Vector2(-16,-18)
         ]),hair)
         draw_colored_polygon(PackedVector2Array([
             center+Vector2(20,-29), center+Vector2(24,-12),
-            center+Vector2(22,12), center+Vector2(17,28),
-            center+Vector2(11,22), center+Vector2(14,4),
+            center+Vector2(24,39), center+Vector2(17,44),
+            center+Vector2(11,34), center+Vector2(14,4),
             center+Vector2(13,-18)
         ]),hair_shadow)
         draw_colored_polygon(PackedVector2Array([
             center+Vector2(18,-28), center+Vector2(21,-12),
-            center+Vector2(19,10), center+Vector2(16,24),
-            center+Vector2(13,18), center+Vector2(16,2),
+            center+Vector2(21,34), center+Vector2(16,38),
+            center+Vector2(13,29), center+Vector2(16,2),
             center+Vector2(15,-18)
         ]),hair)
         draw_line(center+Vector2(-18,-23),center+Vector2(-16,20),hair_light,1.8,true)
