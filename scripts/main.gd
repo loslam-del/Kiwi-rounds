@@ -50,6 +50,7 @@ var boot_loading := true
 var boot_elapsed := 0.0
 var boot_angle := 0.0
 var boot_stage := "Подготовка игры..."
+var boot_status_label: Label
 var mods_loaded := false
 var arena_camera: Camera2D
 var camera_shake_timer := 0.0
@@ -68,6 +69,7 @@ var mod_status_message := "Вставь JSON мода и нажми ИМПОРТ
 var mod_json_buffer := ""
 
 func _ready() -> void:
+    boot_status_label = get_node_or_null("StartupLayer/BootScreen/BootStatus") as Label
     randomize()
     _load_settings()
     queue_redraw()
@@ -108,6 +110,9 @@ func _boot_game() -> void:
     _show_main_menu()
     _update_hud()
     boot_loading = false
+    var startup_layer := get_node_or_null("StartupLayer")
+    if startup_layer != null:
+        startup_layer.queue_free()
     queue_redraw()
 
 func _draw() -> void:
@@ -456,6 +461,8 @@ func _process(delta: float) -> void:
         else:
             arena_camera.offset = Vector2.ZERO
     if boot_loading:
+        if is_instance_valid(boot_status_label):
+            boot_status_label.text = boot_stage
         boot_elapsed += delta
         boot_angle = fmod(boot_angle + delta * 4.2, TAU)
         queue_redraw()
