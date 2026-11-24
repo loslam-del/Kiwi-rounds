@@ -23,6 +23,10 @@ var jump_speed := JUMP_SPEED
 var pulse_force := 780.0
 var pulse_cooldown := 0.0
 var pulse_interval := 0.62
+var magazine_size := 6
+var ammo := 6
+var reload_duration := 1.35
+var reload_timer := 0.0
 var bot_think := 0.0
 var bot_accuracy := 0.64
 var facing := 1.0
@@ -56,6 +60,10 @@ func set_fire(value: bool) -> void:
 func _physics_process(delta: float) -> void:
     animation_time += delta * (7.0 if absf(velocity.x) > 35.0 and is_on_floor() else 2.0)
     pulse_cooldown = maxf(0.0, pulse_cooldown - delta)
+    if reload_timer > 0.0:
+        reload_timer = maxf(0.0, reload_timer - delta)
+        if reload_timer == 0.0:
+            ammo = magazine_size
     if is_bot:
         _think_bot(delta)
     else:
@@ -70,8 +78,11 @@ func _physics_process(delta: float) -> void:
     if jump_held and is_on_floor():
         velocity.y = jump_speed
 
-    if fire_held and pulse_cooldown <= 0.0:
-        _fire_pulse()
+    if fire_held and pulse_cooldown <= 0.0 and reload_timer <= 0.0:
+        if ammo > 0:
+            _fire_pulse()
+        else:
+            start_reload()
 
     move_and_slide()
     queue_redraw()
@@ -118,7 +129,12 @@ func _think_bot(delta: float) -> void:
 func _fire_pulse() -> void:
     if pulse_cooldown > 0.0:
         return
+    if ammo <= 0 or reload_timer > 0.0:
+        return
+    ammo -= 1
     pulse_cooldown = pulse_interval
+    if ammo == 0:
+        start_reload()
     var direction := aim_input.normalized()
     if direction == Vector2.ZERO:
         direction = Vector2(facing, 0.0)
@@ -128,19 +144,33 @@ func _fire_pulse() -> void:
     var muzzle := Vector2(facing * 13.0, -7.0) + direction * 38.0
     pulse_requested.emit(global_position + muzzle, direction, pulse_force, body_color, self)
 
+func start_reload() -> void:
+    if reload_timer <= 0.0 and ammo < magazine_size:
+        reload_timer = reload_duration
+
+func ammo_text() -> String:
+    if reload_timer > 0.0:
+        return "ПЕРЕЗАРЯДКА %.1f" % reload_timer
+    return "ПАТРОНЫ %d/%d" % [ammo, magazine_size]
+
 func apply_upgrade(upgrade_id: String) -> void:
     match upgrade_id:
         "swift":
             move_speed *= 1.16
+            pulse_force *= 0.90
         "spring":
             jump_speed *= 1.12
+            move_speed *= 0.92
         "wave":
             pulse_force *= 1.22
+            reload_duration *= 1.12
         "rapid":
-            pulse_interval *= 0.82
+            reload_duration *= 0.82
+            pulse_force *= 0.90
         "sturdy":
             pulse_force *= 1.10
             move_speed *= 1.06
+            jump_speed *= 1.08
 
 func reset_round(spawn: Vector2) -> void:
     global_position = spawn
@@ -153,6 +183,8 @@ func reset_round(spawn: Vector2) -> void:
     touch_fire = false
     aim_input = Vector2(facing, 0.0)
     pulse_cooldown = 0.4
+    ammo = magazine_size
+    reload_timer = 0.0
 
 func _draw() -> void:
     var moving := absf(velocity.x) > 35.0 and is_on_floor()
