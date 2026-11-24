@@ -1545,18 +1545,20 @@ func _apply_online_state(state: Variant) -> void:
             _close_overlay()
             _show_panel("СОПЕРНИК ВЫБИРАЕТ УЛУЧШЕНИЕ", [], "Следующий раунд начнётся автоматически.")
             game_controls.visible = false
+    elif incoming_phase == "match_end":
+        if phase != "match_end":
+            phase = "match_end"
+            player.set_physics_process(false)
+            rival.set_physics_process(false)
+            _show_panel("МАТЧ ЗАВЕРШЁН", [
+                ["СЫГРАТЬ ЕЩЁ", Callable(self, "_restart_match")],
+                ["В ГЛАВНОЕ МЕНЮ", Callable(self, "_show_main_menu")]
+            ], "Счёт: %d : %d" % [score_player, score_bot])
+            game_controls.visible = false
     elif incoming_phase == "menu":
         phase = "menu"
         _show_main_menu()
     _update_hud()
-    if incoming_phase == "fight" and (score_player >= 5 or score_bot >= 5):
-        phase = "upgrade"
-        player.set_physics_process(false)
-        rival.set_physics_process(false)
-        _show_panel("МАТЧ ЗАВЕРШЁН", [
-            ["В ГЛАВНОЕ МЕНЮ", Callable(self, "_show_main_menu")]
-        ], "Счёт: %d : %d" % [score_player, score_bot])
-        game_controls.visible = false
 
 func _apply_online_player_stats(who: ArenaPlayer, stats: Dictionary) -> void:
     if stats.is_empty():
@@ -2460,6 +2462,8 @@ func _finish_round(player_won: bool) -> void:
     if game_mode == "training":
         _show_training_round_end()
     elif score_player >= 5 or score_bot >= 5:
+        if game_mode == "online":
+            phase = "match_end"
         _show_match_end()
     elif player_won:
         # Only the losing side receives an upgrade.
@@ -2478,6 +2482,8 @@ func _update_hud() -> void:
         arena_name = str(all_maps[clampi(map_index, 0, all_maps.size() - 1)].get("name", "АРЕНА"))
     if game_mode == "training":
         hud.text = "ТРЕНИРОВКА  •  " + arena_name
+    elif game_mode == "online":
+        hud.text = "%s     РАУНД %d     ТЫ  %d : %d  СОПЕРНИК" % [arena_name,round_index,score_player,score_bot]
     else:
         hud.text = "%s     РАУНД %d     ТЫ  %d : %d  CPU" % [arena_name,round_index,score_player,score_bot]
 
@@ -2614,11 +2620,16 @@ func _next_round() -> void:
     _update_hud()
 
 func _show_match_end() -> void:
-    var result := "ПОБЕДА!" if score_player >= 5 else "ПОБЕДИЛ CPU"
+    var result := "ПОБЕДА!" if score_player >= 5 else ("ПОБЕДИЛ СОПЕРНИК" if game_mode == "online" else "ПОБЕДИЛ CPU")
     _show_panel(result,[
         ["СЫГРАТЬ ЕЩЁ",Callable(self,"_restart_match")],
         ["ГЛАВНОЕ МЕНЮ",Callable(self,"_show_main_menu")]
     ],"Первый до 5 побед. Счёт: %d : %d" % [score_player,score_bot])
 
 func _restart_match() -> void:
+    if game_mode == "online":
+        if online_is_host and online_connected:
+            online_in_match = false
+            _online_send({"type":"start_match"})
+        return
     _start_game(game_mode)
