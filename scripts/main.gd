@@ -51,6 +51,9 @@ var boot_elapsed := 0.0
 var boot_angle := 0.0
 var boot_stage := "Подготовка игры..."
 var mods_loaded := false
+var arena_camera: Camera2D
+var camera_shake_timer := 0.0
+var camera_shake_strength := 0.0
 
 func _ready() -> void:
     randomize()
@@ -107,6 +110,8 @@ func _make_arena(index: int) -> void:
             old_platform.queue_free()
     platform_nodes.clear()
     _add_platform(Vector2(640, 700), Vector2(1400, 50))
+    _add_side_wall(-15.0)
+    _add_side_wall(1295.0)
     if all_maps.is_empty():
         return
     map_index = index % all_maps.size()
@@ -116,6 +121,28 @@ func _make_arena(index: int) -> void:
         for item in platforms:
             if typeof(item) == TYPE_DICTIONARY:
                 _add_platform(Vector2(float(item.get("x",640)),float(item.get("y",500))),Vector2(float(item.get("w",180)),float(item.get("h",22))))
+
+func _add_side_wall(x: float) -> void:
+    var wall := StaticBody2D.new()
+    wall.position = Vector2(x,350)
+    wall.collision_layer = 2
+    wall.collision_mask = 0
+    var shape_node := CollisionShape2D.new()
+    var rect := RectangleShape2D.new()
+    rect.size = Vector2(30,900)
+    shape_node.shape = rect
+    wall.add_child(shape_node)
+    add_child(wall)
+    platform_nodes.append(wall)
+    var visual := Polygon2D.new()
+    visual.polygon = PackedVector2Array([Vector2(-15,-450),Vector2(15,-450),Vector2(15,450),Vector2(-15,450)])
+    visual.color = Color("#1c293b")
+    wall.add_child(visual)
+    var edge := Line2D.new()
+    edge.points = PackedVector2Array([Vector2(0,-450),Vector2(0,450)])
+    edge.width = 3.0
+    edge.default_color = Color("#526a87",0.45)
+    wall.add_child(edge)
 
 func _add_platform(at: Vector2, dimensions: Vector2) -> void:
     var body := StaticBody2D.new()
@@ -149,6 +176,7 @@ func _make_players() -> void:
     player.body_color = selected_skin_color
     player.position = Vector2(350,390)
     player.pulse_requested.connect(_spawn_pulse)
+    player.got_hit.connect(_on_player_hit)
     add_child(player)
     rival = PLAYER_SCRIPT.new()
     rival.is_bot = true
@@ -156,6 +184,12 @@ func _make_players() -> void:
     rival.position = Vector2(930,390)
     rival.target = player
     rival.pulse_requested.connect(_spawn_pulse)
+    rival.got_hit.connect(_on_player_hit)
+    arena_camera = Camera2D.new()
+    arena_camera.position = Vector2(640,360)
+    arena_camera.enabled = true
+    arena_camera.position_smoothing_enabled = false
+    add_child(arena_camera)
     add_child(rival)
 
 func _get_skins() -> Array[Dictionary]:
@@ -202,6 +236,15 @@ func _apply_skin() -> void:
 func _cycle_skin() -> void:
     skin_index += 1
     _apply_skin()
+
+func _on_player_hit(_direction: Vector2) -> void:
+    camera_shake_timer = 0.16
+    camera_shake_strength = 7.0
+
+func _clear_pulses() -> void:
+    for node in get_children():
+        if node is EnergyPulse:
+            node.queue_free()
 
 func _spawn_pulse(origin: Vector2, direction: Vector2, force: float, tint: Color, shooter: Node2D) -> void:
     var pulse: EnergyPulse = PULSE_SCRIPT.new()
@@ -290,6 +333,12 @@ func _button_style(color: Color) -> StyleBoxFlat:
     return style
 
 func _process(delta: float) -> void:
+    if is_instance_valid(arena_camera):
+        if camera_shake_timer > 0.0:
+            camera_shake_timer = maxf(0.0,camera_shake_timer-delta)
+            arena_camera.offset = Vector2(randf_range(-camera_shake_strength,camera_shake_strength),randf_range(-camera_shake_strength,camera_shake_strength))
+        else:
+            arena_camera.offset = Vector2.ZERO
     if boot_loading:
         boot_elapsed += delta
         boot_angle = fmod(boot_angle + delta * 4.2, TAU)
@@ -305,6 +354,7 @@ func _process(delta: float) -> void:
         _finish_round(true)
 
 func _start_game(mode: String) -> void:
+    _clear_pulses()
     player.set_physics_process(true)
     rival.set_physics_process(true)
     game_mode = mode
@@ -954,6 +1004,7 @@ func _close_overlay() -> void:
 func _finish_round(player_won: bool) -> void:
     if phase != "fight":
         return
+    _clear_pulses()
     phase = "upgrade"
     player.set_physics_process(false)
     rival.set_physics_process(false)
@@ -997,6 +1048,7 @@ func _choose_upgrade(upgrade_id: String) -> void:
     _next_round()
 
 func _next_round() -> void:
+    _clear_pulses()
     _close_overlay()
     player.set_physics_process(true)
     rival.set_physics_process(true)
