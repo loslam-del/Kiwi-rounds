@@ -6,13 +6,15 @@ var push_force := 780.0
 var tint := Color("#39d6c5")
 var life := 1.25
 var speed := 1050.0
+var shooter: Node2D
 
-func configure(dir: Vector2, force: float, color: Color) -> void:
+func configure(dir: Vector2, force: float, color: Color, source: Node2D) -> void:
     direction = dir.normalized()
     if direction == Vector2.ZERO:
         direction = Vector2.RIGHT
     push_force = force
     tint = color
+    shooter = source
 
 func _ready() -> void:
     collision_layer = 0
@@ -34,6 +36,8 @@ func _physics_process(delta: float) -> void:
         queue_free()
 
 func _on_body_entered(body: Node2D) -> void:
+    if body == shooter:
+        return
     if body is ArenaPlayer:
         body.velocity += direction * push_force
         body.velocity.y -= 150.0
