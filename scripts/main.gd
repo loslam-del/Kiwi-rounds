@@ -1065,6 +1065,9 @@ func _reload_mods() -> void:
 
 func _open_training_cards() -> void:
     if game_mode != "training":
+        phase = "paused"
+        player.set_physics_process(false)
+        rival.set_physics_process(false)
         _show_panel("КАРТОЧКИ",[
             ["ОТКРЫТЬ ТРЕНИРОВКУ",Callable(self,"_start_training")],
             ["НАЗАД",Callable(self,"_resume_game")]
