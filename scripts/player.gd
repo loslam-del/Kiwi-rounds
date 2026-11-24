@@ -6,9 +6,18 @@ signal pulse_requested(origin: Vector2, direction: Vector2, force: float, tint: 
 @export var is_bot := false
 @export var body_color := Color("#39d6c5")
 
-const GRAVITY := 1850.0
-const JUMP_SPEED := -735.0
+const GRAVITY := 1680.0
+const JUMP_SPEED := -690.0
 const BASE_SPEED := 430.0
+const GROUND_ACCEL := 2550.0
+const AIR_ACCEL := 1120.0
+const GROUND_FRICTION := 2050.0
+const AIR_DRAG := 120.0
+const MAX_FALL_SPEED := 1120.0
+const COYOTE_TIME := 0.105
+const JUMP_BUFFER_TIME := 0.13
+const WALL_JUMP_X := 475.0
+const WALL_JUMP_Y := -625.0
 
 var move_input := 0.0
 var move_stick := Vector2.ZERO
@@ -31,14 +40,24 @@ var bot_think := 0.0
 var bot_accuracy := 0.64
 var facing := 1.0
 var animation_time := 0.0
+var coyote_timer := 0.0
+var jump_buffer_timer := 0.0
+var jump_was_held := false
+var jump_hold_timer := 0.0
+var wall_jump_lock := 0.0
+var recoil_kick := 0.0
+var muzzle_flash := 0.0
+var reload_visual := 0.0
 
 func _ready() -> void:
     collision_layer = 1
     collision_mask = 3
     var shape := CollisionShape2D.new()
+    floor_snap_length = 8.0
+    safe_margin = 0.08
     var capsule := CapsuleShape2D.new()
-    capsule.radius = 17.0
-    capsule.height = 76.0
+    capsule.radius = 18.0
+    capsule.height = 88.0
     shape.shape = capsule
     add_child(shape)
 
@@ -58,35 +77,72 @@ func set_fire(value: bool) -> void:
     touch_fire = value
 
 func _physics_process(delta: float) -> void:
-    animation_time += delta * (7.0 if absf(velocity.x) > 35.0 and is_on_floor() else 2.0)
+    animation_time += delta * (8.5 if absf(velocity.x) > 35.0 and is_on_floor() else 2.2)
     pulse_cooldown = maxf(0.0, pulse_cooldown - delta)
+    recoil_kick = move_toward(recoil_kick, 0.0, delta * 38.0)
+    muzzle_flash = maxf(0.0, muzzle_flash - delta)
     if reload_timer > 0.0:
         reload_timer = maxf(0.0, reload_timer - delta)
+        reload_visual = reload_timer / maxf(reload_duration, 0.01)
         if reload_timer == 0.0:
             ammo = magazine_size
+            reload_visual = 0.0
     if is_bot:
         _think_bot(delta)
     else:
         _read_keyboard()
-
-    if absf(move_input) > 0.01:
+    if absf(move_input) > 0.01 and wall_jump_lock <= 0.0:
         facing = signf(move_input)
-
-    velocity.x = move_toward(velocity.x, move_input * move_speed, 2400.0 * delta)
-    velocity.y += GRAVITY * delta
-
-    if jump_held and is_on_floor():
+    if is_on_floor():
+        coyote_timer = COYOTE_TIME
+    else:
+        coyote_timer = maxf(0.0, coyote_timer - delta)
+    if jump_held and not jump_was_held:
+        jump_buffer_timer = JUMP_BUFFER_TIME
+    else:
+        jump_buffer_timer = maxf(0.0, jump_buffer_timer - delta)
+    jump_was_held = jump_held
+    wall_jump_lock = maxf(0.0, wall_jump_lock - delta)
+    var accel := GROUND_ACCEL if is_on_floor() else AIR_ACCEL
+    if wall_jump_lock > 0.0:
+        accel *= 0.18
+    if absf(move_input) > 0.01:
+        velocity.x = move_toward(velocity.x, move_input * move_speed, accel * delta)
+    elif is_on_floor():
+        velocity.x = move_toward(velocity.x, 0.0, GROUND_FRICTION * delta)
+    else:
+        velocity.x = move_toward(velocity.x, 0.0, AIR_DRAG * delta)
+    velocity.y = minf(velocity.y + GRAVITY * delta, MAX_FALL_SPEED)
+    if jump_buffer_timer > 0.0 and coyote_timer > 0.0:
         velocity.y = jump_speed
-
+        coyote_timer = 0.0
+        jump_buffer_timer = 0.0
+        jump_hold_timer = 0.16
+    elif jump_buffer_timer > 0.0 and is_on_wall() and not is_on_floor():
+        var wall_normal := get_wall_normal()
+        velocity.x = wall_normal.x * WALL_JUMP_X
+        velocity.y = WALL_JUMP_Y
+        facing = signf(wall_normal.x)
+        jump_buffer_timer = 0.0
+        coyote_timer = 0.0
+        wall_jump_lock = 0.16
+        jump_hold_timer = 0.12
+    if jump_held and jump_hold_timer > 0.0 and velocity.y < 0.0:
+        velocity.y -= 980.0 * delta
+        jump_hold_timer = maxf(0.0, jump_hold_timer - delta)
+    elif not jump_held:
+        jump_hold_timer = 0.0
+        if velocity.y < -180.0:
+            velocity.y *= 0.58
     if fire_held and pulse_cooldown <= 0.0 and reload_timer <= 0.0:
         if ammo > 0:
             _fire_pulse()
         else:
             start_reload()
-
     move_and_slide()
+    if is_on_wall() and not is_on_floor() and velocity.y > 160.0:
+        velocity.y = minf(velocity.y, 270.0)
     queue_redraw()
-
 func _read_keyboard() -> void:
     var horizontal := 0.0
     if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
@@ -133,6 +189,12 @@ func _fire_pulse() -> void:
         return
     ammo -= 1
     pulse_cooldown = pulse_interval
+    muzzle_flash = 0.075
+    recoil_kick = minf(recoil_kick + 7.0, 15.0)
+    var shot_dir := aim_input.normalized()
+    if shot_dir == Vector2.ZERO:
+        shot_dir = Vector2(facing, 0.0)
+    velocity -= shot_dir * (105.0 if is_on_floor() else 145.0)
     if ammo == 0:
         start_reload()
     var direction := aim_input.normalized()
@@ -185,6 +247,13 @@ func reset_round(spawn: Vector2) -> void:
     pulse_cooldown = 0.4
     ammo = magazine_size
     reload_timer = 0.0
+    reload_visual = 0.0
+    coyote_timer = 0.0
+    jump_buffer_timer = 0.0
+    jump_hold_timer = 0.0
+    wall_jump_lock = 0.0
+    recoil_kick = 0.0
+    muzzle_flash = 0.0
 
 func _draw() -> void:
     var moving := absf(velocity.x) > 35.0 and is_on_floor()
