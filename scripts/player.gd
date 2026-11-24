@@ -371,7 +371,7 @@ func _make_ragdoll_part(world: Node, segment_length: float, at: Vector2, segment
     part.collision_layer = 4
     part.collision_mask = 7
     part.can_sleep = false
-    part.continuous_cd = true
+    part.continuous_cd = RigidBody2D.CCD_MODE_CAST_RAY
     var collision := CollisionShape2D.new()
     var capsule := CapsuleShape2D.new()
     capsule.radius = 2.2
@@ -433,15 +433,22 @@ func _limb_vector(angle: float, length: float) -> Vector2:
     return Vector2(sin(angle), cos(angle)) * length
 
 func _draw() -> void:
-    var center := Vector2(0.0, -7.0)
+    var bob := sin(animation_time) * (1.4 if is_on_floor() and absf(velocity.x) > 35.0 else 0.7)
+    var center := Vector2(0.0, -7.0 + bob)
     var face := Color("#102536")
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
+    # Layered soft aura, crisp silhouette and small highlight: readable at phone scale.
+    draw_circle(center, 28.0, Color(body_color, 0.045))
+    draw_circle(center, 24.0, Color(body_color, 0.10))
     draw_circle(center, 21.0, body_color)
+    draw_arc(center, 20.8, 0.0, TAU, 48, body_color.lightened(0.42), 1.6, true)
+    draw_arc(center + Vector2(-3.0, -4.0), 12.0, PI * 1.05, PI * 1.78, 20, Color(1.0, 1.0, 1.0, 0.16), 2.0, true)
     draw_circle(center + Vector2(-6.0, -2.0), 1.9, face)
     draw_circle(center + Vector2(6.0, -2.0), 1.9, face)
     draw_line(center + Vector2(-3.0, 6.0), center + Vector2(3.0, 6.0), face, 1.8, true)
     if hit_flash > 0.0:
-        draw_circle(center, 24.0, Color(1.0, 0.35, 0.28, hit_flash * 0.28))
+        draw_circle(center, 25.0, Color(1.0, 0.45, 0.34, hit_flash * 0.24))
+        draw_arc(center, 25.0, 0.0, TAU, 48, Color(1.0, 0.82, 0.72, hit_flash * 0.8), 2.2, true)
     if reload_visual > 0.0:
-        draw_arc(center, 25.0, -PI / 2.0, -PI / 2.0 + TAU * (1.0 - reload_visual), 28, Color.WHITE, 2.0, true)
+        draw_arc(center, 27.0, -PI / 2.0, -PI / 2.0 + TAU * (1.0 - reload_visual), 28, Color.WHITE, 2.0, true)
     draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
