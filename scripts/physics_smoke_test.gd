@@ -133,6 +133,10 @@ func _run_physics_checks() -> void:
     if game.get("overlay") == null:
         _fail("training card selection panel did not open")
         return
+    game.call("_toggle_training_card", "homing")
+    if float(player.get("homing_strength")) <= 0.0:
+        _fail("selected homing card did not apply its effect")
+        return
     game.call("_resume_game")
 
     game.set("training_tab", "maps")
@@ -141,7 +145,14 @@ func _run_physics_checks() -> void:
     if game.get("overlay") == null:
         _fail("training arena selection panel did not open")
         return
-    game.call("_resume_game")
+    game.call("_select_training_map", 3)
+    if int(game.get("map_index")) != 3:
+        _fail("training arena selection did not change the map")
+        return
+    game.call("_next_round")
+    if int(game.get("map_index")) != 3:
+        _fail("next training round did not preserve the selected arena")
+        return
 
     game.set("game_mode", "bot")
     game.call("_open_training_cards")
