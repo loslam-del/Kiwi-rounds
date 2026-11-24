@@ -74,6 +74,10 @@ var leg_back_angle := -0.08
 var leg_front_angle := 0.08
 var arm_back_angular_velocity := 0.0
 var arm_front_angular_velocity := 0.0
+var elbow_back_angle := -0.48
+var elbow_front_angle := 0.48
+var elbow_back_angular_velocity := 0.0
+var elbow_front_angular_velocity := 0.0
 var leg_back_angular_velocity := 0.0
 var leg_front_angular_velocity := 0.0
 
@@ -203,20 +207,27 @@ func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
     var walk_drive := move_input * (1.0 if is_on_floor() else 0.28)
     var jump_drive := clampf(-velocity.y / 900.0, -0.85, 0.85)
     var accel_swing := clampf(horizontal_acceleration / 2200.0, -1.25, 1.25)
-    var arm_back_target := -walk_drive * 0.72 - jump_drive * 0.22
-    var arm_front_target := walk_drive * 0.72 - jump_drive * 0.22
+    # Arms rest splayed away from the torso; elbows have their own spring joints.
+    var arm_back_target := -0.82 - walk_drive * 0.34 - jump_drive * 0.18
+    var arm_front_target := 0.82 + walk_drive * 0.34 - jump_drive * 0.18
+    var elbow_back_target := -0.58 - walk_drive * 0.12
+    var elbow_front_target := 0.58 + walk_drive * 0.12
     var leg_back_target := walk_drive * 0.62 + jump_drive * 0.30
     var leg_front_target := -walk_drive * 0.62 + jump_drive * 0.30
     var spring_k := 49.0
     var damping_rate := 12.6
 
-    arm_back_angular_velocity += ((arm_back_target - arm_back_angle) * spring_k - arm_back_angular_velocity * damping_rate - sin(arm_back_angle) * 5.0 - accel_swing * 1.55) * delta
-    arm_front_angular_velocity += ((arm_front_target - arm_front_angle) * spring_k - arm_front_angular_velocity * damping_rate - sin(arm_front_angle) * 5.0 - accel_swing * 1.55) * delta
+    arm_back_angular_velocity += ((arm_back_target - arm_back_angle) * spring_k - arm_back_angular_velocity * damping_rate - sin(arm_back_angle) * 3.0 - accel_swing * 1.25) * delta
+    arm_front_angular_velocity += ((arm_front_target - arm_front_angle) * spring_k - arm_front_angular_velocity * damping_rate - sin(arm_front_angle) * 3.0 - accel_swing * 1.25) * delta
+    elbow_back_angular_velocity += ((elbow_back_target - elbow_back_angle) * 64.0 - elbow_back_angular_velocity * 14.0) * delta
+    elbow_front_angular_velocity += ((elbow_front_target - elbow_front_angle) * 64.0 - elbow_front_angular_velocity * 14.0) * delta
     leg_back_angular_velocity += ((leg_back_target - leg_back_angle) * spring_k - leg_back_angular_velocity * damping_rate - sin(leg_back_angle) * 6.0 + accel_swing * 1.25) * delta
     leg_front_angular_velocity += ((leg_front_target - leg_front_angle) * spring_k - leg_front_angular_velocity * damping_rate - sin(leg_front_angle) * 6.0 + accel_swing * 1.25) * delta
 
-    arm_back_angle = clampf(arm_back_angle + arm_back_angular_velocity * delta, -1.48, 1.48)
-    arm_front_angle = clampf(arm_front_angle + arm_front_angular_velocity * delta, -1.48, 1.48)
+    arm_back_angle = clampf(arm_back_angle + arm_back_angular_velocity * delta, -1.65, 1.65)
+    arm_front_angle = clampf(arm_front_angle + arm_front_angular_velocity * delta, -1.65, 1.65)
+    elbow_back_angle = clampf(elbow_back_angle + elbow_back_angular_velocity * delta, -1.35, 1.35)
+    elbow_front_angle = clampf(elbow_front_angle + elbow_front_angular_velocity * delta, -1.35, 1.35)
     leg_back_angle = clampf(leg_back_angle + leg_back_angular_velocity * delta, -1.18, 1.18)
     leg_front_angle = clampf(leg_front_angle + leg_front_angular_velocity * delta, -1.18, 1.18)
 
@@ -430,8 +441,10 @@ func _draw() -> void:
 
     var elbow_back := shoulder_back + Vector2(sin(arm_back_angle) * arm_len, cos(arm_back_angle) * arm_len)
     var elbow_front := shoulder_front + Vector2(sin(arm_front_angle) * arm_len, cos(arm_front_angle) * arm_len)
-    var hand_back := elbow_back + Vector2(sin(arm_back_angle * 0.8) * arm_len, cos(arm_back_angle * 0.8) * arm_len)
-    var hand_front := elbow_front + Vector2(sin(arm_front_angle * 0.8) * arm_len, cos(arm_front_angle * 0.8) * arm_len)
+    var hand_back_angle := arm_back_angle + elbow_back_angle
+    var hand_front_angle := arm_front_angle + elbow_front_angle
+    var hand_back := elbow_back + Vector2(sin(hand_back_angle) * arm_len, cos(hand_back_angle) * arm_len)
+    var hand_front := elbow_front + Vector2(sin(hand_front_angle) * arm_len, cos(hand_front_angle) * arm_len)
     draw_line(shoulder_back, elbow_back, outline, 9.5, true)
     draw_line(shoulder_back, elbow_back, body_color.darkened(0.18), 6.0, true)
     draw_line(elbow_back, hand_back, outline, 8.5, true)
