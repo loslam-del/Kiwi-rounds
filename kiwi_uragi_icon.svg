@@ -26,6 +26,9 @@
 <path d="M238 333q18 18 39 0" fill="none" stroke="#9d665d" stroke-width="9" stroke-linecap="round"/>
 <ellipse cx="181" cy="319" rx="15" ry="8" fill="#eaa49b" opacity=".55"/>
 <ellipse cx="333" cy="319" rx="15" ry="8" fill="#eaa49b" opacity=".55"/>
+<!-- signature leaf accents -->
+<path d="M365 118c42-42 85-31 81 6-3 26-39 35-81 12-18 20-40 26-58 13 13-24 31-34 58-31Z" fill="#8fc65e" stroke="#20232b" stroke-width="8" stroke-linejoin="round"/>
+<path d="M355 139q27-15 49-35" fill="none" stroke="#4c8d45" stroke-width="6" stroke-linecap="round"/>
 <!-- tiny maid collar / green ribbon -->
 <path d="M206 391l50 31 50-31-17 54h-66Z" fill="#f7f0df" stroke="#20232b" stroke-width="9" stroke-linejoin="round"/>
 <path d="M256 397l-20 19 20 18 20-18Z" fill="#82b95a" stroke="#20232b" stroke-width="7" stroke-linejoin="round"/>
