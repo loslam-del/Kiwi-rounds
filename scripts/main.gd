@@ -58,10 +58,14 @@ func _ready() -> void:
     _update_hud()
 
 func _draw() -> void:
-    draw_rect(Rect2(0, 0, 1280, 720), Color("#10182d"))
-    for i in range(18):
-        draw_circle(Vector2(float((i * 97) % 1280), float((i * 61) % 560)), 2.0, Color("#263653"))
-    draw_rect(Rect2(0, 690, 1280, 30), Color("#18243c"))
+    draw_rect(Rect2(0, 0, 1280, 720), Color("#111111"))
+    draw_rect(Rect2(0, 0, 1280, 8), Color("#e6e6e6"))
+    draw_rect(Rect2(0, 680, 1280, 40), Color("#202020"))
+    for i in range(14):
+        var x := float((i * 113 + 45) % 1280)
+        var y := float((i * 67 + 30) % 650)
+        draw_circle(Vector2(x,y),1.5,Color("#3a3a3a"))
+    draw_rect(Rect2(0, 0, 1280, 720), Color(0,0,0,0), false, 2.0, true)
 
 func _make_arena(index: int) -> void:
     for old_platform in platform_nodes:
@@ -260,7 +264,7 @@ func _show_main_menu() -> void:
         ["НАСТРОЙКИ",Callable(self,"_show_settings")],
         ["СКИНЫ",Callable(self,"_open_skins")],
         ["МОДЫ",Callable(self,"_open_mods")]
-    ],"АРЕНА  •  2D FIGHTER")
+    ],"ARENA FIGHTER     •     ANDROID")
 
 func _show_mode_menu() -> void:
     _show_panel("ВЫБОР РЕЖИМА",[
@@ -414,49 +418,86 @@ func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> v
     game_controls.visible = false
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color(0.035,0.055,0.09,0.88)
+    shade.color = Color("#111111")
     ui.add_child(shade)
     overlay = shade
-    var panel := PanelContainer.new()
-    panel.position = Vector2(360,75)
-    panel.size = Vector2(560,570)
-    panel.add_theme_stylebox_override("panel",_button_style(Color("#172943")))
-    shade.add_child(panel)
-    var column := VBoxContainer.new()
-    column.add_theme_constant_override("separation",10)
-    panel.add_child(column)
+
     var title := Label.new()
     title.text = title_text
+    title.position = Vector2(0,95)
+    title.size = Vector2(1280,100)
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size",32)
-    title.add_theme_color_override("font_color",Color("#f4f7ff"))
-    column.add_child(title)
+    title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",58 if title_text == "KIWI ROUNDS" else 38)
+    title.add_theme_color_override("font_color",Color("#f2f2f2"))
+    title.add_theme_color_override("font_shadow_color",Color("#000000"))
+    title.add_theme_constant_override("shadow_offset_x",3)
+    title.add_theme_constant_override("shadow_offset_y",3)
+    shade.add_child(title)
+
+    var accent := ColorRect.new()
+    accent.position = Vector2(500,195)
+    accent.size = Vector2(280,5)
+    accent.color = Color("#e5e5e5")
+    shade.add_child(accent)
+
     if subtitle != "":
         var info := Label.new()
         info.text = subtitle
+        info.position = Vector2(300,215)
+        info.size = Vector2(680,70)
         info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        info.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
         info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-        info.custom_minimum_size = Vector2(520,80)
         info.add_theme_font_size_override("font_size",17)
-        info.add_theme_color_override("font_color",Color("#c6d6ee"))
-        column.add_child(info)
-    var scroll := ScrollContainer.new()
-    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    column.add_child(scroll)
+        info.add_theme_color_override("font_color",Color("#aaaaaa"))
+        shade.add_child(info)
+
     var list := VBoxContainer.new()
-    list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    list.add_theme_constant_override("separation",8)
-    scroll.add_child(list)
-    for entry in buttons:
+    list.position = Vector2(390,305)
+    list.size = Vector2(500,340)
+    list.add_theme_constant_override("separation",9)
+    shade.add_child(list)
+    for index in range(buttons.size()):
+        var entry: Array = buttons[index]
         var button := Button.new()
         button.text = str(entry[0])
-        button.custom_minimum_size = Vector2(510,58)
+        button.custom_minimum_size = Vector2(500,58)
         button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-        button.add_theme_font_size_override("font_size",20)
-        button.add_theme_stylebox_override("normal",_button_style(Color("#294467")))
-        button.add_theme_stylebox_override("pressed",_button_style(Color("#3d638e")))
+        button.focus_mode = Control.FOCUS_NONE
+        button.add_theme_font_size_override("font_size",23)
+        button.add_theme_color_override("font_color",Color("#f0f0f0"))
+        button.add_theme_color_override("font_hover_color",Color("#111111"))
+        button.add_theme_stylebox_override("normal",_menu_button_style(Color("#242424"),Color("#555555")))
+        button.add_theme_stylebox_override("hover",_menu_button_style(Color("#eeeeee"),Color("#ffffff")))
+        button.add_theme_stylebox_override("pressed",_menu_button_style(Color("#cfcfcf"),Color("#ffffff")))
         button.pressed.connect(entry[1])
         list.add_child(button)
+
+    var footer := Label.new()
+    footer.text = "KIWI ROUNDS  /  v0.2"
+    footer.position = Vector2(0,665)
+    footer.size = Vector2(1280,30)
+    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    footer.add_theme_font_size_override("font_size",13)
+    footer.add_theme_color_override("font_color",Color("#666666"))
+    shade.add_child(footer)
+
+func _menu_button_style(fill: Color, outline: Color) -> StyleBoxFlat:
+    var style := StyleBoxFlat.new()
+    style.bg_color = fill
+    style.border_color = outline
+    style.border_width_left = 2
+    style.border_width_right = 2
+    style.border_width_top = 2
+    style.border_width_bottom = 2
+    style.corner_radius_top_left = 2
+    style.corner_radius_top_right = 2
+    style.corner_radius_bottom_left = 2
+    style.corner_radius_bottom_right = 2
+    style.content_margin_left = 18
+    style.content_margin_right = 18
+    return style
 
 func _close_overlay() -> void:
     if is_instance_valid(overlay):
