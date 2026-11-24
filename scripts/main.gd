@@ -6,13 +6,12 @@ const JOYSTICK_SCRIPT = preload("res://scripts/virtual_joystick.gd")
 const MOD_LOADER_SCRIPT = preload("res://scripts/mod_loader.gd")
 
 const DEFAULT_UPGRADES := [
-    {"id": "swift", "name": "Лёгкие ноги", "desc": "Скорость движения +16%", "effect": "swift"},
-    {"id": "spring", "name": "Пружинный прыжок", "desc": "Прыжок становится выше", "effect": "spring"},
-    {"id": "wave", "name": "Сильная волна", "desc": "Импульс сильнее отталкивает", "effect": "wave"},
-    {"id": "rapid", "name": "Быстрая перезарядка", "desc": "Импульсы доступны чаще", "effect": "rapid"},
-    {"id": "sturdy", "name": "Разгон", "desc": "Немного скорости и силы", "effect": "sturdy"}
+    {"id":"swift","name":"Лёгкие ноги","desc":"Скорость движения +16%","effect":"swift"},
+    {"id":"spring","name":"Пружинный прыжок","desc":"Прыжок становится выше","effect":"spring"},
+    {"id":"wave","name":"Сильная волна","desc":"Импульс сильнее отталкивает","effect":"wave"},
+    {"id":"rapid","name":"Быстрая перезарядка","desc":"Импульсы доступны чаще","effect":"rapid"},
+    {"id":"sturdy","name":"Разгон","desc":"Немного скорости и силы","effect":"sturdy"}
 ]
-
 const DEFAULT_MAPS := [
     {"name":"Сумеречная арена","platforms":[{"x":330,"y":545,"w":250,"h":24},{"x":950,"y":545,"w":250,"h":24},{"x":640,"y":420,"w":190,"h":22},{"x":130,"y":635,"w":170,"h":20},{"x":1150,"y":635,"w":170,"h":20}]},
     {"name":"Парящие острова","platforms":[{"x":250,"y":560,"w":210,"h":22},{"x":500,"y":455,"w":180,"h":22},{"x":780,"y":455,"w":180,"h":22},{"x":1030,"y":560,"w":210,"h":22},{"x":640,"y":330,"w":210,"h":22}]},
@@ -23,7 +22,8 @@ var player: ArenaPlayer
 var rival: ArenaPlayer
 var ui: Control
 var hud: Label
-var overlay: PanelContainer
+var overlay: Control
+var game_controls: Control
 var skin_button: Button
 var platform_nodes: Array[StaticBody2D] = []
 var mod_loader: GameModLoader
@@ -34,7 +34,14 @@ var skin_index := 0
 var score_player := 0
 var score_bot := 0
 var round_index := 1
-var phase := "fight"
+var phase := "menu"
+var game_mode := "bot"
+var bot_difficulty := "normal"
+var bot_accuracy := 0.64
+var active_training_cards: Array[String] = []
+var selected_skin_color := Color("#39d6c5")
+var sound_enabled := true
+var vibration_enabled := true
 
 func _ready() -> void:
     randomize()
@@ -47,6 +54,7 @@ func _ready() -> void:
     _make_arena(0)
     _make_players()
     _make_ui()
+    _show_main_menu()
     _update_hud()
 
 func _draw() -> void:
@@ -68,9 +76,8 @@ func _make_arena(index: int) -> void:
     var platforms: Variant = map_data.get("platforms", [])
     if typeof(platforms) == TYPE_ARRAY:
         for item in platforms:
-            if typeof(item) != TYPE_DICTIONARY:
-                continue
-            _add_platform(Vector2(float(item.get("x", 640)), float(item.get("y", 500))), Vector2(float(item.get("w", 180)), float(item.get("h", 22))))
+            if typeof(item) == TYPE_DICTIONARY:
+                _add_platform(Vector2(float(item.get("x",640)),float(item.get("y",500))),Vector2(float(item.get("w",180)),float(item.get("h",22))))
 
 func _add_platform(at: Vector2, dimensions: Vector2) -> void:
     var body := StaticBody2D.new()
@@ -85,55 +92,55 @@ func _add_platform(at: Vector2, dimensions: Vector2) -> void:
     add_child(body)
     platform_nodes.append(body)
     var visual := Polygon2D.new()
-    visual.polygon = PackedVector2Array([
-        Vector2(-dimensions.x / 2, -dimensions.y / 2),
-        Vector2(dimensions.x / 2, -dimensions.y / 2),
-        Vector2(dimensions.x / 2, dimensions.y / 2),
-        Vector2(-dimensions.x / 2, dimensions.y / 2)
-    ])
+    visual.polygon = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(-dimensions.x/2,dimensions.y/2)])
     visual.color = Color("#354766")
     body.add_child(visual)
     var stripe := Line2D.new()
-    stripe.points = PackedVector2Array([Vector2(-dimensions.x / 2, -dimensions.y / 2), Vector2(dimensions.x / 2, -dimensions.y / 2)])
+    stripe.points = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2)])
     stripe.width = 4.0
     stripe.default_color = Color("#6f91b9")
     body.add_child(stripe)
 
 func _make_players() -> void:
     player = PLAYER_SCRIPT.new()
-    player.body_color = Color("#39d6c5")
-    player.position = Vector2(350, 390)
+    player.body_color = selected_skin_color
+    player.position = Vector2(350,390)
     player.pulse_requested.connect(_spawn_pulse)
     add_child(player)
     rival = PLAYER_SCRIPT.new()
     rival.is_bot = true
     rival.body_color = Color("#ff786f")
-    rival.position = Vector2(930, 390)
+    rival.position = Vector2(930,390)
     rival.target = player
     rival.pulse_requested.connect(_spawn_pulse)
     add_child(rival)
-    _apply_skin()
 
 func _apply_skin() -> void:
-    if mod_loader.skins.is_empty():
-        player.body_color = Color("#39d6c5")
+    var skins: Array[Dictionary] = [
+        {"name":"Бирюзовый","color":"#39d6c5"},
+        {"name":"Лазурный","color":"#4b9cff"},
+        {"name":"Фиолетовый","color":"#b47cff"},
+        {"name":"Золотой","color":"#ffc857"},
+        {"name":"Розовый","color":"#ff78b7"}
+    ]
+    skins.append_array(mod_loader.skins)
+    if skins.is_empty():
         return
-    skin_index = skin_index % mod_loader.skins.size()
-    var skin: Dictionary = mod_loader.skins[skin_index]
-    player.body_color = Color.from_string(str(skin.get("color", "#39d6c5")), Color("#39d6c5"))
+    skin_index = posmod(skin_index, skins.size())
+    var skin: Dictionary = skins[skin_index]
+    selected_skin_color = Color.from_string(str(skin.get("color","#39d6c5")),Color("#39d6c5"))
+    player.body_color = selected_skin_color
     player.queue_redraw()
     if is_instance_valid(skin_button):
-        skin_button.text = "СКИН: " + str(skin.get("name", skin.get("id", "MOD")))
+        skin_button.text = "СКИН: " + str(skin.get("name",skin.get("id","MOD")))
 
 func _cycle_skin() -> void:
-    if mod_loader.skins.is_empty():
-        return
-    skin_index = (skin_index + 1) % mod_loader.skins.size()
+    skin_index += 1
     _apply_skin()
 
 func _spawn_pulse(origin: Vector2, direction: Vector2, force: float, tint: Color) -> void:
     var pulse: EnergyPulse = PULSE_SCRIPT.new()
-    pulse.configure(direction, force, tint)
+    pulse.configure(direction,force,tint)
     pulse.global_position = origin
     add_child(pulse)
 
@@ -143,51 +150,54 @@ func _make_ui() -> void:
     ui = Control.new()
     ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     layer.add_child(ui)
-
     hud = Label.new()
-    hud.position = Vector2(0, 18)
-    hud.size = Vector2(1280, 50)
+    hud.position = Vector2(0,14)
+    hud.size = Vector2(1280,50)
     hud.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    hud.add_theme_font_size_override("font_size", 28)
-    hud.add_theme_color_override("font_color", Color("#f4f7ff"))
+    hud.add_theme_font_size_override("font_size",28)
+    hud.add_theme_color_override("font_color",Color("#f4f7ff"))
     ui.add_child(hud)
-
-    skin_button = _add_button("СКИН", Vector2(1080, 20), Vector2(150, 54))
-    skin_button.visible = not mod_loader.skins.is_empty()
-    skin_button.pressed.connect(_cycle_skin)
-    _apply_skin()
-
+    game_controls = Control.new()
+    game_controls.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    ui.add_child(game_controls)
+    skin_button = _add_button("СКИН",Vector2(1080,18),Vector2(150,50),game_controls)
+    skin_button.pressed.connect(_open_skins)
     var movement_joystick: VirtualJoystick = JOYSTICK_SCRIPT.new()
-    movement_joystick.position = Vector2(35, 535)
-    movement_joystick.size = Vector2(150, 150)
+    movement_joystick.position = Vector2(35,535)
+    movement_joystick.size = Vector2(150,150)
     movement_joystick.value_changed.connect(player.set_move)
-    ui.add_child(movement_joystick)
-
-    var fire_button := _add_button("ВОЛНА", Vector2(205, 585), Vector2(125, 88))
+    game_controls.add_child(movement_joystick)
+    var fire_button := _add_button("ВОЛНА",Vector2(205,585),Vector2(125,88),game_controls)
     fire_button.button_down.connect(player.set_fire.bind(true))
     fire_button.button_up.connect(player.set_fire.bind(false))
-
     var aim_joystick: VirtualJoystick = JOYSTICK_SCRIPT.new()
-    aim_joystick.position = Vector2(1080, 535)
-    aim_joystick.size = Vector2(150, 150)
+    aim_joystick.position = Vector2(1080,535)
+    aim_joystick.size = Vector2(150,150)
     aim_joystick.value_changed.connect(player.set_aim)
-    ui.add_child(aim_joystick)
-
-    var jump_button := _add_button("ПРЫЖОК", Vector2(1090, 405), Vector2(130, 82))
+    game_controls.add_child(aim_joystick)
+    var jump_button := _add_button("ПРЫЖОК",Vector2(1090,405),Vector2(130,82),game_controls)
     jump_button.button_down.connect(player.set_jump.bind(true))
     jump_button.button_up.connect(player.set_jump.bind(false))
+    var menu_button := _add_button("МЕНЮ",Vector2(18,18),Vector2(120,50),game_controls)
+    menu_button.pressed.connect(_show_pause_menu)
+    var cards_button := _add_button("КАРТОЧКИ",Vector2(150,18),Vector2(160,50),game_controls)
+    cards_button.pressed.connect(_open_training_cards)
+    _apply_skin()
 
-func _add_button(caption: String, at: Vector2, dimensions: Vector2) -> Button:
+func _add_button(caption: String, at: Vector2, dimensions: Vector2, parent: Control = null) -> Button:
     var button := Button.new()
     button.text = caption
     button.position = at
     button.size = dimensions
     button.focus_mode = Control.FOCUS_NONE
-    button.add_theme_font_size_override("font_size", 20)
-    button.add_theme_color_override("font_color", Color("#ffffff"))
-    button.add_theme_stylebox_override("normal", _button_style(Color("#263b5b")))
-    button.add_theme_stylebox_override("pressed", _button_style(Color("#3d638e")))
-    ui.add_child(button)
+    button.add_theme_font_size_override("font_size",19)
+    button.add_theme_color_override("font_color",Color("#ffffff"))
+    button.add_theme_stylebox_override("normal",_button_style(Color("#263b5b")))
+    button.add_theme_stylebox_override("pressed",_button_style(Color("#3d638e")))
+    if parent == null:
+        ui.add_child(button)
+    else:
+        parent.add_child(button)
     return button
 
 func _button_style(color: Color) -> StyleBoxFlat:
@@ -212,6 +222,231 @@ func _process(_delta: float) -> void:
     elif rival.global_position.y > 850:
         _finish_round(true)
 
+func _start_game(mode: String) -> void:
+    game_mode = mode
+    score_player = 0
+    score_bot = 0
+    round_index = 1
+    active_training_cards.clear()
+    _reset_player_stats(player)
+    _reset_player_stats(rival)
+    rival.bot_accuracy = bot_accuracy
+    rival.move_speed = 430.0 * (1.0 if bot_difficulty == "easy" else (1.12 if bot_difficulty == "hard" else 1.0))
+    _make_arena(0)
+    player.reset_round(Vector2(350,390))
+    rival.reset_round(Vector2(930,390))
+    phase = "fight"
+    _close_overlay()
+    game_controls.visible = true
+    hud.visible = true
+    _update_hud()
+
+func _reset_player_stats(who: ArenaPlayer) -> void:
+    who.move_speed = 430.0
+    who.jump_speed = -735.0
+    who.pulse_force = 610.0
+    who.pulse_interval = 0.78
+
+func _show_main_menu() -> void:
+    phase = "menu"
+    game_controls.visible = false
+    hud.visible = false
+    _show_panel("KIWI ROUNDS",[
+        ["ИГРАТЬ",Callable(self,"_show_mode_menu")],
+        ["НАСТРОЙКИ",Callable(self,"_show_settings")],
+        ["СКИНЫ",Callable(self,"_open_skins")],
+        ["МОДЫ",Callable(self,"_open_mods")]
+    ],"АРЕНА  •  2D FIGHTER")
+
+func _show_mode_menu() -> void:
+    _show_panel("ВЫБОР РЕЖИМА",[
+        ["ИГРАТЬ ОНЛАЙН",Callable(self,"_show_online_info")],
+        ["ПРОТИВ БОТОВ",Callable(self,"_show_difficulty_menu")],
+        ["ТРЕНИРОВКА",Callable(self,"_start_training")],
+        ["НАЗАД",Callable(self,"_show_main_menu")]
+    ],"Выбери, как хочешь играть")
+
+func _show_difficulty_menu() -> void:
+    _show_panel("СЛОЖНОСТЬ БОТОВ",[
+        ["ЛЁГКАЯ",Callable(self,"_set_easy")],
+        ["ОБЫЧНАЯ",Callable(self,"_set_normal")],
+        ["СЛОЖНАЯ",Callable(self,"_set_hard")],
+        ["НАЗАД",Callable(self,"_show_mode_menu")]
+    ],"Сейчас: " + bot_difficulty.to_upper())
+
+func _set_easy() -> void:
+    bot_difficulty = "easy"
+    bot_accuracy = 0.38
+    _start_game("bot")
+
+func _set_normal() -> void:
+    bot_difficulty = "normal"
+    bot_accuracy = 0.64
+    _start_game("bot")
+
+func _set_hard() -> void:
+    bot_difficulty = "hard"
+    bot_accuracy = 0.88
+    _start_game("bot")
+
+func _start_training() -> void:
+    _start_game("training")
+    _open_training_cards()
+
+func _show_online_info() -> void:
+    _show_panel("ОНЛАЙН",[
+        ["НАЗАД",Callable(self,"_show_mode_menu")]
+    ],"Сетевой матчмейкинг ещё не подключён. Этот пункт подготовлен для будущего онлайн-режима.")
+
+func _show_pause_menu() -> void:
+    phase = "paused"
+    _show_panel("ПАУЗА",[
+        ["ПРОДОЛЖИТЬ",Callable(self,"_resume_game")],
+        ["КАРТОЧКИ",Callable(self,"_open_training_cards")],
+        ["В ГЛАВНОЕ МЕНЮ",Callable(self,"_show_main_menu")]
+    ],"Игра приостановлена")
+
+func _resume_game() -> void:
+    _close_overlay()
+    phase = "fight"
+    game_controls.visible = true
+
+func _show_settings() -> void:
+    _show_panel("НАСТРОЙКИ",[
+        ["ЗВУК: " + ("ВКЛ" if sound_enabled else "ВЫКЛ"),Callable(self,"_toggle_sound")],
+        ["ВИБРАЦИЯ: " + ("ВКЛ" if vibration_enabled else "ВЫКЛ"),Callable(self,"_toggle_vibration")],
+        ["НАЗАД",Callable(self,"_show_main_menu")]
+    ],"Звуковые эффекты и вибрация будут подключены отдельно")
+
+func _toggle_sound() -> void:
+    sound_enabled = not sound_enabled
+    _show_settings()
+
+func _toggle_vibration() -> void:
+    vibration_enabled = not vibration_enabled
+    _show_settings()
+
+func _open_skins() -> void:
+    var skin_count := 5 + mod_loader.skins.size()
+    var current_name := "Выбран скин " + str(skin_index + 1) + " из " + str(skin_count)
+    _show_panel("СКИНЫ",[
+        ["ПРЕДЫДУЩИЙ",Callable(self,"_previous_skin")],
+        ["СЛЕДУЮЩИЙ",Callable(self,"_cycle_skin")],
+        ["ПРИМЕНИТЬ И НАЗАД",Callable(self,"_apply_skin_and_return")],
+        ["В ГЛАВНОЕ МЕНЮ",Callable(self,"_show_main_menu")]
+    ],current_name + "\nЦвет персонажа меняется сразу")
+
+func _previous_skin() -> void:
+    skin_index -= 1
+    _apply_skin()
+    _open_skins()
+
+func _apply_skin_and_return() -> void:
+    _apply_skin()
+    if phase == "fight":
+        _resume_game()
+    else:
+        _show_main_menu()
+
+func _open_mods() -> void:
+    var description := "Найдено модов: %d\nСкинов: %d  •  карт: %d  •  карточек: %d\nПапка: user://mods/\nКаждый мод должен содержать mod.json." % [mod_loader.loaded_mod_names.size(),mod_loader.skins.size(),mod_loader.maps.size(),mod_loader.upgrades.size()]
+    if not mod_loader.loaded_mod_names.is_empty():
+        description += "\n\n" + "\n".join(mod_loader.loaded_mod_names)
+    _show_panel("МОДЫ",[
+        ["ПЕРЕЗАГРУЗИТЬ МОДЫ",Callable(self,"_reload_mods")],
+        ["НАЗАД",Callable(self,"_show_main_menu")]
+    ],description)
+
+func _reload_mods() -> void:
+    mod_loader.load_all()
+    all_maps = DEFAULT_MAPS.duplicate(true)
+    all_maps.append_array(mod_loader.maps)
+    all_upgrades = DEFAULT_UPGRADES.duplicate(true)
+    all_upgrades.append_array(mod_loader.upgrades)
+    _apply_skin()
+    _open_mods()
+
+func _open_training_cards() -> void:
+    if game_mode != "training":
+        _show_panel("КАРТОЧКИ",[
+            ["ОТКРЫТЬ ТРЕНИРОВКУ",Callable(self,"_start_training")],
+            ["НАЗАД",Callable(self,"_resume_game")]
+        ],"Выдавать и удалять карточки можно в режиме тренировки.")
+        return
+    phase = "paused"
+    var lines := "Нажми на карточку, чтобы выдать или убрать её.\nАктивно: %d" % active_training_cards.size()
+    var buttons: Array = []
+    for card in all_upgrades:
+        var id := str(card.get("effect",card.get("id","")))
+        var mark := "✓ " if active_training_cards.has(id) else "+ "
+        buttons.append([mark + str(card.get("name",id)),Callable(self,"_toggle_training_card").bind(id)])
+    buttons.append(["ГОТОВО",Callable(self,"_resume_game")])
+    _show_panel("КАРТОЧКИ ТРЕНИРОВКИ",buttons,lines)
+
+func _toggle_training_card(card_id: String) -> void:
+    if active_training_cards.has(card_id):
+        active_training_cards.erase(card_id)
+    else:
+        active_training_cards.append(card_id)
+    _reset_player_stats(player)
+    for active_id in active_training_cards:
+        player.apply_upgrade(active_id)
+    _open_training_cards()
+
+func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> void:
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color(0.035,0.055,0.09,0.88)
+    ui.add_child(shade)
+    overlay = shade
+    var panel := PanelContainer.new()
+    panel.position = Vector2(360,75)
+    panel.size = Vector2(560,570)
+    panel.add_theme_stylebox_override("panel",_button_style(Color("#172943")))
+    shade.add_child(panel)
+    var column := VBoxContainer.new()
+    column.add_theme_constant_override("separation",10)
+    panel.add_child(column)
+    var title := Label.new()
+    title.text = title_text
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",32)
+    title.add_theme_color_override("font_color",Color("#f4f7ff"))
+    column.add_child(title)
+    if subtitle != "":
+        var info := Label.new()
+        info.text = subtitle
+        info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        info.custom_minimum_size = Vector2(520,80)
+        info.add_theme_font_size_override("font_size",17)
+        info.add_theme_color_override("font_color",Color("#c6d6ee"))
+        column.add_child(info)
+    var scroll := ScrollContainer.new()
+    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    column.add_child(scroll)
+    var list := VBoxContainer.new()
+    list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    list.add_theme_constant_override("separation",8)
+    scroll.add_child(list)
+    for entry in buttons:
+        var button := Button.new()
+        button.text = str(entry[0])
+        button.custom_minimum_size = Vector2(510,58)
+        button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        button.add_theme_font_size_override("font_size",20)
+        button.add_theme_stylebox_override("normal",_button_style(Color("#294467")))
+        button.add_theme_stylebox_override("pressed",_button_style(Color("#3d638e")))
+        button.pressed.connect(entry[1])
+        list.add_child(button)
+
+func _close_overlay() -> void:
+    if is_instance_valid(overlay):
+        overlay.queue_free()
+    overlay = null
+
 func _finish_round(player_won: bool) -> void:
     if phase != "fight":
         return
@@ -223,95 +458,54 @@ func _finish_round(player_won: bool) -> void:
     _update_hud()
     if score_player >= 3 or score_bot >= 3:
         _show_match_end()
+    elif game_mode == "training":
+        _show_training_round_end()
     else:
         _show_upgrade_panel()
 
 func _update_hud() -> void:
     if is_instance_valid(hud):
-        hud.text = "РАУНД %d     ТЫ  %d : %d  CPU" % [round_index, score_player, score_bot]
+        hud.text = "ТРЕНИРОВКА" if game_mode == "training" else "РАУНД %d     ТЫ  %d : %d  CPU" % [round_index,score_player,score_bot]
+
+func _show_training_round_end() -> void:
+    _show_panel("РАУНД ЗАВЕРШЁН",[
+        ["КАРТОЧКИ",Callable(self,"_open_training_cards")],
+        ["СЛЕДУЮЩИЙ РАУНД",Callable(self,"_next_round")],
+        ["В ГЛАВНОЕ МЕНЮ",Callable(self,"_show_main_menu")]
+    ],"В тренировке можно свободно выдавать и убирать карточки.")
 
 func _show_upgrade_panel() -> void:
-    _remove_overlay()
-    overlay = PanelContainer.new()
-    overlay.position = Vector2(330, 170)
-    overlay.size = Vector2(620, 390)
-    overlay.add_theme_stylebox_override("panel", _button_style(Color("#172943")))
-    ui.add_child(overlay)
-    var column := VBoxContainer.new()
-    column.add_theme_constant_override("separation", 14)
-    overlay.add_child(column)
-    var title := Label.new()
-    title.text = "ВЫБЕРИ УЛУЧШЕНИЕ"
-    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size", 28)
-    column.add_child(title)
     var choices: Array = all_upgrades.duplicate(true)
     choices.shuffle()
-    var count := mini(3, choices.size())
-    for i in range(count):
+    var buttons: Array = []
+    for i in range(mini(3,choices.size())):
         var item: Dictionary = choices[i]
-        var button := Button.new()
-        button.text = "%s\n%s" % [str(item.get("name", item.get("id", "Upgrade"))), str(item.get("desc", ""))]
-        button.custom_minimum_size = Vector2(570, 82)
-        button.add_theme_font_size_override("font_size", 19)
-        button.add_theme_stylebox_override("normal", _button_style(Color("#294467")))
-        button.pressed.connect(_choose_upgrade.bind(str(item.get("effect", item.get("id", "")))))
-        column.add_child(button)
+        buttons.append([str(item.get("name",item.get("id","Улучшение"))) + "\n" + str(item.get("desc","")),Callable(self,"_choose_upgrade").bind(str(item.get("effect",item.get("id",""))))])
+    _show_panel("ВЫБЕРИ УЛУЧШЕНИЕ",buttons,"После выбора начнётся следующий раунд")
 
 func _choose_upgrade(upgrade_id: String) -> void:
-    if phase != "upgrade":
-        return
     player.apply_upgrade(upgrade_id)
-    var bot_choice: Dictionary = all_upgrades.pick_random()
-    rival.apply_upgrade(str(bot_choice.get("effect", bot_choice.get("id", ""))))
-    _remove_overlay()
+    if not all_upgrades.is_empty():
+        var bot_choice: Dictionary = all_upgrades.pick_random()
+        rival.apply_upgrade(str(bot_choice.get("effect",bot_choice.get("id",""))))
+    _next_round()
+
+func _next_round() -> void:
+    _close_overlay()
     round_index += 1
     _make_arena(round_index - 1)
-    player.reset_round(Vector2(350, 390))
-    rival.reset_round(Vector2(930, 390))
+    player.reset_round(Vector2(350,390))
+    rival.reset_round(Vector2(930,390))
     phase = "fight"
+    game_controls.visible = true
     _update_hud()
 
 func _show_match_end() -> void:
-    _remove_overlay()
-    overlay = PanelContainer.new()
-    overlay.position = Vector2(390, 230)
-    overlay.size = Vector2(500, 250)
-    overlay.add_theme_stylebox_override("panel", _button_style(Color("#172943")))
-    ui.add_child(overlay)
-    var column := VBoxContainer.new()
-    overlay.add_child(column)
-    var title := Label.new()
-    title.text = "ПОБЕДА!" if score_player >= 3 else "ПОБЕДИЛ CPU"
-    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size", 34)
-    column.add_child(title)
-    var again := Button.new()
-    again.text = "СЫГРАТЬ ЕЩЁ"
-    again.custom_minimum_size = Vector2(460, 90)
-    again.pressed.connect(_restart_match)
-    column.add_child(again)
+    var result := "ПОБЕДА!" if score_player >= 3 else "ПОБЕДИЛ CPU"
+    _show_panel(result,[
+        ["СЫГРАТЬ ЕЩЁ",Callable(self,"_restart_match")],
+        ["ГЛАВНОЕ МЕНЮ",Callable(self,"_show_main_menu")]
+    ],"Счёт: %d : %d" % [score_player,score_bot])
 
 func _restart_match() -> void:
-    score_player = 0
-    score_bot = 0
-    round_index = 1
-    player.move_speed = 430.0
-    player.jump_speed = -735.0
-    player.pulse_force = 610.0
-    player.pulse_interval = 0.78
-    rival.move_speed = 430.0
-    rival.jump_speed = -735.0
-    rival.pulse_force = 610.0
-    rival.pulse_interval = 0.78
-    _remove_overlay()
-    _make_arena(0)
-    player.reset_round(Vector2(350, 390))
-    rival.reset_round(Vector2(930, 390))
-    phase = "fight"
-    _update_hud()
-
-func _remove_overlay() -> void:
-    if is_instance_valid(overlay):
-        overlay.queue_free()
-    overlay = null
+    _start_game(game_mode)
