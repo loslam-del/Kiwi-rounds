@@ -198,40 +198,39 @@ func _physics_process(delta: float) -> void:
         velocity.y = minf(velocity.y, 270.0)
     queue_redraw()
 func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
-    # Gravity pulls each limb down; acceleration and movement swing them.
-    # Spring torque keeps the joints near a natural pose without locking them.
-    var walk_drive := move_input * (1.0 if is_on_floor() else 0.25)
-    var jump_drive := clampf(-velocity.y / 900.0, -0.8, 0.8)
-    var arm_target_back := -walk_drive * 0.62 - jump_drive * 0.18
-    var arm_target_front := walk_drive * 0.62 - jump_drive * 0.18
-    var leg_target_back := walk_drive * 0.48 + jump_drive * 0.25
-    var leg_target_front := -walk_drive * 0.48 + jump_drive * 0.25
-    var accel_swing := clampf(horizontal_acceleration / 2200.0, -1.2, 1.2)
+    # Angular spring model: omega=7 rad/s, damping ratio=0.9.
+    # Semi-implicit integration keeps the joints stable at normal mobile frame rates.
+    var walk_drive := move_input * (1.0 if is_on_floor() else 0.28)
+    var jump_drive := clampf(-velocity.y / 900.0, -0.85, 0.85)
+    var accel_swing := clampf(horizontal_acceleration / 2200.0, -1.25, 1.25)
+    var arm_back_target := -walk_drive * 0.72 - jump_drive * 0.22
+    var arm_front_target := walk_drive * 0.72 - jump_drive * 0.22
+    var leg_back_target := walk_drive * 0.62 + jump_drive * 0.30
+    var leg_front_target := -walk_drive * 0.62 + jump_drive * 0.30
+    var spring_k := 49.0
+    var damping_rate := 12.6
 
-    arm_back_angular_velocity += (arm_target_back - arm_back_angle) * 24.0 * delta
-    arm_front_angular_velocity += (arm_target_front - arm_front_angle) * 24.0 * delta
-    leg_back_angular_velocity += (leg_target_back - leg_back_angle) * 20.0 * delta
-    leg_front_angular_velocity += (leg_target_front - leg_front_angle) * 20.0 * delta
+    arm_back_angular_velocity += ((arm_back_target - arm_back_angle) * spring_k - arm_back_angular_velocity * damping_rate - sin(arm_back_angle) * 5.0 - accel_swing * 1.55) * delta
+    arm_front_angular_velocity += ((arm_front_target - arm_front_angle) * spring_k - arm_front_angular_velocity * damping_rate - sin(arm_front_angle) * 5.0 - accel_swing * 1.55) * delta
+    leg_back_angular_velocity += ((leg_back_target - leg_back_angle) * spring_k - leg_back_angular_velocity * damping_rate - sin(leg_back_angle) * 6.0 + accel_swing * 1.25) * delta
+    leg_front_angular_velocity += ((leg_front_target - leg_front_angle) * spring_k - leg_front_angular_velocity * damping_rate - sin(leg_front_angle) * 6.0 + accel_swing * 1.25) * delta
 
-    arm_back_angular_velocity += (-sin(arm_back_angle) * 4.0 - accel_swing * 1.2) * delta
-    arm_front_angular_velocity += (-sin(arm_front_angle) * 4.0 - accel_swing * 1.2) * delta
-    leg_back_angular_velocity += (-sin(leg_back_angle) * 4.8 + accel_swing * 0.9) * delta
-    leg_front_angular_velocity += (-sin(leg_front_angle) * 4.8 + accel_swing * 0.9) * delta
+    arm_back_angle = clampf(arm_back_angle + arm_back_angular_velocity * delta, -1.48, 1.48)
+    arm_front_angle = clampf(arm_front_angle + arm_front_angular_velocity * delta, -1.48, 1.48)
+    leg_back_angle = clampf(leg_back_angle + leg_back_angular_velocity * delta, -1.18, 1.18)
+    leg_front_angle = clampf(leg_front_angle + leg_front_angular_velocity * delta, -1.18, 1.18)
 
-    var damping := exp(-5.2 * delta)
-    arm_back_angular_velocity *= damping
-    arm_front_angular_velocity *= damping
-    leg_back_angular_velocity *= damping
-    leg_front_angular_velocity *= damping
-    arm_back_angle += arm_back_angular_velocity * delta
-    arm_front_angle += arm_front_angular_velocity * delta
-    leg_back_angle += leg_back_angular_velocity * delta
-    leg_front_angle += leg_front_angular_velocity * delta
 
-    arm_back_angle = clampf(arm_back_angle, -1.35, 1.35)
-    arm_front_angle = clampf(arm_front_angle, -1.35, 1.35)
-    leg_back_angle = clampf(leg_back_angle, -1.05, 1.05)
-    leg_front_angle = clampf(leg_front_angle, -1.05, 1.05)
+func apply_hit_impulse(direction: Vector2, force: float) -> void:
+    var side := signf(direction.x)
+    if side == 0.0:
+        side = 1.0
+    var kick := clampf(force / 780.0, 0.45, 1.8)
+    arm_back_angular_velocity -= side * 3.8 * kick
+    arm_front_angular_velocity -= side * 4.6 * kick
+    leg_back_angular_velocity -= side * 2.2 * kick
+    leg_front_angular_velocity -= side * 2.8 * kick
+    hitstun_timer = maxf(hitstun_timer, 0.16)
 
 
 func _read_keyboard() -> void:
@@ -406,12 +405,12 @@ func _draw() -> void:
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
 
     # Physical, jointed-looking limbs with independent angular momentum.
-    var leg_len := 12.0
-    var arm_len := 10.0
-    var hip_back := Vector2(-8.0, 10.0)
-    var hip_front := Vector2(8.0, 10.0)
-    var shoulder_back := Vector2(-16.0, -7.0)
-    var shoulder_front := Vector2(15.0, -7.0)
+    var leg_len := 16.0
+    var arm_len := 14.0
+    var hip_back := Vector2(-7.5, 9.0)
+    var hip_front := Vector2(7.5, 9.0)
+    var shoulder_back := Vector2(-14.0, -8.0)
+    var shoulder_front := Vector2(14.0, -8.0)
     var knee_back := hip_back + Vector2(sin(leg_back_angle) * leg_len, cos(leg_back_angle) * leg_len)
     var knee_front := hip_front + Vector2(sin(leg_front_angle) * leg_len, cos(leg_front_angle) * leg_len)
     var foot_back := knee_back + Vector2(sin(leg_back_angle * 0.72) * leg_len, cos(leg_back_angle * 0.72) * leg_len)
@@ -420,12 +419,12 @@ func _draw() -> void:
     draw_line(hip_back, knee_back, body_color.darkened(0.18), 5.5, true)
     draw_line(knee_back, foot_back, outline, 8.0, true)
     draw_line(knee_back, foot_back, body_color.darkened(0.08), 5.0, true)
-    draw_line(foot_back + Vector2(-3, 0), foot_back + Vector2(6, 0), outline, 5.0, true)
+    draw_line(foot_back + Vector2(-4, 0), foot_back + Vector2(7, 0), outline, 6.5, true)
     draw_line(hip_front, knee_front, outline, 9.0, true)
     draw_line(hip_front, knee_front, body_color.lightened(0.08), 5.5, true)
     draw_line(knee_front, foot_front, outline, 8.0, true)
     draw_line(knee_front, foot_front, body_color, 5.0, true)
-    draw_line(foot_front + Vector2(-3, 0), foot_front + Vector2(7, 0), outline, 5.0, true)
+    draw_line(foot_front + Vector2(-4, 0), foot_front + Vector2(8, 0), outline, 6.5, true)
     draw_circle(hip_back, 4.0, body_color.darkened(0.15))
     draw_circle(hip_front, 4.0, body_color)
 
@@ -433,15 +432,15 @@ func _draw() -> void:
     var elbow_front := shoulder_front + Vector2(sin(arm_front_angle) * arm_len, cos(arm_front_angle) * arm_len)
     var hand_back := elbow_back + Vector2(sin(arm_back_angle * 0.8) * arm_len, cos(arm_back_angle * 0.8) * arm_len)
     var hand_front := elbow_front + Vector2(sin(arm_front_angle * 0.8) * arm_len, cos(arm_front_angle * 0.8) * arm_len)
-    draw_line(shoulder_back, elbow_back, outline, 8.5, true)
-    draw_line(shoulder_back, elbow_back, body_color.darkened(0.18), 5.0, true)
-    draw_line(elbow_back, hand_back, outline, 7.5, true)
-    draw_line(elbow_back, hand_back, body_color.darkened(0.08), 4.5, true)
+    draw_line(shoulder_back, elbow_back, outline, 9.5, true)
+    draw_line(shoulder_back, elbow_back, body_color.darkened(0.18), 6.0, true)
+    draw_line(elbow_back, hand_back, outline, 8.5, true)
+    draw_line(elbow_back, hand_back, body_color.darkened(0.08), 5.5, true)
     draw_circle(hand_back, 3.2, body_color.darkened(0.08))
-    draw_line(shoulder_front, elbow_front, outline, 8.5, true)
-    draw_line(shoulder_front, elbow_front, body_color.lightened(0.08), 5.0, true)
-    draw_line(elbow_front, hand_front, outline, 7.5, true)
-    draw_line(elbow_front, hand_front, body_color, 4.5, true)
+    draw_line(shoulder_front, elbow_front, outline, 9.5, true)
+    draw_line(shoulder_front, elbow_front, body_color.lightened(0.08), 6.0, true)
+    draw_line(elbow_front, hand_front, outline, 8.5, true)
+    draw_line(elbow_front, hand_front, body_color, 5.5, true)
     draw_circle(hand_front, 3.2, body_color)
     draw_circle(shoulder_back, 4.0, body_color.darkened(0.15))
     draw_circle(shoulder_front, 4.0, body_color)
