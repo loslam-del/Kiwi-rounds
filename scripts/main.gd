@@ -325,7 +325,10 @@ func _apply_skin() -> void:
     _save_settings()
 
 func _cycle_skin() -> void:
-    skin_index += 1
+    var skins := _get_skins()
+    if skins.is_empty():
+        return
+    skin_index = posmod(skin_index + 1, skins.size())
     _apply_skin()
 
 func _on_player_hit(_direction: Vector2, hit_target: Node2D) -> void:
