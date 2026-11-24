@@ -1477,7 +1477,9 @@ func _finish_round(player_won: bool) -> void:
     else:
         score_bot += 1
     _update_hud()
-    if score_player >= 5 or score_bot >= 5:
+    if game_mode == "training":
+        _show_training_round_end()
+    elif score_player >= 5 or score_bot >= 5:
         _show_match_end()
     elif game_mode == "training":
         _show_training_round_end()
