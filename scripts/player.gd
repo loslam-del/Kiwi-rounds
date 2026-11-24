@@ -92,8 +92,11 @@ func _ready() -> void:
     var shape := CollisionShape2D.new()
     floor_snap_length = 8.0
     safe_margin = 0.08
-    var core := CircleShape2D.new()
-    core.radius = 21.0
+    # A tall capsule follows the visible fighter silhouette more closely than
+    # the old circular hitbox, so feet and knees no longer sink through platforms.
+    var core := CapsuleShape2D.new()
+    core.radius = 18.0
+    core.height = 58.0
     shape.shape = core
     add_child(shape)
 
@@ -447,9 +450,9 @@ func _draw() -> void:
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
 
     # Far-side limbs are drawn first so they emerge naturally from behind the torso.
-    var hip_back := Vector2(-6.5, 8.0)
-    var hip_front := Vector2(6.5, 8.0)
-    var leg_len := 17.0
+    var hip_back := Vector2(-6.5, 5.5)
+    var hip_front := Vector2(6.5, 5.5)
+    var leg_len := 11.5
     var knee_back := hip_back + Vector2(sin(leg_back_angle) * leg_len, cos(leg_back_angle) * leg_len)
     var knee_front := hip_front + Vector2(sin(leg_front_angle) * leg_len, cos(leg_front_angle) * leg_len)
     var foot_back_angle := leg_back_angle + knee_back_angle
