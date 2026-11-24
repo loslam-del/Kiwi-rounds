@@ -194,6 +194,53 @@ function handleMessage(ws, raw) {
     return;
   }
 
+  if (message.type === "start_match") {
+    const room = client.roomId ? rooms.get(client.roomId) : null;
+    if (!room) {
+      send(ws, "error", { code: "NOT_IN_ROOM", message: "Сначала войди в комнату" });
+      return;
+    }
+    if (room.hostId !== client.id) {
+      send(ws, "error", { code: "HOST_ONLY", message: "Начать матч может только создатель комнаты" });
+      return;
+    }
+    if (room.players.size !== 2) {
+      send(ws, "error", { code: "NEED_TWO_PLAYERS", message: "Для боя нужны ровно два игрока" });
+      return;
+    }
+    for (const player of room.players.values()) send(player.ws, "match_started", { roomId: room.id, hostId: room.hostId });
+    return;
+  }
+
+  if (message.type === "game_input") {
+    const room = client.roomId ? rooms.get(client.roomId) : null;
+    if (!room || room.players.size !== 2) return;
+    if (room.hostId === client.id) return;
+    const host = room.players.get(room.hostId);
+    if (host) send(host.ws, "game_input", {
+      playerId: client.id,
+      input: {
+        move: Math.max(-1, Math.min(1, Number(message.input?.move) || 0)),
+        aimX: Math.max(-1, Math.min(1, Number(message.input?.aimX) || 0)),
+        aimY: Math.max(-1, Math.min(1, Number(message.input?.aimY) || 0)),
+        jump: Boolean(message.input?.jump),
+        fire: Boolean(message.input?.fire),
+        reload: Boolean(message.input?.reload)
+      }
+    });
+    return;
+  }
+
+  if (message.type === "game_state") {
+    const room = client.roomId ? rooms.get(client.roomId) : null;
+    if (!room || room.hostId !== client.id || room.players.size !== 2) return;
+    const state = message.state;
+    if (!state || typeof state !== "object") return;
+    const guest = [...room.players.values()].find((p) => p.id !== client.id);
+    if (guest) send(guest.ws, "game_state", { state });
+    return;
+  }
+
   send(ws, "error", { code: "UNKNOWN_MESSAGE", message: "Неизвестная команда" });
 }
 
