@@ -99,6 +99,16 @@ func _spawn_impact_particles() -> void:
     ring.default_color = tint.lightened(0.35)
     ring.antialiased = true
     burst.add_child(ring)
+    var outer_ring := Line2D.new()
+    var outer_points := PackedVector2Array()
+    for i in range(33):
+        var angle := TAU * float(i) / 32.0
+        outer_points.append(Vector2(cos(angle),sin(angle)) * 22.0)
+    outer_ring.points = outer_points
+    outer_ring.width = 1.4
+    outer_ring.default_color = Color(1.0,1.0,1.0,0.72)
+    outer_ring.antialiased = true
+    burst.add_child(outer_ring)
     var ring_tween := burst.create_tween()
     ring_tween.set_parallel(true)
     ring_tween.tween_property(burst,"scale",Vector2(3.0,3.0),0.22)
@@ -106,14 +116,14 @@ func _spawn_impact_particles() -> void:
     ring_tween.chain().tween_callback(burst.queue_free)
     var particles := CPUParticles2D.new()
     particles.one_shot = true
-    particles.amount = 14
-    particles.lifetime = 0.24
+    particles.amount = 22
+    particles.lifetime = 0.32
     particles.explosiveness = 1.0
     particles.direction = direction
     particles.spread = 155.0
-    particles.initial_velocity_min = 90.0
-    particles.initial_velocity_max = 260.0
-    particles.gravity = Vector2(0.0,220.0)
+    particles.initial_velocity_min = 120.0
+    particles.initial_velocity_max = 380.0
+    particles.gravity = Vector2(0.0,160.0)
     particles.scale_amount_min = 2.4
     particles.scale_amount_max = 2.4
     particles.color = tint.lightened(0.35)
