@@ -70,16 +70,20 @@ var kiwi_aura := false
 # simulated independently, while shoulder/hip anchors follow the torso.
 var arm_back_angle := -0.18
 var arm_front_angle := 0.18
-var leg_back_angle := -0.08
-var leg_front_angle := 0.08
+var leg_back_angle := -0.12
+var leg_front_angle := 0.12
+var knee_back_angle := -0.28
+var knee_front_angle := 0.28
 var arm_back_angular_velocity := 0.0
 var arm_front_angular_velocity := 0.0
-var elbow_back_angle := -0.48
-var elbow_front_angle := 0.48
+var elbow_back_angle := -0.72
+var elbow_front_angle := 0.72
 var elbow_back_angular_velocity := 0.0
 var elbow_front_angular_velocity := 0.0
 var leg_back_angular_velocity := 0.0
 var leg_front_angular_velocity := 0.0
+var knee_back_angular_velocity := 0.0
+var knee_front_angular_velocity := 0.0
 
 
 func _ready() -> void:
@@ -202,34 +206,40 @@ func _physics_process(delta: float) -> void:
         velocity.y = minf(velocity.y, 270.0)
     queue_redraw()
 func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
-    # Angular spring model: omega=7 rad/s, damping ratio=0.9.
-    # Semi-implicit integration keeps the joints stable at normal mobile frame rates.
-    var walk_drive := move_input * (1.0 if is_on_floor() else 0.28)
+    var moving := is_on_floor() and absf(move_input) > 0.05
+    var walk_drive := move_input if is_on_floor() else move_input * 0.22
     var jump_drive := clampf(-velocity.y / 900.0, -0.85, 0.85)
-    var accel_swing := clampf(horizontal_acceleration / 2200.0, -1.25, 1.25)
-    # Arms rest splayed away from the torso; elbows have their own spring joints.
-    var arm_back_target := -0.82 - walk_drive * 0.34 - jump_drive * 0.18
-    var arm_front_target := 0.82 + walk_drive * 0.34 - jump_drive * 0.18
-    var elbow_back_target := -0.58 - walk_drive * 0.12
-    var elbow_front_target := 0.58 + walk_drive * 0.12
-    var leg_back_target := walk_drive * 0.62 + jump_drive * 0.30
-    var leg_front_target := -walk_drive * 0.62 + jump_drive * 0.30
-    var spring_k := 49.0
-    var damping_rate := 12.6
+    var accel_swing := clampf(horizontal_acceleration / 2200.0, -1.1, 1.1)
 
-    arm_back_angular_velocity += ((arm_back_target - arm_back_angle) * spring_k - arm_back_angular_velocity * damping_rate - sin(arm_back_angle) * 3.0 - accel_swing * 1.25) * delta
-    arm_front_angular_velocity += ((arm_front_target - arm_front_angle) * spring_k - arm_front_angular_velocity * damping_rate - sin(arm_front_angle) * 3.0 - accel_swing * 1.25) * delta
-    elbow_back_angular_velocity += ((elbow_back_target - elbow_back_angle) * 64.0 - elbow_back_angular_velocity * 14.0) * delta
-    elbow_front_angular_velocity += ((elbow_front_target - elbow_front_angle) * 64.0 - elbow_front_angular_velocity * 14.0) * delta
-    leg_back_angular_velocity += ((leg_back_target - leg_back_angle) * spring_k - leg_back_angular_velocity * damping_rate - sin(leg_back_angle) * 6.0 + accel_swing * 1.25) * delta
-    leg_front_angular_velocity += ((leg_front_target - leg_front_angle) * spring_k - leg_front_angular_velocity * damping_rate - sin(leg_front_angle) * 6.0 + accel_swing * 1.25) * delta
+    # Shoulder joints swing outward; elbows and knees have independent spring motion.
+    var arm_back_target := -0.92 - walk_drive * 0.30 - jump_drive * 0.16
+    var arm_front_target := 0.92 + walk_drive * 0.30 - jump_drive * 0.16
+    var elbow_back_target := -0.78 + walk_drive * 0.16
+    var elbow_front_target := 0.78 - walk_drive * 0.16
+    var leg_back_target := -walk_drive * 0.58 + jump_drive * 0.22
+    var leg_front_target := walk_drive * 0.58 + jump_drive * 0.22
+    var knee_back_target := (0.62 if moving and sin(animation_time) > 0.0 else -0.12) + absf(jump_drive) * 0.28
+    var knee_front_target := (0.62 if moving and sin(animation_time) <= 0.0 else -0.12) + absf(jump_drive) * 0.28
+
+    var spring_k := 58.0
+    var damping_rate := 13.5
+    arm_back_angular_velocity += ((arm_back_target - arm_back_angle) * spring_k - arm_back_angular_velocity * damping_rate - accel_swing * 1.0) * delta
+    arm_front_angular_velocity += ((arm_front_target - arm_front_angle) * spring_k - arm_front_angular_velocity * damping_rate - accel_swing * 1.0) * delta
+    elbow_back_angular_velocity += ((elbow_back_target - elbow_back_angle) * 72.0 - elbow_back_angular_velocity * 15.0) * delta
+    elbow_front_angular_velocity += ((elbow_front_target - elbow_front_angle) * 72.0 - elbow_front_angular_velocity * 15.0) * delta
+    leg_back_angular_velocity += ((leg_back_target - leg_back_angle) * spring_k - leg_back_angular_velocity * damping_rate + accel_swing * 0.8) * delta
+    leg_front_angular_velocity += ((leg_front_target - leg_front_angle) * spring_k - leg_front_angular_velocity * damping_rate + accel_swing * 0.8) * delta
+    knee_back_angular_velocity += ((knee_back_target - knee_back_angle) * 48.0 - knee_back_angular_velocity * 12.0) * delta
+    knee_front_angular_velocity += ((knee_front_target - knee_front_angle) * 48.0 - knee_front_angular_velocity * 12.0) * delta
 
     arm_back_angle = clampf(arm_back_angle + arm_back_angular_velocity * delta, -1.65, 1.65)
     arm_front_angle = clampf(arm_front_angle + arm_front_angular_velocity * delta, -1.65, 1.65)
-    elbow_back_angle = clampf(elbow_back_angle + elbow_back_angular_velocity * delta, -1.35, 1.35)
-    elbow_front_angle = clampf(elbow_front_angle + elbow_front_angular_velocity * delta, -1.35, 1.35)
-    leg_back_angle = clampf(leg_back_angle + leg_back_angular_velocity * delta, -1.18, 1.18)
-    leg_front_angle = clampf(leg_front_angle + leg_front_angular_velocity * delta, -1.18, 1.18)
+    elbow_back_angle = clampf(elbow_back_angle + elbow_back_angular_velocity * delta, -1.5, 1.5)
+    elbow_front_angle = clampf(elbow_front_angle + elbow_front_angular_velocity * delta, -1.5, 1.5)
+    leg_back_angle = clampf(leg_back_angle + leg_back_angular_velocity * delta, -0.9, 0.9)
+    leg_front_angle = clampf(leg_front_angle + leg_front_angular_velocity * delta, -0.9, 0.9)
+    knee_back_angle = clampf(knee_back_angle + knee_back_angular_velocity * delta, -0.35, 0.95)
+    knee_front_angle = clampf(knee_front_angle + knee_front_angular_velocity * delta, -0.35, 0.95)
 
 
 func apply_hit_impulse(direction: Vector2, force: float) -> void:
@@ -409,76 +419,84 @@ func reset_round(spawn: Vector2) -> void:
 func _draw() -> void:
     var moving := is_on_floor() and absf(velocity.x) > 35.0
     var stride := sin(animation_time) if moving else 0.0
-    var bob := absf(stride) * 2.0 if moving else sin(animation_time * 2.0) * 0.7
+    var bob := absf(stride) * 1.4 if moving else sin(animation_time * 2.0) * 0.45
     var center := Vector2(0.0, -8.0 + bob)
     var outline := Color("#142333")
-    var face := Color("#102536")
+    var dark := body_color.darkened(0.22)
+    var light := body_color.lightened(0.12)
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
 
-    # Physical, jointed-looking limbs with independent angular momentum.
-    var leg_len := 16.0
-    var arm_len := 14.0
-    var hip_back := Vector2(-7.5, 9.0)
-    var hip_front := Vector2(7.5, 9.0)
-    var shoulder_back := Vector2(-14.0, -8.0)
-    var shoulder_front := Vector2(14.0, -8.0)
+    # Far-side limbs are drawn first so they emerge naturally from behind the torso.
+    var hip_back := Vector2(-6.5, 8.0)
+    var hip_front := Vector2(6.5, 8.0)
+    var leg_len := 17.0
     var knee_back := hip_back + Vector2(sin(leg_back_angle) * leg_len, cos(leg_back_angle) * leg_len)
     var knee_front := hip_front + Vector2(sin(leg_front_angle) * leg_len, cos(leg_front_angle) * leg_len)
-    var foot_back := knee_back + Vector2(sin(leg_back_angle * 0.72) * leg_len, cos(leg_back_angle * 0.72) * leg_len)
-    var foot_front := knee_front + Vector2(sin(leg_front_angle * 0.72) * leg_len, cos(leg_front_angle * 0.72) * leg_len)
-    draw_line(hip_back, knee_back, outline, 9.0, true)
-    draw_line(hip_back, knee_back, body_color.darkened(0.18), 5.5, true)
-    draw_line(knee_back, foot_back, outline, 8.0, true)
-    draw_line(knee_back, foot_back, body_color.darkened(0.08), 5.0, true)
-    draw_line(foot_back + Vector2(-4, 0), foot_back + Vector2(7, 0), outline, 6.5, true)
-    draw_line(hip_front, knee_front, outline, 9.0, true)
-    draw_line(hip_front, knee_front, body_color.lightened(0.08), 5.5, true)
-    draw_line(knee_front, foot_front, outline, 8.0, true)
-    draw_line(knee_front, foot_front, body_color, 5.0, true)
-    draw_line(foot_front + Vector2(-4, 0), foot_front + Vector2(8, 0), outline, 6.5, true)
-    draw_circle(hip_back, 4.0, body_color.darkened(0.15))
-    draw_circle(hip_front, 4.0, body_color)
+    var foot_back_angle := leg_back_angle + knee_back_angle
+    var foot_front_angle := leg_front_angle + knee_front_angle
+    var foot_back := knee_back + Vector2(sin(foot_back_angle) * leg_len, cos(foot_back_angle) * leg_len)
+    var foot_front := knee_front + Vector2(sin(foot_front_angle) * leg_len, cos(foot_front_angle) * leg_len)
+    draw_line(hip_back, knee_back, outline, 10.0, true)
+    draw_line(hip_back, knee_back, dark, 6.0, true)
+    draw_line(knee_back, foot_back, outline, 9.0, true)
+    draw_line(knee_back, foot_back, dark, 5.5, true)
+    draw_line(foot_back + Vector2(-5,0), foot_back + Vector2(7,0), outline, 7.0, true)
+    draw_line(foot_back + Vector2(-4,0), foot_back + Vector2(6,0), dark, 4.0, true)
 
-    var elbow_back := shoulder_back + Vector2(sin(arm_back_angle) * arm_len, cos(arm_back_angle) * arm_len)
-    var elbow_front := shoulder_front + Vector2(sin(arm_front_angle) * arm_len, cos(arm_front_angle) * arm_len)
-    var hand_back_angle := arm_back_angle + elbow_back_angle
-    var hand_front_angle := arm_front_angle + elbow_front_angle
-    var hand_back := elbow_back + Vector2(sin(hand_back_angle) * arm_len, cos(hand_back_angle) * arm_len)
-    var hand_front := elbow_front + Vector2(sin(hand_front_angle) * arm_len, cos(hand_front_angle) * arm_len)
-    draw_line(shoulder_back, elbow_back, outline, 9.5, true)
-    draw_line(shoulder_back, elbow_back, body_color.darkened(0.18), 6.0, true)
-    draw_line(elbow_back, hand_back, outline, 8.5, true)
-    draw_line(elbow_back, hand_back, body_color.darkened(0.08), 5.5, true)
-    draw_circle(hand_back, 3.2, body_color.darkened(0.08))
-    draw_line(shoulder_front, elbow_front, outline, 9.5, true)
-    draw_line(shoulder_front, elbow_front, body_color.lightened(0.08), 6.0, true)
-    draw_line(elbow_front, hand_front, outline, 8.5, true)
-    draw_line(elbow_front, hand_front, body_color, 5.5, true)
-    draw_circle(hand_front, 3.2, body_color)
-    draw_circle(shoulder_back, 4.0, body_color.darkened(0.15))
-    draw_circle(shoulder_front, 4.0, body_color)
+    var shoulder_back := Vector2(-13.0, -7.0)
+    var shoulder_front := Vector2(13.0, -7.0)
+    var upper_arm_len := 15.0
+    var forearm_len := 14.0
+    var elbow_back := shoulder_back + Vector2(sin(arm_back_angle) * upper_arm_len, cos(arm_back_angle) * upper_arm_len)
+    var elbow_front := shoulder_front + Vector2(sin(arm_front_angle) * upper_arm_len, cos(arm_front_angle) * upper_arm_len)
+    var wrist_back_angle := arm_back_angle + elbow_back_angle
+    var wrist_front_angle := arm_front_angle + elbow_front_angle
+    var hand_back := elbow_back + Vector2(sin(wrist_back_angle) * forearm_len, cos(wrist_back_angle) * forearm_len)
+    var hand_front := elbow_front + Vector2(sin(wrist_front_angle) * forearm_len, cos(wrist_front_angle) * forearm_len)
+    draw_line(shoulder_back, elbow_back, outline, 10.0, true)
+    draw_line(shoulder_back, elbow_back, dark, 6.2, true)
+    draw_line(elbow_back, hand_back, outline, 9.0, true)
+    draw_line(elbow_back, hand_back, dark, 5.7, true)
+    draw_circle(hand_back, 4.0, dark)
 
-    # Rounded armored body with a readable face and bright rim.
-    draw_circle(center, 28.0, Color(body_color, 0.07))
-    draw_circle(center, 23.0, outline)
-    draw_circle(center, 20.0, body_color)
-    draw_arc(center, 19.6, 0.0, TAU, 48, body_color.lightened(0.52), 1.8, true)
-    draw_circle(center + Vector2(-5.0,-7.0), 7.0, Color(1.0,1.0,1.0,0.12))
-    draw_circle(center + Vector2(-6.0,-2.0), 2.0, face)
-    draw_circle(center + Vector2(6.0,-2.0), 2.0, face)
-    draw_line(center + Vector2(-3.0,6.0), center + Vector2(3.0,6.0), face, 1.8, true)
-    draw_arc(center + Vector2(0,2), 23.0, PI*0.12, PI*0.88, 28, Color(1,1,1,0.24), 1.3, true)
+    # Compact rounded torso leaves the hips and shoulders readable.
+    draw_circle(center, 24.0, Color(body_color, 0.08))
+    draw_circle(center, 20.0, outline)
+    draw_circle(center, 17.5, body_color)
+    draw_arc(center, 17.2, 0.0, TAU, 48, light, 1.5, true)
+    draw_circle(center + Vector2(-4.5,-6.0), 5.5, Color(1,1,1,0.12))
+    draw_circle(center + Vector2(-5.5,-2.0), 1.8, Color("#102536"))
+    draw_circle(center + Vector2(5.5,-2.0), 1.8, Color("#102536"))
+    draw_line(center + Vector2(-2.5,5.0), center + Vector2(2.5,5.0), Color("#102536"), 1.5, true)
+
+    # Near-side leg is in front of the torso, with a visible knee and foot.
+    draw_line(hip_front, knee_front, outline, 10.0, true)
+    draw_line(hip_front, knee_front, light, 6.0, true)
+    draw_circle(knee_front, 3.8, body_color.lightened(0.05))
+    draw_line(knee_front, foot_front, outline, 9.0, true)
+    draw_line(knee_front, foot_front, body_color, 5.4, true)
+    draw_line(foot_front + Vector2(-5,0), foot_front + Vector2(8,0), outline, 7.0, true)
+    draw_line(foot_front + Vector2(-4,0), foot_front + Vector2(7,0), light, 4.0, true)
+    draw_circle(hip_front, 4.0, light)
+
+    # Near-side arm stays visibly separated from the body and bends at the elbow.
+    draw_line(shoulder_front, elbow_front, outline, 10.0, true)
+    draw_line(shoulder_front, elbow_front, light, 6.2, true)
+    draw_circle(elbow_front, 4.2, light)
+    draw_line(elbow_front, hand_front, outline, 9.0, true)
+    draw_line(elbow_front, hand_front, body_color, 5.7, true)
+    draw_circle(hand_front, 4.0, light)
+    draw_circle(shoulder_front, 4.0, light)
 
     if kiwi_aura:
         for leaf_index in range(4):
             var leaf_angle := animation_time * 0.35 + TAU * float(leaf_index) / 4.0
-            var leaf_center := center + Vector2(cos(leaf_angle),sin(leaf_angle)) * 34.0
+            var leaf_center := center + Vector2(cos(leaf_angle),sin(leaf_angle)) * 30.0
             draw_set_transform(leaf_center,leaf_angle,Vector2.ONE)
             draw_colored_polygon(PackedVector2Array([Vector2(0,-5),Vector2(5,0),Vector2(0,8),Vector2(-5,0)]),Color("#8fc65e",0.9))
         draw_set_transform(Vector2.ZERO,0.0,Vector2(facing,1.0))
 
     if skin_style == "kiwi":
-        # Kiwi's school look: ash-blonde low twin buns, face-framing locks and uniform.
         var hair := Color("#d8d0c3")
         var hair_light := Color("#eee8dc")
         var hair_shadow := Color("#aaa397")
@@ -486,60 +504,56 @@ func _draw() -> void:
         var green := Color("#477b4c")
         var green_dark := Color("#294c38")
         var tie := Color("#e5bd48")
-        # White shirt, green sailor collar and yellow necktie.
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-17,8),center+Vector2(17,8),center+Vector2(21,27),center+Vector2(-21,27)]),green_dark)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-15,7),center+Vector2(15,7),center+Vector2(17,22),center+Vector2(-17,22)]),shirt)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-17,7),center+Vector2(-4,13),center+Vector2(0,19),center+Vector2(4,13),center+Vector2(17,7),center+Vector2(13,18),center+Vector2(0,25),center+Vector2(-13,18)]),green)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-3,9),center+Vector2(3,9),center+Vector2(5,21),center+Vector2(0,25),center+Vector2(-5,21)]),tie)
-        # Low twin buns behind the head.
-        draw_circle(center+Vector2(-20,-21),9.0,hair_shadow)
-        draw_circle(center+Vector2(-20,-22),7.0,hair)
-        draw_circle(center+Vector2(20,-21),9.0,hair_shadow)
-        draw_circle(center+Vector2(20,-22),7.0,hair)
-        # Ash-blonde layered fringe, shoulder-length side locks and ahoge.
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-22,-12),center+Vector2(-21,-29),center+Vector2(-12,-39),center+Vector2(0,-42),center+Vector2(14,-36),center+Vector2(22,-22),center+Vector2(18,-12),center+Vector2(8,-23),center+Vector2(0,-18),center+Vector2(-8,-24),center+Vector2(-17,-13)]),hair)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-20,-16),center+Vector2(-14,-30),center+Vector2(-5,-35),center+Vector2(-7,-20),center+Vector2(-13,-12)]),hair_light)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(3,-36),center+Vector2(13,-34),center+Vector2(21,-21),center+Vector2(12,-25),center+Vector2(5,-20)]),hair_shadow)
-        draw_line(center+Vector2(-19,-17),center+Vector2(-17,5),hair_shadow,5.0,true)
-        draw_line(center+Vector2(18,-18),center+Vector2(17,4),hair_shadow,5.0,true)
-        draw_line(center+Vector2(-1,-39),center+Vector2(4,-49),hair_light,3.0,true)
-        # Wine-red eyes, a beauty mark and soft cheek color.
-        draw_circle(center+Vector2(-7,-3),2.8,Color("#792f48"))
-        draw_circle(center+Vector2(7,-3),2.8,Color("#792f48"))
-        draw_circle(center+Vector2(13,5),1.6,Color("#3b2930"))
-        draw_circle(center+Vector2(-10,7),2.8,Color("#d88c91",0.62))
-        draw_circle(center+Vector2(10,7),2.8,Color("#d88c91",0.62))
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-15,7),center+Vector2(15,7),center+Vector2(18,22),center+Vector2(-18,22)]),green_dark)
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-13,7),center+Vector2(13,7),center+Vector2(15,19),center+Vector2(-15,19)]),shirt)
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-15,7),center+Vector2(-4,12),center+Vector2(0,18),center+Vector2(4,12),center+Vector2(15,7),center+Vector2(12,16),center+Vector2(0,22),center+Vector2(-12,16)]),green)
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-2.5,9),center+Vector2(2.5,9),center+Vector2(4,19),center+Vector2(0,22),center+Vector2(-4,19)]),tie)
+        draw_circle(center+Vector2(-18,-19),8.0,hair_shadow)
+        draw_circle(center+Vector2(-18,-20),6.0,hair)
+        draw_circle(center+Vector2(18,-19),8.0,hair_shadow)
+        draw_circle(center+Vector2(18,-20),6.0,hair)
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-20,-11),center+Vector2(-19,-27),center+Vector2(-11,-35),center+Vector2(0,-38),center+Vector2(13,-33),center+Vector2(20,-20),center+Vector2(16,-11),center+Vector2(7,-21),center+Vector2(0,-17),center+Vector2(-7,-22),center+Vector2(-16,-12)]),hair)
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-18,-15),center+Vector2(-12,-27),center+Vector2(-4,-32),center+Vector2(-6,-19),center+Vector2(-12,-11)]),hair_light)
+        draw_colored_polygon(PackedVector2Array([center+Vector2(3,-33),center+Vector2(12,-31),center+Vector2(19,-20),center+Vector2(11,-23),center+Vector2(5,-19)]),hair_shadow)
+        draw_line(center+Vector2(-17,-15),center+Vector2(-15,4),hair_shadow,4.0,true)
+        draw_line(center+Vector2(17,-16),center+Vector2(15,4),hair_shadow,4.0,true)
+        draw_line(center+Vector2(-1,-36),center+Vector2(4,-44),hair_light,2.8,true)
+        draw_circle(center+Vector2(-6,-3),2.5,Color("#792f48"))
+        draw_circle(center+Vector2(6,-3),2.5,Color("#792f48"))
+        draw_circle(center+Vector2(11,4),1.4,Color("#3b2930"))
+        draw_circle(center+Vector2(-9,6),2.4,Color("#d88c91",0.62))
+        draw_circle(center+Vector2(9,6),2.4,Color("#d88c91",0.62))
 
     if hit_flash > 0.0:
-        draw_circle(center, 26.0, Color(1.0,0.45,0.34,hit_flash*0.24))
-        draw_arc(center, 26.0, 0.0, TAU, 48, Color(1.0,0.82,0.72,hit_flash*0.8), 2.2, true)
+        draw_circle(center, 23.0, Color(1.0,0.45,0.34,hit_flash*0.24))
+        draw_arc(center, 23.0, 0.0, TAU, 48, Color(1.0,0.82,0.72,hit_flash*0.8), 2.0, true)
     if reload_visual > 0.0:
-        draw_arc(center, 30.0, -PI/2.0, -PI/2.0+TAU*(1.0-reload_visual), 32, Color.WHITE, 2.4, true)
+        draw_arc(center, 26.0, -PI/2.0, -PI/2.0+TAU*(1.0-reload_visual), 32, Color.WHITE, 2.2, true)
 
-    var gun_aim := aim_input.normalized()
-    if gun_aim == Vector2.ZERO:
-        gun_aim = Vector2(facing,0.0)
-    var gun_origin := Vector2(9.0 * facing, -8.0 + bob)
-    draw_set_transform(gun_origin, gun_aim.angle(), Vector2.ONE)
+    # The blaster is anchored to the front hand instead of floating at the torso.
+    var local_aim := Vector2(aim_input.x * facing, aim_input.y).normalized()
+    if local_aim.length_squared() < 0.01:
+        local_aim = Vector2.RIGHT
+    var gun_origin := hand_front + local_aim * 1.5
+    draw_set_transform(gun_origin, local_aim.angle(), Vector2.ONE)
     var metal := Color("#202c3b")
     var trim := body_color.lightened(0.42)
-    var barrel_len := 25.0 + float(weapon_level) * 3.0
-    draw_circle(Vector2(0,0), 14.0, Color(trim,0.12))
-    draw_rect(Rect2(-7,-8,barrel_len+12,17), outline)
-    draw_rect(Rect2(-5,-6,barrel_len+9,13), metal)
-    draw_rect(Rect2(-2,-5,barrel_len+6,3), trim)
-    draw_rect(Rect2(-7,5,11,13), outline)
-    draw_rect(Rect2(-4,7,6,8), trim.darkened(0.16))
-    draw_rect(Rect2(4,-10,9,3), Color("#91a5bb"))
+    var barrel_len := 24.0 + float(weapon_level) * 3.0
+    draw_circle(Vector2(0,0), 7.0, Color(trim,0.16))
+    draw_rect(Rect2(-5,-5,barrel_len+8,10), outline)
+    draw_rect(Rect2(-4,-3,barrel_len+6,6), metal)
+    draw_rect(Rect2(0,-2,barrel_len+3,2), trim)
+    draw_rect(Rect2(-4,4,8,8), outline)
+    draw_rect(Rect2(-2,5,4,5), trim.darkened(0.18))
+    draw_rect(Rect2(2,-7,7,2), Color("#91a5bb"))
     if weapon_level >= 1:
-        draw_rect(Rect2(7,-12,barrel_len-2,3), trim)
-        draw_circle(Vector2(barrel_len-2,0), 5.0, Color(trim,0.45))
+        draw_rect(Rect2(6,-8,barrel_len-1,2), trim)
+        draw_circle(Vector2(barrel_len,0), 3.5, Color(trim,0.55))
     if weapon_level >= 2:
-        draw_rect(Rect2(8,8,barrel_len-8,3), Color("#d8e6f0"))
-        draw_circle(Vector2(2,-14), 3.5, Color("#ffe08a"))
+        draw_rect(Rect2(6,7,barrel_len-7,2), Color("#d8e6f0"))
     if weapon_level >= 3:
-        draw_arc(Vector2(10,0), 19.0, -PI*0.75, PI*0.75, 24, trim, 2.8, true)
+        draw_arc(Vector2(8,0), 11.0, -PI*0.75, PI*0.75, 24, trim, 2.0, true)
     if muzzle_flash > 0.0:
-        var flash_size := 8.0 + muzzle_flash * 90.0
-        draw_colored_polygon(PackedVector2Array([Vector2(barrel_len+2,0),Vector2(barrel_len+flash_size,-flash_size*0.42),Vector2(barrel_len+flash_size*0.55,0),Vector2(barrel_len+flash_size,flash_size*0.42)]),Color("#fff0a8",0.9))
+        var flash_size := 7.0 + muzzle_flash * 80.0
+        draw_colored_polygon(PackedVector2Array([Vector2(barrel_len+2,0),Vector2(barrel_len+flash_size,-flash_size*0.4),Vector2(barrel_len+flash_size*0.55,0),Vector2(barrel_len+flash_size,flash_size*0.4)]),Color("#fff0a8",0.9))
     draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
