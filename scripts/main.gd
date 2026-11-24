@@ -1446,7 +1446,33 @@ func _online_sync_tick(delta: float) -> void:
                     "rival_vel":[rival.velocity.x, rival.velocity.y],
                     "score_player":score_player,
                     "score_bot":score_bot,
-                    "round":round_index
+                    "round":round_index,
+                    "phase":phase,
+                    "map_index":map_index,
+                    "player_ammo":player.ammo,
+                    "rival_ammo":rival.ammo,
+                    "player_reload":player.reload_timer,
+                    "rival_reload":rival.reload_timer,
+                    "player_stats":{
+                        "move_speed":player.move_speed,"jump_speed":player.jump_speed,
+                        "gravity_scale":player.gravity_scale,"air_control_scale":player.air_control_scale,
+                        "ground_accel_scale":player.ground_accel_scale,"wall_jump_scale":player.wall_jump_scale,
+                        "extra_air_jumps":player.extra_air_jumps,"pulse_force":player.pulse_force,
+                        "pulse_interval":player.pulse_interval,"magazine_size":player.magazine_size,
+                        "reload_duration":player.reload_duration,"homing_strength":player.homing_strength,
+                        "ricochet_count":player.ricochet_count,"projectile_speed":player.projectile_speed,
+                        "weapon_level":player.weapon_level,"kiwi_aura":player.kiwi_aura
+                    },
+                    "rival_stats":{
+                        "move_speed":rival.move_speed,"jump_speed":rival.jump_speed,
+                        "gravity_scale":rival.gravity_scale,"air_control_scale":rival.air_control_scale,
+                        "ground_accel_scale":rival.ground_accel_scale,"wall_jump_scale":rival.wall_jump_scale,
+                        "extra_air_jumps":rival.extra_air_jumps,"pulse_force":rival.pulse_force,
+                        "pulse_interval":rival.pulse_interval,"magazine_size":rival.magazine_size,
+                        "reload_duration":rival.reload_duration,"homing_strength":rival.homing_strength,
+                        "ricochet_count":rival.ricochet_count,"projectile_speed":rival.projectile_speed,
+                        "weapon_level":rival.weapon_level,"kiwi_aura":rival.kiwi_aura
+                    }
                 }
             })
     elif online_sync_timer >= 0.05:
@@ -1471,6 +1497,21 @@ func _apply_online_state(state: Variant) -> void:
     if typeof(state) != TYPE_DICTIONARY:
         return
     var data: Dictionary = state
+    var incoming_round := int(data.get("round", 1))
+    var incoming_map := int(data.get("map_index", 0))
+    var incoming_phase := str(data.get("phase", "fight"))
+    var round_changed := incoming_round != round_index or incoming_map != map_index
+    if round_changed:
+        _clear_pulses()
+        _make_arena(incoming_map)
+        round_index = incoming_round
+        player.reset_round(Vector2(930,390))
+        rival.reset_round(Vector2(350,390))
+    map_index = incoming_map
+    var host_player_stats: Dictionary = data.get("player_stats", {})
+    var host_rival_stats: Dictionary = data.get("rival_stats", {})
+    _apply_online_player_stats(rival, host_player_stats)
+    _apply_online_player_stats(player, host_rival_stats)
     var pp: Array = data.get("player_pos", [])
     var pv: Array = data.get("player_vel", [])
     var rp: Array = data.get("rival_pos", [])
@@ -1485,8 +1526,58 @@ func _apply_online_state(state: Variant) -> void:
         player.velocity = Vector2(float(rv[0]), float(rv[1]))
     score_player = int(data.get("score_bot", 0))
     score_bot = int(data.get("score_player", 0))
-    round_index = int(data.get("round", 1))
+    player.ammo = int(data.get("rival_ammo", player.ammo))
+    rival.ammo = int(data.get("player_ammo", rival.ammo))
+    player.reload_timer = float(data.get("rival_reload", player.reload_timer))
+    rival.reload_timer = float(data.get("player_reload", rival.reload_timer))
+    if incoming_phase == "fight":
+        if phase != "fight" or round_changed:
+            _close_overlay()
+            phase = "fight"
+            player.set_physics_process(false)
+            rival.set_physics_process(false)
+            game_controls.visible = true
+    elif incoming_phase == "upgrade":
+        if phase != "upgrade":
+            phase = "upgrade"
+            player.set_physics_process(false)
+            rival.set_physics_process(false)
+            _close_overlay()
+            _show_panel("СОПЕРНИК ВЫБИРАЕТ УЛУЧШЕНИЕ", [], "Следующий раунд начнётся автоматически.")
+            game_controls.visible = false
+    elif incoming_phase == "menu":
+        phase = "menu"
+        _show_main_menu()
     _update_hud()
+    if incoming_phase == "fight" and (score_player >= 5 or score_bot >= 5):
+        phase = "upgrade"
+        player.set_physics_process(false)
+        rival.set_physics_process(false)
+        _show_panel("МАТЧ ЗАВЕРШЁН", [
+            ["В ГЛАВНОЕ МЕНЮ", Callable(self, "_show_main_menu")]
+        ], "Счёт: %d : %d" % [score_player, score_bot])
+        game_controls.visible = false
+
+func _apply_online_player_stats(who: ArenaPlayer, stats: Dictionary) -> void:
+    if stats.is_empty():
+        return
+    who.move_speed = float(stats.get("move_speed", who.move_speed))
+    who.jump_speed = float(stats.get("jump_speed", who.jump_speed))
+    who.gravity_scale = float(stats.get("gravity_scale", who.gravity_scale))
+    who.air_control_scale = float(stats.get("air_control_scale", who.air_control_scale))
+    who.ground_accel_scale = float(stats.get("ground_accel_scale", who.ground_accel_scale))
+    who.wall_jump_scale = float(stats.get("wall_jump_scale", who.wall_jump_scale))
+    who.extra_air_jumps = int(stats.get("extra_air_jumps", who.extra_air_jumps))
+    who.pulse_force = float(stats.get("pulse_force", who.pulse_force))
+    who.pulse_interval = float(stats.get("pulse_interval", who.pulse_interval))
+    who.magazine_size = int(stats.get("magazine_size", who.magazine_size))
+    who.reload_duration = float(stats.get("reload_duration", who.reload_duration))
+    who.homing_strength = float(stats.get("homing_strength", who.homing_strength))
+    who.ricochet_count = int(stats.get("ricochet_count", who.ricochet_count))
+    who.projectile_speed = float(stats.get("projectile_speed", who.projectile_speed))
+    who.weapon_level = int(stats.get("weapon_level", who.weapon_level))
+    who.kiwi_aura = bool(stats.get("kiwi_aura", who.kiwi_aura))
+    who.ammo = mini(who.ammo, who.magazine_size)
 
 func _online_render_rooms(rooms: Variant) -> void:
     if not is_instance_valid(online_rooms_list):
