@@ -329,7 +329,7 @@ func _draw() -> void:
     var gun_origin := hand + aim*5.0
     var gun_back := gun_origin - aim*13.0
     var barrel_end := gun_origin + aim*37.0
-    var casing := PackedVector2Array([gun_back+side*7.0,gun_origin+side*8.0,barrel_end-side*5.0,barrel_end+side*5.0,gun_origin-side*8.0,gun_back-side*7.0])
+    var casing := PackedVector2Array([gun_back+side*7.0,gun_origin+side*8.0,barrel_end+side*5.0,barrel_end-side*5.0,gun_origin-side*8.0,gun_back-side*7.0])
     draw_colored_polygon(casing,Color("#293647"))
     draw_polyline(PackedVector2Array([casing[0],casing[1],casing[2],casing[3],casing[4],casing[5],casing[0]]),outline,2.2,true)
     draw_colored_polygon(PackedVector2Array([gun_origin+side*5.0+aim*2.0,gun_origin+side*5.0+aim*23.0,gun_origin-side*5.0+aim*23.0,gun_origin-side*5.0+aim*2.0]),Color("#53657b"))
