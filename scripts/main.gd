@@ -1618,7 +1618,7 @@ func _next_round() -> void:
     player.set_physics_process(true)
     rival.set_physics_process(true)
     round_index += 1
-    _make_arena(round_index - 1)
+    _make_arena(map_index if game_mode == "training" else round_index - 1)
     player.reset_round(Vector2(350,390))
     rival.reset_round(Vector2(930,390))
     phase = "fight"
