@@ -76,12 +76,16 @@ func _run_physics_checks() -> void:
         _fail("player shot did not consume ammunition")
         return
 
+    # Reload behavior belongs to bot matches; training intentionally disables the rival.
+    game.call("_start_game", "bot")
     rival.set("ammo", 0)
     rival.set("reload_timer", 0.0)
     await physics_frame
     if float(rival.get("reload_timer")) <= 0.0:
         _fail("bot did not automatically start reloading")
         return
+    # Return to training for the training-specific checks below.
+    game.call("_start_game", "training")
 
     var pulse_script := load("res://scripts/pulse.gd") as Script
     var pulse := pulse_script.new() as Area2D
