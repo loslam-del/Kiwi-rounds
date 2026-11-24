@@ -68,16 +68,16 @@ var kiwi_aura := false
 
 # Lightweight ragdoll-style limb physics. Angles and angular velocity are
 # simulated independently, while shoulder/hip anchors follow the torso.
-var arm_back_angle := -0.18
-var arm_front_angle := 0.18
+var arm_back_angle := -0.38
+var arm_front_angle := 1.0
 var leg_back_angle := -0.12
 var leg_front_angle := 0.12
 var knee_back_angle := -0.28
 var knee_front_angle := 0.28
 var arm_back_angular_velocity := 0.0
 var arm_front_angular_velocity := 0.0
-var elbow_back_angle := -0.72
-var elbow_front_angle := 0.72
+var elbow_back_angle := -0.18
+var elbow_front_angle := 0.55
 var elbow_back_angular_velocity := 0.0
 var elbow_front_angular_velocity := 0.0
 var leg_back_angular_velocity := 0.0
