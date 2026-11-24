@@ -7,6 +7,7 @@ signal reload_started
 
 @export var is_bot := false
 @export var body_color := Color("#39d6c5")
+@export var skin_style := "default"
 
 const GRAVITY := 1420.0
 const JUMP_SPEED := -715.0
@@ -379,6 +380,16 @@ func _draw() -> void:
     draw_circle(center + Vector2(6.0,-2.0), 2.0, face)
     draw_line(center + Vector2(-3.0,6.0), center + Vector2(3.0,6.0), face, 1.8, true)
     draw_arc(center + Vector2(0,2), 23.0, PI*0.12, PI*0.88, 28, Color(1,1,1,0.24), 1.3, true)
+
+    if skin_style == "kiwi":
+        # Kiwi Araga-inspired cosmetic: cream-blonde fringe and a green leaf bow.
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-20,-17),center+Vector2(-16,-32),center+Vector2(-4,-39),center+Vector2(12,-34),center+Vector2(21,-20),center+Vector2(8,-25),center+Vector2(-3,-22),center+Vector2(-13,-14)]),Color("#f3e8d0"))
+        draw_line(center+Vector2(-20,-17),center+Vector2(-16,-32),Color("#27303a"),1.8,true)
+        draw_colored_polygon(PackedVector2Array([center+Vector2(4,-34),center+Vector2(-8,-48),center+Vector2(-20,-45),center+Vector2(-16,-32)]),Color("#8fc65e"))
+        draw_colored_polygon(PackedVector2Array([center+Vector2(5,-34),center+Vector2(17,-49),center+Vector2(28,-42),center+Vector2(18,-29)]),Color("#6fa84f"))
+        draw_circle(center+Vector2(4,-35),3.5,Color("#4c8d45"))
+        draw_circle(center+Vector2(-10,7),3.0,Color("#eea6a0",0.65))
+        draw_circle(center+Vector2(10,7),3.0,Color("#eea6a0",0.65))
 
     if hit_flash > 0.0:
         draw_circle(center, 26.0, Color(1.0,0.45,0.34,hit_flash*0.24))
