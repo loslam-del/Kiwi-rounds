@@ -101,6 +101,17 @@ var online_rooms_list: VBoxContainer
 var online_name_input: LineEdit
 var online_room_name_input: LineEdit
 var online_password_input: LineEdit
+var music_player: AudioStreamPlayer
+var music_tracks: Array[String] = [
+    "res://music/Moetwee, Differentwrld - Help Me (hitmo.net).mp3",
+    "res://music/dabbackwood - заново [mp3uk.net] (1).mp3",
+    "res://music/onda-andar-type-london (1).mp3",
+    "res://music/rabzyyx - im so crazy for you [mp3uk.net].mp3",
+    "res://music/zxcursed_x_shadowraze_-_metamorphosis_3_x_chronospher_(mp3.pm).mp3",
+    "res://music/влад пиво, ЯРЧЕ СОЛНЦА, besoboy - Пообещай (hitmo.net).mp3"
+]
+var music_last_index := -1
+
 
 
 func _ready() -> void:
@@ -142,6 +153,7 @@ func _boot_game() -> void:
     _apply_skin()
     boot_stage = "Подготовка интерфейса..."
     _make_ui()
+    _setup_music()
     boot_stage = "Запуск меню..."
     _show_main_menu()
     _update_hud()
@@ -543,6 +555,32 @@ func _apply_control_layout() -> void:
     ammo_label.size = Vector2(150,28)
     menu_button.position = Vector2(18,18)
     cards_button.position = Vector2(150,18)
+
+func _setup_music() -> void:
+    music_player = AudioStreamPlayer.new()
+    music_player.name = "BackgroundMusic"
+    music_player.bus = "Master"
+    music_player.volume_db = -8.0
+    add_child(music_player)
+    music_player.finished.connect(_play_next_music)
+    _play_next_music()
+
+func _play_next_music() -> void:
+    if not is_instance_valid(music_player) or music_tracks.is_empty():
+        return
+    var choices: Array[int] = []
+    for i in range(music_tracks.size()):
+        if i != music_last_index:
+            choices.append(i)
+    if choices.is_empty():
+        choices.append(0)
+    music_last_index = choices.pick_random()
+    var stream := load(music_tracks[music_last_index]) as AudioStream
+    if stream == null:
+        push_warning("Не удалось загрузить музыку: " + music_tracks[music_last_index])
+        return
+    music_player.stream = stream
+    music_player.play()
 
 func _apply_audio_settings() -> void:
     if AudioServer.bus_count > 0:
