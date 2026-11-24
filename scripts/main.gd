@@ -593,32 +593,82 @@ func _show_main_menu() -> void:
     shade.add_child(footer)
 
 func _add_kiwi_mascot(parent: Control, center: Vector2) -> void:
-    var kiwi := Polygon2D.new()
-    kiwi.position = center
-    kiwi.polygon = PackedVector2Array([Vector2(-48,-30),Vector2(-30,-52),Vector2(0,-58),Vector2(31,-45),Vector2(49,-17),Vector2(43,22),Vector2(20,49),Vector2(-14,54),Vector2(-43,34),Vector2(-55,0)])
-    kiwi.color = Color("#9bcf4a")
-    parent.add_child(kiwi)
-    var belly := Polygon2D.new()
-    belly.position = center + Vector2(0,8)
-    belly.polygon = PackedVector2Array([Vector2(-34,-8),Vector2(-20,-29),Vector2(12,-34),Vector2(34,-10),Vector2(30,19),Vector2(8,37),Vector2(-22,28),Vector2(-38,7)])
-    belly.color = Color("#d8ed9a")
-    parent.add_child(belly)
-    var leaf := Polygon2D.new()
-    leaf.position = center + Vector2(0,-51)
-    leaf.polygon = PackedVector2Array([Vector2(-4,4),Vector2(0,-27),Vector2(23,-17),Vector2(10,2)])
-    leaf.color = Color("#65a94c")
-    parent.add_child(leaf)
-    for eye_x in [-18,12]:
+    var outline := Color("#20232b")
+    var face := Polygon2D.new()
+    face.position = center
+    face.polygon = PackedVector2Array([
+        Vector2(-49,-8),Vector2(-44,-31),Vector2(-28,-48),Vector2(-5,-55),
+        Vector2(19,-50),Vector2(39,-34),Vector2(49,-9),Vector2(44,20),
+        Vector2(27,43),Vector2(0,51),Vector2(-28,42),Vector2(-45,19)
+    ])
+    face.color = Color("#f4dfc4")
+    parent.add_child(face)
+
+    var fringe := Polygon2D.new()
+    fringe.position = center
+    fringe.polygon = PackedVector2Array([
+        Vector2(-47,-10),Vector2(-42,-34),Vector2(-25,-49),Vector2(-5,-53),
+        Vector2(18,-48),Vector2(38,-32),Vector2(46,-12),Vector2(25,-21),
+        Vector2(8,-24),Vector2(-8,-19),Vector2(-24,-8)
+    ])
+    fringe.color = Color("#eee4cc")
+    parent.add_child(fringe)
+
+    var fringe_line := Line2D.new()
+    fringe_line.points = PackedVector2Array([
+        center+Vector2(-47,-10),center+Vector2(-42,-34),center+Vector2(-25,-49),
+        center+Vector2(-5,-53),center+Vector2(18,-48),center+Vector2(38,-32)
+    ])
+    fringe_line.width = 3.0
+    fringe_line.default_color = outline
+    parent.add_child(fringe_line)
+
+    for eye_x in [-17,17]:
         var eye := ColorRect.new()
-        eye.position = center + Vector2(eye_x,-9)
-        eye.size = Vector2(8,13)
-        eye.color = Color("#20252b")
+        eye.position = center + Vector2(eye_x-3,-4)
+        eye.size = Vector2(6,12)
+        eye.color = outline
         parent.add_child(eye)
-    var smile := ColorRect.new()
-    smile.position = center + Vector2(-4,17)
-    smile.size = Vector2(13,4)
-    smile.color = Color("#52643b")
-    parent.add_child(smile)
+        var shine := ColorRect.new()
+        shine.position = center + Vector2(eye_x-1,-3)
+        shine.size = Vector2(2,3)
+        shine.color = Color.WHITE
+        parent.add_child(shine)
+
+    var mouth := Line2D.new()
+    mouth.points = PackedVector2Array([center+Vector2(-5,20),center+Vector2(0,24),center+Vector2(6,19)])
+    mouth.width = 2.5
+    mouth.default_color = Color("#9a655d")
+    parent.add_child(mouth)
+
+    var bow_left := Polygon2D.new()
+    bow_left.position = center + Vector2(-7,-48)
+    bow_left.polygon = PackedVector2Array([Vector2(0,0),Vector2(-17,-10),Vector2(-14,7)])
+    bow_left.color = Color("#86bd58")
+    parent.add_child(bow_left)
+    var bow_right := Polygon2D.new()
+    bow_right.position = center + Vector2(7,-48)
+    bow_right.polygon = PackedVector2Array([Vector2(0,0),Vector2(17,-10),Vector2(14,7)])
+    bow_right.color = Color("#86bd58")
+    parent.add_child(bow_right)
+    var bow_center := Polygon2D.new()
+    bow_center.position = center + Vector2(0,-48)
+    bow_center.polygon = PackedVector2Array([Vector2(-5,-5),Vector2(5,-5),Vector2(6,5),Vector2(-6,5)])
+    bow_center.color = Color("#4d8b43")
+    parent.add_child(bow_center)
+
+    var collar := Polygon2D.new()
+    collar.position = center + Vector2(0,40)
+    collar.polygon = PackedVector2Array([Vector2(-15,0),Vector2(0,10),Vector2(15,0),Vector2(0,17)])
+    collar.color = Color("#f8f3e7")
+    parent.add_child(collar)
+    var collar_edge := Line2D.new()
+    collar_edge.points = PackedVector2Array([
+        center+Vector2(-15,40),center+Vector2(0,50),center+Vector2(15,40)
+    ])
+    collar_edge.width = 2.0
+    collar_edge.default_color = outline
+    parent.add_child(collar_edge)
 
 func _show_mode_menu() -> void:
     _show_panel("ВЫБОР РЕЖИМА",[
