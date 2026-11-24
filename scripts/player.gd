@@ -578,5 +578,10 @@ func _draw() -> void:
         draw_arc(Vector2(8,0),12.0,-PI*0.72,PI*0.72,24,trim,2.0,true)
     if muzzle_flash > 0.0:
         var flash_size := 7.0 + muzzle_flash * 80.0
-        draw_colored_polygon(PackedVector2Array([Vector2(barrel_len+1,0),Vector2(barrel_len+flash_size,-flash_size*0.4),Vector2(barrel_len+flash_size*0.55,0),Vector2(barrel_len+flash_size,flash_size*0.4)]),Color("#fff0a8",0.9))
+        draw_circle(Vector2(barrel_len+4,0),flash_size*0.62,Color("#ffd978",muzzle_flash*1.8))
+        draw_colored_polygon(PackedVector2Array([Vector2(barrel_len+1,0),Vector2(barrel_len+flash_size,-flash_size*0.4),Vector2(barrel_len+flash_size*0.55,0),Vector2(barrel_len+flash_size,flash_size*0.4)]),Color("#fff0a8",0.95))
+        for spark_index in range(3):
+            var spark_angle := -0.42 + float(spark_index)*0.42
+            var spark_end := Vector2(barrel_len+flash_size*1.15,0) + Vector2(cos(spark_angle),sin(spark_angle))*flash_size*0.45
+            draw_line(Vector2(barrel_len+3,0),spark_end,Color("#fff5c8",0.82),1.6,true)
     draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
