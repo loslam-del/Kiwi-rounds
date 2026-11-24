@@ -930,6 +930,9 @@ func _open_skins() -> void:
         style.border_color = Color("#d9ef70") if i == skin_index else Color("#454b5b")
         style.set_border_width_all(3 if i == skin_index else 1)
         style.set_corner_radius_all(18)
+        style.shadow_color = Color(0.0,0.0,0.0,0.34)
+        style.shadow_size = 9
+        style.shadow_offset = Vector2(0,4)
         card.add_theme_stylebox_override("panel",style)
         var column := VBoxContainer.new()
         column.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -937,6 +940,21 @@ func _open_skins() -> void:
         card.add_child(column)
         var preview_area := Control.new()
         preview_area.custom_minimum_size = Vector2(235,175)
+        var preview_back := Panel.new()
+        preview_back.position = Vector2(5,5)
+        preview_back.size = Vector2(225,165)
+        var preview_style := StyleBoxFlat.new()
+        preview_style.bg_color = Color("#171d27")
+        preview_style.border_color = color.darkened(0.18)
+        preview_style.set_border_width_all(2)
+        preview_style.set_corner_radius_all(14)
+        preview_back.add_theme_stylebox_override("panel",preview_style)
+        preview_area.add_child(preview_back)
+        var color_chip := ColorRect.new()
+        color_chip.position = Vector2(15,15)
+        color_chip.size = Vector2(205,4)
+        color_chip.color = color
+        preview_area.add_child(color_chip)
         column.add_child(preview_area)
         var fighter: ArenaPlayer = PLAYER_SCRIPT.new()
         fighter.body_color = color
@@ -952,8 +970,11 @@ func _open_skins() -> void:
         name_label.add_theme_color_override("font_color",Color("#f3f1e8"))
         column.add_child(name_label)
         var choose := Button.new()
-        choose.text = "ЭКИПИРОВАНО  ✓" if i == skin_index else "ВЫБРАТЬ"
+        choose.text = "НАДЕТО  ✓" if i == skin_index else "ЭКИПИРОВАТЬ"
         choose.custom_minimum_size = Vector2(220,45)
+        choose.focus_mode = Control.FOCUS_NONE
+        choose.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+        choose.add_theme_font_size_override("font_size",16)
         choose.add_theme_stylebox_override("normal",_menu_button_style(Color("#596b32") if i == skin_index else Color("#303644"),Color("#d9ef70") if i == skin_index else Color("#596174")))
         choose.pressed.connect(_select_skin.bind(i))
         column.add_child(choose)
