@@ -160,7 +160,7 @@ func _draw() -> void:
     var bob := absf(sin(animation_time * 2.0)) * 1.5 if moving else 0.0
 
     # Тень и ноги рисуются первыми, чтобы корпус находился поверх них.
-    draw_ellipse_shadow()
+    draw_circle(Vector2(0.0,45.0), 15.0, Color(0.0,0.0,0.0,0.22))
     var left_hip := Vector2(-7.0, 14.0 + bob)
     var right_hip := Vector2(7.0, 14.0 + bob)
     var left_foot := Vector2(-9.0 + stride, 43.0)
@@ -196,7 +196,6 @@ func _draw() -> void:
     draw_circle(hand, 5.5, Color("#efbd94"))
 
     # Пистолет: рукоять, затвор, ствол и мушка.
-    var grip := hand - gun_dir * 2.0 + side * 7.0
     var gun_body := PackedVector2Array([
         hand - side * 5.0 - gun_dir * 5.0,
         hand + side * 5.0 - gun_dir * 5.0,
