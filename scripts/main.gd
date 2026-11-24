@@ -7,12 +7,18 @@ const ACTION_BUTTON_SCRIPT = preload("res://scripts/virtual_action_button.gd")
 const MOD_LOADER_SCRIPT = preload("res://scripts/mod_loader.gd")
 
 const DEFAULT_UPGRADES := [
-    {"id":"swift","name":"ТУРБО-ШАГ","icon":"↗","buff":"СКОРОСТЬ +18%","debuff":"ВЫСОТА ПРЫЖКА −6%","effect":"swift"},
-    {"id":"spring","name":"ПРУЖИНА","icon":"↟","buff":"ПРЫЖОК +18%","debuff":"СКОРОСТЬ −7%","effect":"spring"},
-    {"id":"feather","name":"ЛЁГКОСТЬ","icon":"✦","buff":"ГРАВИТАЦИЯ −18%","debuff":"ПАДЕНИЕ ЧУТЬ МЕДЛЕННЕЕ","effect":"feather"},
-    {"id":"wall","name":"СТЕНКА-РАКЕТКА","icon":"↶","buff":"ОТТАЛКИВАНИЕ ОТ СТЕН +22%","debuff":"НЕТ","effect":"wall"},
-    {"id":"air","name":"ВОЗДУШНЫЙ ШАГ","icon":"＋","buff":"ЕЩЁ ОДИН ПРЫЖОК В ВОЗДУХЕ","debuff":"СКОРОСТЬ −5%","effect":"air"},
-    {"id":"grounded","name":"ТЯЖЁЛЫЕ БОТИНКИ","icon":"⬇","buff":"УСКОРЕНИЕ НА ЗЕМЛЕ +22%","debuff":"ГРАВИТАЦИЯ −8%","effect":"grounded"}
+    {"id":"swift","name":"ТУРБО-ШАГ","icon":"↗","art":"dash","primary":"Рывковая мобильность","buff":"СКОРОСТЬ +18%","debuff":"ВЫСОТА ПРЫЖКА −6%","effect":"swift"},
+    {"id":"spring","name":"ПРУЖИНА","icon":"↟","art":"spring","primary":"Усиленный прыжок","buff":"ПРЫЖОК +18%","debuff":"СКОРОСТЬ −7%","effect":"spring"},
+    {"id":"feather","name":"ЛЁГКОСТЬ","icon":"✦","art":"feather","primary":"Низкая гравитация","buff":"ГРАВИТАЦИЯ −18%","debuff":"МЕДЛЕННЕЕ ПАДЕНИЕ","effect":"feather"},
+    {"id":"wall","name":"СТЕНКА-РАКЕТКА","icon":"↶","art":"wall","primary":"Сильный отскок от стен","buff":"ОТТАЛКИВАНИЕ ОТ СТЕН +22%","debuff":"МЕНЬШЕ КОНТРОЛЯ В ВОЗДУХЕ","effect":"wall"},
+    {"id":"air","name":"ВОЗДУШНЫЙ ШАГ","icon":"＋","art":"air","primary":"Дополнительный прыжок","buff":"ЕЩЁ ОДИН ПРЫЖОК В ВОЗДУХЕ","debuff":"СКОРОСТЬ −5%","effect":"air"},
+    {"id":"grounded","name":"ТЯЖЁЛЫЕ БОТИНКИ","icon":"⬇","art":"boots","primary":"Ускорение на земле","buff":"УСКОРЕНИЕ НА ЗЕМЛЕ +22%","debuff":"ГРАВИТАЦИЯ −8%","effect":"grounded"},
+    {"id":"homing","name":"ОХОТНИК","icon":"◎","art":"homing","primary":"САМОНАВОДКА СНАРЯДА","buff":"ПУЛЯ ПЛАВНО ДОВОРАЧИВАЕТ К ПРОТИВНИКУ","debuff":"СКОРОСТЬ СНАРЯДА −10%","effect":"homing"},
+    {"id":"ricochet","name":"РЕЙКОШЕТ","icon":"⤴","art":"ricochet","primary":"РИКОШЕТ ×2","buff":"СНАРЯД ОТСКАКИВАЕТ ОТ СТЕН И ПЛАТФОРМ","debuff":"СИЛА ОТБРАСЫВАНИЯ −12%","effect":"ricochet"},
+    {"id":"heavy","name":"ТЯЖЁЛЫЙ КАЛИБР","icon":"▰","art":"heavy","primary":"УСИЛЕННЫЙ ВЫСТРЕЛ","buff":"ОТБРАСЫВАНИЕ +24%","debuff":"СКОРОСТЬ СТРЕЛЬБЫ −15%","effect":"heavy"},
+    {"id":"rapid","name":"ШТУРМОВОЙ МОДУЛЬ","icon":"»","art":"rapid","primary":"УСКОРЕННАЯ СТРЕЛЬБА","buff":"ПЕРЕЗАРЯДКА МЕЖДУ ВЫСТРЕЛАМИ −22%","debuff":"СИЛА ВЫСТРЕЛА −9%","effect":"rapid"},
+    {"id":"magazine","name":"ДВОЙНОЙ МАГАЗИН","icon":"▥","art":"magazine","primary":"9 ЗАРЯДОВ В ОБОЙМЕ","buff":"МАГАЗИН +3 ПАТРОНА","debuff":"ПЕРЕЗАРЯДКА ДОЛЬШЕ +12%","effect":"magazine"},
+    {"id":"piercing","name":"РЕЛЬСОТРОН","icon":"➤","art":"piercing","primary":"РАЗОГНАННЫЙ СНАРЯД","buff":"СКОРОСТЬ СНАРЯДА +22%","debuff":"ПЕРЕЗАРЯДКА ДОЛЬШЕ +16%","effect":"piercing"}
 ]
 const DEFAULT_MAPS := [
     {"name":"КОРОТКИЙ МОСТ","platforms":[{"x":330,"y":555,"w":230,"h":20},{"x":950,"y":555,"w":230,"h":20},{"x":640,"y":420,"w":170,"h":20}]},
@@ -177,6 +183,7 @@ func _make_arena(index: int) -> void:
 
 func _add_side_wall(x: float) -> void:
     var wall := StaticBody2D.new()
+    wall.name = "ArenaSideWall"
     wall.position = Vector2(x,350)
     wall.collision_layer = 2
     wall.collision_mask = 0
@@ -199,6 +206,7 @@ func _add_side_wall(x: float) -> void:
 
 func _add_platform(at: Vector2, dimensions: Vector2) -> void:
     var body := StaticBody2D.new()
+    body.name = "ArenaPlatform"
     body.position = at
     body.collision_layer = 2
     body.collision_mask = 0
@@ -249,6 +257,7 @@ func _make_players() -> void:
     rival.body_color = Color("#ff786f")
     rival.position = Vector2(930,390)
     rival.target = player
+    player.target = rival
     rival.pulse_requested.connect(_spawn_pulse)
     rival.got_hit.connect(_on_player_hit)
     rival.reload_started.connect(_play_sfx.bind("reload"))
@@ -560,6 +569,14 @@ func _reset_player_stats(who: ArenaPlayer) -> void:
     who.ammo = 6
     who.reload_duration = 1.35
     who.reload_timer = 0.0
+    who.homing_strength = 0.0
+    who.ricochet_count = 0
+    who.projectile_speed = 1050.0
+    who.weapon_level = 0
+    who.homing_strength = 0.0
+    who.ricochet_count = 0
+    who.projectile_speed = 1050.0
+    who.weapon_level = 0
 
 func _show_main_menu() -> void:
     phase = "menu"
@@ -744,8 +761,8 @@ func _set_hard() -> void:
     _start_game("bot")
 
 func _start_training() -> void:
+    # Training begins immediately. Cards are opened only from the dedicated CARDS menu.
     _start_game("training")
-    _open_training_cards()
 
 func _show_online_info() -> void:
     _show_panel("ОНЛАЙН",[
@@ -1083,6 +1100,102 @@ func _set_training_tab(tab: String) -> void:
     training_tab = tab
     _open_training_cards()
 
+func _add_card_illustration(parent: Control, card_id: String, active: bool) -> void:
+    var tint := Color("#d9ef70") if active else Color("#91a7c4")
+    var dark := Color("#101a28")
+    var glow := Color(tint,0.12)
+    var halo := Polygon2D.new()
+    halo.position = Vector2(157,59)
+    halo.polygon = PackedVector2Array([Vector2(-115,-54),Vector2(115,-54),Vector2(137,0),Vector2(115,54),Vector2(-115,54),Vector2(-137,0)])
+    halo.color = glow
+    parent.add_child(halo)
+    var frame := Line2D.new()
+    frame.points = PackedVector2Array([Vector2(30,59),Vector2(48,14),Vector2(85,5),Vector2(108,14),Vector2(126,59),Vector2(108,104),Vector2(85,113),Vector2(48,104),Vector2(30,59)])
+    frame.width = 2.0
+    frame.default_color = Color(tint,0.28)
+    frame.antialiased = true
+    parent.add_child(frame)
+    # Custom illustrated emblem for each card, with a shared hand-painted tech-art language.
+    var emblem := Polygon2D.new()
+    emblem.position = Vector2(157,58)
+    emblem.color = tint
+    match card_id:
+        "homing":
+            emblem.polygon = PackedVector2Array([Vector2(-8,-43),Vector2(9,-18),Vector2(34,-10),Vector2(14,8),Vector2(7,38),Vector2(-8,20),Vector2(-25,37),Vector2(-20,7),Vector2(-40,-9),Vector2(-15,-18)])
+            var target_ring := Line2D.new()
+            var pts := PackedVector2Array()
+            for i in range(49):
+                var a := TAU * float(i) / 48.0
+                pts.append(Vector2(cos(a),sin(a))*49.0)
+            target_ring.points = pts
+            target_ring.width = 2.2
+            target_ring.default_color = Color(tint,0.8)
+            target_ring.antialiased = true
+            parent.add_child(target_ring)
+            var dot := Polygon2D.new()
+            dot.polygon = PackedVector2Array([Vector2(-5,-5),Vector2(5,-5),Vector2(5,5),Vector2(-5,5)])
+            dot.position = Vector2(157,58)
+            dot.color = Color.WHITE
+            parent.add_child(dot)
+        "ricochet":
+            emblem.polygon = PackedVector2Array([Vector2(-12,-43),Vector2(12,-43),Vector2(12,-5),Vector2(42,-5),Vector2(42,17),Vector2(-12,17)])
+            var bounce := Line2D.new()
+            bounce.points = PackedVector2Array([Vector2(90,86),Vector2(90,27),Vector2(207,27),Vector2(207,86)])
+            bounce.width = 4.0
+            bounce.default_color = tint
+            bounce.antialiased = true
+            parent.add_child(bounce)
+        "heavy":
+            emblem.polygon = PackedVector2Array([Vector2(-55,-17),Vector2(27,-17),Vector2(27,-30),Vector2(58,0),Vector2(27,30),Vector2(27,17),Vector2(-55,17)])
+            var weight := Polygon2D.new()
+            weight.position = Vector2(157,58)
+            weight.polygon = PackedVector2Array([Vector2(-13,-43),Vector2(13,-43),Vector2(13,-17),Vector2(40,-17),Vector2(40,17),Vector2(13,17),Vector2(13,43),Vector2(-13,43),Vector2(-13,17),Vector2(-40,17),Vector2(-40,-17),Vector2(-13,-17)])
+            weight.color = Color(tint,0.5)
+            parent.add_child(weight)
+        "rapid":
+            emblem.polygon = PackedVector2Array([Vector2(13,-47),Vector2(-34,7),Vector2(-7,7),Vector2(-22,47),Vector2(39,-15),Vector2(11,-15)])
+            var speed_lines := Line2D.new()
+            speed_lines.points = PackedVector2Array([Vector2(55,43),Vector2(96,43),Vector2(115,31)])
+            speed_lines.width = 4.0
+            speed_lines.default_color = tint
+            parent.add_child(speed_lines)
+        "magazine":
+            emblem.polygon = PackedVector2Array([Vector2(-35,-37),Vector2(35,-37),Vector2(35,38),Vector2(-35,38)])
+            for i in range(3):
+                var slot := ColorRect.new()
+                slot.position = Vector2(134.0+float(i)*16.0,37.0)
+                slot.size = Vector2(8,42)
+                slot.color = dark
+                parent.add_child(slot)
+        "piercing":
+            emblem.polygon = PackedVector2Array([Vector2(-60,-9),Vector2(24,-9),Vector2(24,-24),Vector2(61,0),Vector2(24,24),Vector2(24,9),Vector2(-60,9)])
+            var streak := Line2D.new()
+            streak.points = PackedVector2Array([Vector2(84,59),Vector2(224,59)])
+            streak.width = 2.0
+            streak.default_color = Color.WHITE
+            parent.add_child(streak)
+        "spring":
+            emblem.polygon = PackedVector2Array([Vector2(-35,-42),Vector2(35,-42),Vector2(-15,-14),Vector2(35,-14),Vector2(-15,14),Vector2(35,14),Vector2(8,42),Vector2(-35,42)])
+        "feather":
+            emblem.polygon = PackedVector2Array([Vector2(-42,26),Vector2(-15,-36),Vector2(6,-45),Vector2(31,-15),Vector2(38,18),Vector2(5,42),Vector2(-9,8)])
+        "wall":
+            emblem.polygon = PackedVector2Array([Vector2(-42,-35),Vector2(-20,-35),Vector2(-20,25),Vector2(20,25),Vector2(20,4),Vector2(44,4),Vector2(44,45),Vector2(-42,45)])
+        "air":
+            emblem.polygon = PackedVector2Array([Vector2(-10,-46),Vector2(10,-46),Vector2(10,-10),Vector2(46,-10),Vector2(46,10),Vector2(10,10),Vector2(10,46),Vector2(-10,46),Vector2(-10,10),Vector2(-46,10),Vector2(-46,-10),Vector2(-10,-10)])
+        "boots":
+            emblem.polygon = PackedVector2Array([Vector2(-39,-42),Vector2(-4,-42),Vector2(-4,15),Vector2(40,15),Vector2(40,39),Vector2(-39,39)])
+        _:
+            emblem.polygon = PackedVector2Array([Vector2(-44,-34),Vector2(0,-49),Vector2(44,-34),Vector2(35,26),Vector2(0,48),Vector2(-35,26)])
+    if card_id not in ["homing","ricochet","heavy","rapid","magazine","piercing"]:
+        parent.add_child(emblem)
+    else:
+        parent.add_child(emblem)
+    var shine := Line2D.new()
+    shine.points = PackedVector2Array([Vector2(126,30),Vector2(145,19),Vector2(169,18)])
+    shine.width = 2.0
+    shine.default_color = Color(1.0,1.0,1.0,0.55)
+    parent.add_child(shine)
+
 func _build_upgrade_cards(shade: Control) -> void:
     var info := Label.new()
     info.text = "СОБЕРИ СВОЙ БИЛД  •  УСИЛЕНИЯ И ОСЛАБЛЕНИЯ"
@@ -1124,23 +1237,7 @@ func _build_upgrade_cards(shade: Control) -> void:
         art_style.set_corner_radius_all(12)
         art_area.add_theme_stylebox_override("panel",art_style)
         column.add_child(art_area)
-        var art := Polygon2D.new()
-        art.position = Vector2(157,58)
-        art.color = Color("#d9ef70") if active else Color("#a9b3c7")
-        match id:
-            "swift":
-                art.polygon = PackedVector2Array([Vector2(-58,-15),Vector2(10,-15),Vector2(10,-34),Vector2(62,0),Vector2(10,34),Vector2(10,15),Vector2(-58,15)])
-            "spring":
-                art.polygon = PackedVector2Array([Vector2(-38,-42),Vector2(38,-42),Vector2(-15,-14),Vector2(38,-14),Vector2(-15,14),Vector2(38,14),Vector2(10,42),Vector2(-38,42),Vector2(-10,14),Vector2(-45,14),Vector2(-15,-14)])
-            "wave":
-                art.polygon = PackedVector2Array([Vector2(0,-48),Vector2(18,-15),Vector2(52,-12),Vector2(25,10),Vector2(34,45),Vector2(0,25),Vector2(-34,45),Vector2(-25,10),Vector2(-52,-12),Vector2(-18,-15)])
-            "rapid":
-                art.polygon = PackedVector2Array([Vector2(10,-48),Vector2(-35,8),Vector2(-8,8),Vector2(-22,48),Vector2(38,-14),Vector2(10,-14)])
-            "sturdy":
-                art.polygon = PackedVector2Array([Vector2(0,-47),Vector2(42,-25),Vector2(34,20),Vector2(0,49),Vector2(-34,20),Vector2(-42,-25)])
-            _:
-                art.polygon = PackedVector2Array([Vector2(-40,-40),Vector2(40,-40),Vector2(40,40),Vector2(-40,40)])
-        art_area.add_child(art)
+        _add_card_illustration(art_area, id, active)
         var icon_label := Label.new()
         icon_label.text = str(card.get("icon",""))
         icon_label.position = Vector2(0,91)
@@ -1155,6 +1252,12 @@ func _build_upgrade_cards(shade: Control) -> void:
         name_label.add_theme_font_size_override("font_size",18)
         name_label.add_theme_color_override("font_color",Color("#f3f1e8"))
         column.add_child(name_label)
+        var primary := Label.new()
+        primary.text = str(card.get("primary","ОСНОВНОЙ ЭФФЕКТ"))
+        primary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        primary.add_theme_font_size_override("font_size",14)
+        primary.add_theme_color_override("font_color",Color("#f0d88a"))
+        column.add_child(primary)
         var buff := Label.new()
         buff.text = "▲  " + str(card.get("buff",card.get("desc","")))
         buff.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
