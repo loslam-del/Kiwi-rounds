@@ -1119,6 +1119,7 @@ func _add_card_illustration(parent: Control, card_id: String, active: bool) -> v
     var emblem := Polygon2D.new()
     emblem.position = Vector2(157,58)
     emblem.color = tint
+    parent.add_child(emblem)
     match card_id:
         "homing":
             emblem.polygon = PackedVector2Array([Vector2(-8,-43),Vector2(9,-18),Vector2(34,-10),Vector2(14,8),Vector2(7,38),Vector2(-8,20),Vector2(-25,37),Vector2(-20,7),Vector2(-40,-9),Vector2(-15,-18)])
@@ -1186,10 +1187,6 @@ func _add_card_illustration(parent: Control, card_id: String, active: bool) -> v
             emblem.polygon = PackedVector2Array([Vector2(-39,-42),Vector2(-4,-42),Vector2(-4,15),Vector2(40,15),Vector2(40,39),Vector2(-39,39)])
         _:
             emblem.polygon = PackedVector2Array([Vector2(-44,-34),Vector2(0,-49),Vector2(44,-34),Vector2(35,26),Vector2(0,48),Vector2(-35,26)])
-    if card_id not in ["homing","ricochet","heavy","rapid","magazine","piercing"]:
-        parent.add_child(emblem)
-    else:
-        parent.add_child(emblem)
     var shine := Line2D.new()
     shine.points = PackedVector2Array([Vector2(126,30),Vector2(145,19),Vector2(169,18)])
     shine.width = 2.0
