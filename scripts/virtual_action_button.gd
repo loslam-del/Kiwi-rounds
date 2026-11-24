@@ -56,6 +56,14 @@ func _gui_input(event: InputEvent) -> void:
             queue_redraw()
         accept_event()
 
+func cancel_input() -> void:
+    var was_active := active_touch != -1 or mouse_active
+    active_touch = -1
+    mouse_active = false
+    if was_active:
+        button_up.emit()
+    queue_redraw()
+
 func _event_inside(viewport_position: Vector2) -> bool:
     return get_global_rect().has_point(viewport_position)
 
