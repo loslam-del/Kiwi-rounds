@@ -59,6 +59,12 @@ func _run_physics_checks() -> void:
         return
     player.call("set_move", Vector2.ZERO)
     player.velocity = Vector2.ZERO
+    player.call("set_jump", true)
+    await physics_frame
+    if player.velocity.x <= 0.0 or player.velocity.y >= 0.0:
+        _fail("wall jump did not launch away from the wall")
+        return
+    player.call("set_jump", false)
 
     for _i in range(8):
         await physics_frame
