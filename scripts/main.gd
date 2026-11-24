@@ -143,6 +143,18 @@ func _draw() -> void:
         var y := fposmod(base_y + sin(background_time * 0.7 + float(i)) * 5.0, 660.0)
         var twinkle := 0.12 + (sin(background_time * 2.0 + float(i) * 1.7) + 1.0) * 0.09
         draw_circle(Vector2(x,y),1.5 if i%3==0 else 1.0,Color(0.72,0.88,1.0,twinkle))
+    # Architectural light columns and a subtle animated arena grid.
+    for i in range(13):
+        var gx := 54.0 + float(i) * 98.0
+        var sway := sin(background_time * 0.42 + float(i) * 0.7) * 10.0
+        draw_line(Vector2(gx+sway,70),Vector2(gx-sway*0.5,680),Color(0.38,0.72,0.82,0.025),1.0)
+    for i in range(6):
+        var gy := 520.0 + float(i) * 28.0
+        draw_line(Vector2(0,gy),Vector2(1280,gy),Color(0.45,0.72,0.84,0.035),1.0)
+    for i in range(8):
+        var orbit := 92.0 + float(i) * 22.0
+        var phase_offset := background_time * (0.16 if i % 2 == 0 else -0.12)
+        draw_arc(Vector2(640,435),orbit,phase_offset,phase_offset+PI*0.62,48,Color(0.42,0.82,0.78,0.045),1.2,true)
     # Soft arena halos and a faint central light column.
     draw_circle(Vector2(640,450),250.0,Color(0.28,0.62,0.68,0.025))
     draw_arc(Vector2(640,470),430,PI,TAU,80,Color(0.38,0.65,0.82,0.12),2.0,true)
