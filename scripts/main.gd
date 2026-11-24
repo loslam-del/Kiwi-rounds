@@ -223,6 +223,8 @@ func _process(_delta: float) -> void:
         _finish_round(true)
 
 func _start_game(mode: String) -> void:
+    player.set_physics_process(true)
+    rival.set_physics_process(true)
     game_mode = mode
     score_player = 0
     score_bot = 0
@@ -231,7 +233,7 @@ func _start_game(mode: String) -> void:
     _reset_player_stats(player)
     _reset_player_stats(rival)
     rival.bot_accuracy = bot_accuracy
-    rival.move_speed = 430.0 * (1.0 if bot_difficulty == "easy" else (1.12 if bot_difficulty == "hard" else 1.0))
+    rival.move_speed = 340.0 if bot_difficulty == "easy" else (480.0 if bot_difficulty == "hard" else 430.0)
     _make_arena(0)
     player.reset_round(Vector2(350,390))
     rival.reset_round(Vector2(930,390))
@@ -249,6 +251,8 @@ func _reset_player_stats(who: ArenaPlayer) -> void:
 
 func _show_main_menu() -> void:
     phase = "menu"
+    player.set_physics_process(false)
+    rival.set_physics_process(false)
     game_controls.visible = false
     hud.visible = false
     _show_panel("KIWI ROUNDS",[
@@ -300,6 +304,8 @@ func _show_online_info() -> void:
 
 func _show_pause_menu() -> void:
     phase = "paused"
+    player.set_physics_process(false)
+    rival.set_physics_process(false)
     _show_panel("ПАУЗА",[
         ["ПРОДОЛЖИТЬ",Callable(self,"_resume_game")],
         ["КАРТОЧКИ",Callable(self,"_open_training_cards")],
@@ -308,6 +314,8 @@ func _show_pause_menu() -> void:
 
 func _resume_game() -> void:
     _close_overlay()
+    player.set_physics_process(true)
+    rival.set_physics_process(true)
     phase = "fight"
     game_controls.visible = true
 
@@ -327,6 +335,10 @@ func _toggle_vibration() -> void:
     _show_settings()
 
 func _open_skins() -> void:
+    if phase == "fight":
+        phase = "paused"
+        player.set_physics_process(false)
+        rival.set_physics_process(false)
     var skin_count := 5 + mod_loader.skins.size()
     var current_name := "Выбран скин " + str(skin_index + 1) + " из " + str(skin_count)
     _show_panel("СКИНЫ",[
@@ -367,6 +379,9 @@ func _reload_mods() -> void:
     _open_mods()
 
 func _open_training_cards() -> void:
+    if phase == "fight":
+        player.set_physics_process(false)
+        rival.set_physics_process(false)
     if game_mode != "training":
         _show_panel("КАРТОЧКИ",[
             ["ОТКРЫТЬ ТРЕНИРОВКУ",Callable(self,"_start_training")],
@@ -492,6 +507,8 @@ func _choose_upgrade(upgrade_id: String) -> void:
 
 func _next_round() -> void:
     _close_overlay()
+    player.set_physics_process(true)
+    rival.set_physics_process(true)
     round_index += 1
     _make_arena(round_index - 1)
     player.reset_round(Vector2(350,390))
