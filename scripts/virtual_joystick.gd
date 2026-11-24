@@ -61,6 +61,17 @@ func _reset_value() -> void:
 
 func _draw() -> void:
     var center := size * 0.5
-    draw_circle(center, minf(size.x, size.y) * 0.47, base_color)
-    draw_arc(center, minf(size.x, size.y) * 0.47, 0.0, TAU, 64, Color(0.65, 0.79, 0.96, 0.7), 3.0)
-    draw_circle(center + value * knob_limit, minf(size.x, size.y) * 0.19, knob_color)
+    var radius := minf(size.x, size.y) * 0.46
+    # Compact twin-ring joystick with a clear directional thumb pad.
+    draw_circle(center + Vector2(0,3), radius, Color(0.025,0.055,0.09,0.50))
+    draw_circle(center, radius, Color(0.12,0.22,0.34,0.66))
+    draw_arc(center, radius, 0.0, TAU, 64, Color(0.55,0.72,0.91,0.72), 2.2, true)
+    draw_arc(center, radius * 0.70, 0.0, TAU, 48, Color(0.62,0.78,0.95,0.16), 1.0, true)
+    for angle in [0.0, PI*0.5, PI, PI*1.5]:
+        var a := Vector2(cos(angle),sin(angle))
+        draw_line(center + a * (radius*0.76), center + a * (radius*0.88), Color(0.76,0.88,1.0,0.32), 1.4, true)
+    var knob_center := center + value * knob_limit
+    draw_circle(knob_center + Vector2(0,2), radius * 0.29, Color(0.02,0.05,0.09,0.45))
+    draw_circle(knob_center, radius * 0.27, Color(0.62,0.78,0.94,0.92))
+    draw_arc(knob_center, radius * 0.27, 0.0, TAU, 40, Color(0.91,0.97,1.0,0.85), 1.5, true)
+    draw_circle(knob_center + Vector2(-radius*0.07,-radius*0.08), radius*0.075, Color(1,1,1,0.30))
