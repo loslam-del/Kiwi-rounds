@@ -78,7 +78,8 @@ func _spawn_impact_particles() -> void:
     particles.initial_velocity_min = 90.0
     particles.initial_velocity_max = 260.0
     particles.gravity = Vector2(0.0,220.0)
-    particles.scale_amount = 2.4
+    particles.scale_amount_min = 2.4
+    particles.scale_amount_max = 2.4
     particles.color = tint.lightened(0.35)
     get_tree().current_scene.add_child(particles)
     particles.global_position = global_position
