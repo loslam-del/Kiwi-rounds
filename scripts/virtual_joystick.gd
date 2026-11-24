@@ -41,6 +41,11 @@ func _gui_input(event: InputEvent) -> void:
         _set_from_position(event.position)
         accept_event()
 
+func cancel_input() -> void:
+    active_index = -1
+    mouse_active = false
+    _reset_value()
+
 func _set_from_position(local_position: Vector2) -> void:
     var center := size * 0.5
     var offset := local_position - center
