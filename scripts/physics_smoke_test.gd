@@ -76,7 +76,8 @@ func _run_physics_checks() -> void:
     platform.name = "ArenaPlatform"
     game.add_child(platform)
     bounce.call("_on_body_entered", platform)
-    if (bounce.get("direction") as Vector2).y <= 0.0 or int(bounce.get("ricochets_left")) != 1:
+    var bounce_direction: Vector2 = bounce.get("direction")
+    if bounce_direction.y <= 0.0 or int(bounce.get("ricochets_left")) != 1:
         _fail("projectile did not ricochet from a platform")
         return
 
@@ -85,7 +86,8 @@ func _run_physics_checks() -> void:
     game.add_child(guided)
     guided.call("configure", Vector2.UP, 610.0, Color.WHITE, player)
     guided.call("_physics_process", 0.1)
-    if (guided.get("direction") as Vector2).x <= 0.0:
+    var guided_direction: Vector2 = guided.get("direction")
+    if guided_direction.x <= 0.0:
         _fail("homing projectile did not turn toward its target")
         return
 
