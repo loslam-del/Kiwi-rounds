@@ -80,9 +80,8 @@ func _physics_process(delta: float) -> void:
 
     global_position = to
     rotation = direction.angle()
-    life -= delta
-    if life <= 0.0 or global_position.x < -100.0 or global_position.x > 1380.0 or global_position.y < -100.0 or global_position.y > 820.0:
-        queue_free()
+    # Projectiles have no lifetime or distance cutoff: they remain active
+    # until the raycast above detects a real collision.
 
 func _spawn_impact_particles() -> void:
     # Expanding ring gives impacts a clear readable contact point.
