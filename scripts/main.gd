@@ -937,6 +937,7 @@ func _open_skins() -> void:
         var skin: Dictionary = skins[i]
         var color := Color.from_string(str(skin.get("color","#39d6c5")),Color("#39d6c5"))
         var card := PanelContainer.new()
+        card.name = "SkinCard_%d" % i
         card.custom_minimum_size = Vector2(340,286)
         var style := StyleBoxFlat.new()
         style.bg_color = Color("#30352b") if i == skin_index else Color("#20242e")
@@ -948,10 +949,12 @@ func _open_skins() -> void:
         style.shadow_offset = Vector2(0,4)
         card.add_theme_stylebox_override("panel",style)
         var column := VBoxContainer.new()
+        column.name = "SkinColumn"
         column.alignment = BoxContainer.ALIGNMENT_CENTER
         column.add_theme_constant_override("separation",8)
         card.add_child(column)
         var preview_area := Control.new()
+        preview_area.name = "SkinPreviewArea"
         preview_area.custom_minimum_size = Vector2(310,158)
         preview_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         preview_area.clip_contents = true
