@@ -719,194 +719,167 @@ func _show_main_menu() -> void:
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     shade.color = Color("#080d19")
+    shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
     ui.add_child(shade)
     overlay = shade
 
-    # Neon frame, moving grid and title moved noticeably higher.
-    var frame := Panel.new()
-    frame.position = Vector2(34, 30)
-    frame.size = Vector2(1212, 660)
-    var frame_style := StyleBoxFlat.new()
-    frame_style.bg_color = Color("#0c1424")
-    frame_style.border_color = Color("#36e6df")
-    frame_style.set_border_width_all(2)
-    frame_style.set_corner_radius_all(22)
-    frame_style.shadow_color = Color("#27d9d0", 0.20)
-    frame_style.shadow_size = 24
-    frame.add_theme_stylebox_override("panel", frame_style)
-    shade.add_child(frame)
-
-    for i in range(13):
-        var grid_line := ColorRect.new()
-        grid_line.position = Vector2(50 + i * 91, 44)
-        grid_line.size = Vector2(1, 630)
-        grid_line.color = Color("#43c9dc", 0.055)
-        shade.add_child(grid_line)
-    for i in range(8):
-        var grid_line := ColorRect.new()
-        grid_line.position = Vector2(44, 70 + i * 82)
-        grid_line.size = Vector2(1190, 1)
-        grid_line.color = Color("#43c9dc", 0.05)
-        shade.add_child(grid_line)
+    # Full-screen live arena is created first, so all menu controls render above it.
+    _create_menu_bot_preview(shade)
 
     var logo_texture := load("res://assets/1795552443370.jpg") as Texture2D
     if logo_texture != null:
         var logo := TextureRect.new()
         logo.name = "MenuLogo"
         logo.texture = logo_texture
-        logo.position = Vector2(72, 34)
-        logo.size = Vector2(540, 150)
+        logo.position = Vector2(390, 22)
+        logo.size = Vector2(500, 145)
         logo.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
         logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
         logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
         shade.add_child(logo)
 
-    # Title mascot intentionally omitted; the user will provide custom artwork.
-
     var subtitle := Label.new()
-    subtitle.text = "NEON BOT ARENA  /  RANDOM MAPS  /  RANDOM BUILDS"
-    subtitle.position = Vector2(0, 190)
-    subtitle.size = Vector2(1280, 28)
+    subtitle.text = "NEON BOT ARENA  •  RANDOM MAPS  •  RANDOM BUILDS"
+    subtitle.position = Vector2(300, 158)
+    subtitle.size = Vector2(680, 24)
     subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    subtitle.add_theme_font_size_override("font_size", 14)
-    subtitle.add_theme_color_override("font_color", Color("#62dfe4"))
+    subtitle.add_theme_font_size_override("font_size", 13)
+    subtitle.add_theme_color_override("font_color", Color("#a9e9ee"))
     shade.add_child(subtitle)
 
+    # Centered translucent menu keeps the live fight visible around it.
     var menu_panel := Panel.new()
-    menu_panel.position = Vector2(92, 258)
-    menu_panel.size = Vector2(430, 360)
+    menu_panel.position = Vector2(425, 205)
+    menu_panel.size = Vector2(430, 390)
     var menu_style := StyleBoxFlat.new()
-    menu_style.bg_color = Color("#101c2d", 0.96)
-    menu_style.border_color = Color("#8b67ff", 0.72)
+    menu_style.bg_color = Color("#091321", 0.78)
+    menu_style.border_color = Color("#36e6df", 0.82)
     menu_style.set_border_width_all(2)
-    menu_style.set_corner_radius_all(18)
-    menu_style.shadow_color = Color("#8b67ff", 0.18)
-    menu_style.shadow_size = 18
+    menu_style.set_corner_radius_all(22)
+    menu_style.shadow_color = Color("#36e6df", 0.22)
+    menu_style.shadow_size = 22
     menu_panel.add_theme_stylebox_override("panel", menu_style)
     shade.add_child(menu_panel)
 
-    var play := _add_button("▶   ИГРАТЬ", Vector2(122, 292), Vector2(370, 68), shade)
+    var play := _add_button("▶   ИГРАТЬ", Vector2(465, 238), Vector2(350, 66), shade)
     play.add_theme_font_size_override("font_size", 25)
     play.add_theme_stylebox_override("normal", _menu_button_style(Color("#36e6df"), Color("#b5fff4")))
     play.add_theme_color_override("font_color", Color("#07151d"))
     play.pressed.connect(_start_game.bind("bot"))
 
-    var skins := _add_button("✦   СКИНЫ", Vector2(122, 376), Vector2(370, 58), shade)
+    var skins := _add_button("✦   СКИНЫ", Vector2(465, 322), Vector2(350, 58), shade)
     skins.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
     skins.add_theme_color_override("font_color", Color("#e8f6ff"))
     skins.pressed.connect(_open_skins)
 
-    var settings := _add_button("⚙   НАСТРОЙКИ", Vector2(122, 448), Vector2(370, 58), shade)
+    var settings := _add_button("⚙   НАСТРОЙКИ", Vector2(465, 394), Vector2(350, 58), shade)
     settings.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#36e6df")))
     settings.add_theme_color_override("font_color", Color("#e8f6ff"))
     settings.pressed.connect(_show_settings)
 
-    var mods := _add_button("▣   МОДЫ", Vector2(122, 520), Vector2(370, 58), shade)
+    var mods := _add_button("▣   МОДЫ", Vector2(465, 466), Vector2(350, 58), shade)
     mods.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
     mods.add_theme_color_override("font_color", Color("#e8f6ff"))
     mods.pressed.connect(_open_mods)
 
     var footer := Label.new()
     footer.text = "KIWI LABS   •   BUILD. FIGHT. REPEAT."
-    footer.position = Vector2(92, 630)
+    footer.position = Vector2(425, 558)
     footer.size = Vector2(430, 22)
     footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     footer.add_theme_font_size_override("font_size", 12)
-    footer.add_theme_color_override("font_color", Color("#5e8c9d"))
+    footer.add_theme_color_override("font_color", Color("#9bb8c9"))
     shade.add_child(footer)
 
-    _create_menu_bot_preview(shade)
-
 func _create_menu_bot_preview(parent: Control) -> void:
-    # A live miniature duel in a stable ground-level arena; map decorations vary without shifting bot spawn points.
+    # Full-screen background sparring match, independent from the real match state.
     var stage := Node2D.new()
     stage.name = "MenuBotPreview"
+    stage.position = Vector2.ZERO
     parent.add_child(stage)
 
     var map_data: Dictionary = all_maps.pick_random() if not all_maps.is_empty() else DEFAULT_MAPS[0]
-    var map_label := Label.new()
-    map_label.text = "LIVE SIM  //  " + str(map_data.get("name", "RANDOM ARENA"))
-    map_label.position = Vector2(720, 260)
-    map_label.size = Vector2(470, 26)
-    map_label.add_theme_font_size_override("font_size", 16)
-    map_label.add_theme_color_override("font_color", Color("#b8a0ff"))
-    parent.add_child(map_label)
+    var bg := ColorRect.new()
+    bg.position = Vector2.ZERO
+    bg.size = Vector2(1280, 720)
+    bg.color = Color.from_string(str(map_data.get("bg_bottom", "#101a2a")), Color("#101a2a"))
+    bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    parent.add_child(bg)
+    parent.move_child(bg, 0)
+    parent.move_child(stage, 1)
+
+    # Soft horizon and floor lighting make the whole viewport feel like an arena.
+    var horizon := Polygon2D.new()
+    horizon.polygon = PackedVector2Array([Vector2(0,0),Vector2(1280,0),Vector2(1280,520),Vector2(0,520)])
+    horizon.color = Color.from_string(str(map_data.get("bg_top", "#172234")), Color("#172234"))
+    stage.add_child(horizon)
 
     var ground := StaticBody2D.new()
-    ground.position = Vector2(1000, 655)
+    ground.position = Vector2(640, 690)
     ground.collision_layer = 2
     var ground_shape := CollisionShape2D.new()
     var ground_rect := RectangleShape2D.new()
-    ground_rect.size = Vector2(570, 34)
+    ground_rect.size = Vector2(1280, 80)
     ground_shape.shape = ground_rect
     ground.add_child(ground_shape)
     stage.add_child(ground)
-    _add_menu_preview_platform(stage, Vector2(1000, 638), Vector2(570, 18), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")), false)
+    _add_menu_preview_platform(stage, Vector2(640, 650), Vector2(1280, 18), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")), false)
 
-    var wall_left := StaticBody2D.new()
-    wall_left.position = Vector2(720, 450)
-    wall_left.collision_layer = 2
-    var wall_left_shape := CollisionShape2D.new()
-    var wall_rect := RectangleShape2D.new()
-    wall_rect.size = Vector2(24, 470)
-    wall_left_shape.shape = wall_rect
-    wall_left.add_child(wall_left_shape)
-    stage.add_child(wall_left)
-    var wall_right := StaticBody2D.new()
-    wall_right.position = Vector2(1280, 450)
-    wall_right.collision_layer = 2
-    var wall_right_shape := CollisionShape2D.new()
-    var wall_right_rect := RectangleShape2D.new()
-    wall_right_rect.size = Vector2(24, 470)
-    wall_right_shape.shape = wall_right_rect
-    wall_right.add_child(wall_right_shape)
-    stage.add_child(wall_right)
+    for wall_x in [18.0, 1262.0]:
+        var wall := StaticBody2D.new()
+        wall.position = Vector2(wall_x, 360)
+        wall.collision_layer = 2
+        var wall_shape := CollisionShape2D.new()
+        var wall_rect := RectangleShape2D.new()
+        wall_rect.size = Vector2(36, 720)
+        wall_shape.shape = wall_rect
+        wall.add_child(wall_shape)
+        stage.add_child(wall)
 
     var platform_data: Array = map_data.get("platforms", [])
-    var added := 0
+    var used_platforms := 0
     for item in platform_data:
         if typeof(item) != TYPE_DICTIONARY:
             continue
-        var px := float(item.get("x", 900))
-        if px < 650.0:
-            continue
-        var py := clampf(float(item.get("y", 500)), 360.0, 590.0)
-        var pw := clampf(float(item.get("w", 160)), 90.0, 260.0)
-        _add_menu_preview_platform(stage, Vector2(px, py), Vector2(pw, 16), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")), false)
-        added += 1
-        if added >= 4:
+        var px := clampf(float(item.get("x", 640)), 130.0, 1150.0)
+        var py := clampf(float(item.get("y", 500)), 310.0, 605.0)
+        var pw := clampf(float(item.get("w", 170)), 110.0, 290.0)
+        _add_menu_preview_platform(stage, Vector2(px, py), Vector2(pw, 16), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")), true)
+        used_platforms += 1
+        if used_platforms >= 6:
             break
-    if added == 0:
-        _add_menu_preview_platform(stage, Vector2(900, 520), Vector2(150, 16), Color("#36e6df"), false)
-        _add_menu_preview_platform(stage, Vector2(1110, 455), Vector2(150, 16), Color("#b58cff"), false)
 
     var bot_a: ArenaPlayer = PLAYER_SCRIPT.new()
+    bot_a.name = "MenuBotKiwi"
     bot_a.is_bot = true
-    bot_a.menu_preview_mode = true
+    bot_a.menu_preview_mode = false
     bot_a.body_color = Color("#36e6df")
-    bot_a.position = Vector2(850, 586)
-    bot_a.bot_accuracy = 1.0
-    bot_a.move_speed = 390.0
-    bot_a.pulse_force = 520.0
-    bot_a.pulse_interval = 0.42
-    bot_a.magazine_size = 999
-    bot_a.ammo = 999
-    bot_a.bot_think = 0.05
+    bot_a.position = Vector2(360, 595)
+    bot_a.bot_accuracy = 0.86
+    bot_a.move_speed = 430.0
+    bot_a.pulse_force = 610.0
+    bot_a.pulse_interval = 0.56
+    bot_a.magazine_size = 8
+    bot_a.ammo = 8
+    bot_a.reload_duration = 1.1
+    bot_a.bot_think = 0.04
     stage.add_child(bot_a)
     bot_a.set_physics_process(true)
 
     var bot_b: ArenaPlayer = PLAYER_SCRIPT.new()
+    bot_b.name = "MenuBotPink"
     bot_b.is_bot = true
-    bot_b.menu_preview_mode = true
+    bot_b.menu_preview_mode = false
     bot_b.body_color = Color("#ff6fae")
-    bot_b.position = Vector2(1150, 586)
-    bot_b.bot_accuracy = 1.0
-    bot_b.move_speed = 390.0
-    bot_b.pulse_force = 520.0
-    bot_b.pulse_interval = 0.42
-    bot_b.magazine_size = 999
-    bot_b.ammo = 999
-    bot_b.bot_think = 0.05
+    bot_b.position = Vector2(920, 595)
+    bot_b.bot_accuracy = 0.86
+    bot_b.move_speed = 430.0
+    bot_b.pulse_force = 610.0
+    bot_b.pulse_interval = 0.56
+    bot_b.magazine_size = 8
+    bot_b.ammo = 8
+    bot_b.reload_duration = 1.1
+    bot_b.bot_think = 0.04
     stage.add_child(bot_b)
     bot_b.set_physics_process(true)
     bot_a.target = bot_b
@@ -914,20 +887,17 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_a.pulse_requested.connect(_spawn_menu_preview_pulse.bind(stage))
     bot_b.pulse_requested.connect(_spawn_menu_preview_pulse.bind(stage))
 
-    # Randomize combat cards only; mobility cards could leave preview bots airborne.
+    # Each menu visit gets a different small set of combat upgrades.
     var preview_upgrade_pool: Array = []
     for upgrade in all_upgrades:
         var effect := str(upgrade.get("effect", upgrade.get("id", "")))
         if effect in ["homing", "ricochet", "heavy", "rapid", "magazine", "piercing", "kiwi_charm"]:
             preview_upgrade_pool.append(upgrade)
-    var upgrades_a: Array = preview_upgrade_pool.duplicate(true)
-    var upgrades_b: Array = preview_upgrade_pool.duplicate(true)
-    upgrades_a.shuffle()
-    upgrades_b.shuffle()
-    for i in range(mini(2, upgrades_a.size())):
-        bot_a.apply_upgrade(str(upgrades_a[i].get("effect", upgrades_a[i].get("id", ""))))
-    for i in range(mini(2, upgrades_b.size())):
-        bot_b.apply_upgrade(str(upgrades_b[i].get("effect", upgrades_b[i].get("id", ""))))
+    preview_upgrade_pool.shuffle()
+    if preview_upgrade_pool.size() > 0:
+        bot_a.apply_upgrade(str(preview_upgrade_pool[0].get("effect", preview_upgrade_pool[0].get("id", ""))))
+    if preview_upgrade_pool.size() > 1:
+        bot_b.apply_upgrade(str(preview_upgrade_pool[1].get("effect", preview_upgrade_pool[1].get("id", ""))))
 
 func _add_menu_preview_platform(stage: Node2D, at: Vector2, dimensions: Vector2, accent: Color, collide: bool = true) -> void:
     var body := StaticBody2D.new()
