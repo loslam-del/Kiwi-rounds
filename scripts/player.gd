@@ -82,7 +82,7 @@ func _ready() -> void:
     safe_margin = 0.08
     var capsule := CapsuleShape2D.new()
     capsule.radius = 20.0
-    capsule.height = 62.0
+    capsule.height = 88.0
     shape.shape = capsule
     add_child(shape)
 
