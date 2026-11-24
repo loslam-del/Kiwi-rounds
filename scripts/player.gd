@@ -206,47 +206,52 @@ func _physics_process(delta: float) -> void:
         velocity.y = minf(velocity.y, 270.0)
     queue_redraw()
 func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
-    var moving := is_on_floor() and absf(move_input) > 0.05
-    var walk_drive := move_input if is_on_floor() else move_input * 0.22
-    var jump_drive := clampf(-velocity.y / 900.0, -0.85, 0.85)
-    var accel_swing := clampf(horizontal_acceleration / 2200.0, -1.1, 1.1)
+    var grounded := is_on_floor()
+    var moving := grounded and absf(move_input) > 0.05
+    var gait := sin(animation_time) if moving else 0.0
+    var local_aim := Vector2(aim_input.x * facing, aim_input.y).normalized()
+    if local_aim.length_squared() < 0.01:
+        local_aim = Vector2.RIGHT
+    # The front arm follows the aim direction; the elbow keeps a small natural bend.
+    var aim_angle := atan2(local_aim.x, local_aim.y)
+    var arm_front_target := aim_angle * 0.68
+    var elbow_front_target := aim_angle * 0.32
+    var arm_back_target := -0.38 - gait * 0.34
+    var elbow_back_target := -0.18 + gait * 0.18
 
-    # Shoulder joints swing outward; elbows and knees have independent spring motion.
-    var arm_back_target := -0.92 - walk_drive * 0.30 - jump_drive * 0.16
-    var arm_front_target := 0.92 + walk_drive * 0.30 - jump_drive * 0.16
-    var elbow_back_target := -0.78 + walk_drive * 0.16
-    var elbow_front_target := 0.78 - walk_drive * 0.16
-    var leg_back_target := -walk_drive * 0.58 + jump_drive * 0.22
-    var leg_front_target := walk_drive * 0.58 + jump_drive * 0.22
-    var knee_back_target := (0.62 if moving and sin(animation_time) > 0.0 else -0.12) + absf(jump_drive) * 0.28
-    var knee_front_target := (0.62 if moving and sin(animation_time) <= 0.0 else -0.12) + absf(jump_drive) * 0.28
+    # Alternating hip and knee motion drives visible walking and landing poses.
+    var leg_back_target := gait * 0.42 if grounded else -0.16
+    var leg_front_target := -gait * 0.42 if grounded else 0.16
+    var knee_back_target := maxf(0.0, gait) * 0.58 if moving else (0.22 if not grounded else -0.04)
+    var knee_front_target := maxf(0.0, -gait) * 0.58 if moving else (0.22 if not grounded else -0.04)
+    var accel_swing := clampf(horizontal_acceleration / 2400.0, -0.8, 0.8)
 
-    var spring_k := 58.0
-    var damping_rate := 13.5
-    arm_back_angular_velocity += ((arm_back_target - arm_back_angle) * spring_k - arm_back_angular_velocity * damping_rate - accel_swing * 1.0) * delta
-    arm_front_angular_velocity += ((arm_front_target - arm_front_angle) * spring_k - arm_front_angular_velocity * damping_rate - accel_swing * 1.0) * delta
-    elbow_back_angular_velocity += ((elbow_back_target - elbow_back_angle) * 72.0 - elbow_back_angular_velocity * 15.0) * delta
-    elbow_front_angular_velocity += ((elbow_front_target - elbow_front_angle) * 72.0 - elbow_front_angular_velocity * 15.0) * delta
-    leg_back_angular_velocity += ((leg_back_target - leg_back_angle) * spring_k - leg_back_angular_velocity * damping_rate + accel_swing * 0.8) * delta
-    leg_front_angular_velocity += ((leg_front_target - leg_front_angle) * spring_k - leg_front_angular_velocity * damping_rate + accel_swing * 0.8) * delta
-    knee_back_angular_velocity += ((knee_back_target - knee_back_angle) * 48.0 - knee_back_angular_velocity * 12.0) * delta
-    knee_front_angular_velocity += ((knee_front_target - knee_front_angle) * 48.0 - knee_front_angular_velocity * 12.0) * delta
+    var spring_k := 64.0
+    var damping_rate := 15.0
+    arm_back_angular_velocity += ((arm_back_target - arm_back_angle) * spring_k - arm_back_angular_velocity * damping_rate - accel_swing * 0.8) * delta
+    arm_front_angular_velocity += ((arm_front_target - arm_front_angle) * spring_k - arm_front_angular_velocity * damping_rate) * delta
+    elbow_back_angular_velocity += ((elbow_back_target - elbow_back_angle) * 70.0 - elbow_back_angular_velocity * 15.0) * delta
+    elbow_front_angular_velocity += ((elbow_front_target - elbow_front_angle) * 70.0 - elbow_front_angular_velocity * 15.0) * delta
+    leg_back_angular_velocity += ((leg_back_target - leg_back_angle) * spring_k - leg_back_angular_velocity * damping_rate + accel_swing * 0.65) * delta
+    leg_front_angular_velocity += ((leg_front_target - leg_front_angle) * spring_k - leg_front_angular_velocity * damping_rate + accel_swing * 0.65) * delta
+    knee_back_angular_velocity += ((knee_back_target - knee_back_angle) * 52.0 - knee_back_angular_velocity * 13.0) * delta
+    knee_front_angular_velocity += ((knee_front_target - knee_front_angle) * 52.0 - knee_front_angular_velocity * 13.0) * delta
 
-    arm_back_angle = clampf(arm_back_angle + arm_back_angular_velocity * delta, -1.65, 1.65)
-    arm_front_angle = clampf(arm_front_angle + arm_front_angular_velocity * delta, -1.65, 1.65)
-    elbow_back_angle = clampf(elbow_back_angle + elbow_back_angular_velocity * delta, -1.5, 1.5)
-    elbow_front_angle = clampf(elbow_front_angle + elbow_front_angular_velocity * delta, -1.5, 1.5)
-    leg_back_angle = clampf(leg_back_angle + leg_back_angular_velocity * delta, -0.9, 0.9)
-    leg_front_angle = clampf(leg_front_angle + leg_front_angular_velocity * delta, -0.9, 0.9)
-    knee_back_angle = clampf(knee_back_angle + knee_back_angular_velocity * delta, -0.35, 0.95)
-    knee_front_angle = clampf(knee_front_angle + knee_front_angular_velocity * delta, -0.35, 0.95)
+    arm_back_angle = clampf(arm_back_angle + arm_back_angular_velocity * delta, -1.25, 1.25)
+    arm_front_angle = clampf(arm_front_angle + arm_front_angular_velocity * delta, -2.35, 2.35)
+    elbow_back_angle = clampf(elbow_back_angle + elbow_back_angular_velocity * delta, -0.9, 0.9)
+    elbow_front_angle = clampf(elbow_front_angle + elbow_front_angular_velocity * delta, -1.1, 1.1)
+    leg_back_angle = clampf(leg_back_angle + leg_back_angular_velocity * delta, -0.72, 0.72)
+    leg_front_angle = clampf(leg_front_angle + leg_front_angular_velocity * delta, -0.72, 0.72)
+    knee_back_angle = clampf(knee_back_angle + knee_back_angular_velocity * delta, -0.12, 0.82)
+    knee_front_angle = clampf(knee_front_angle + knee_front_angular_velocity * delta, -0.12, 0.82)
 
 
 func _weapon_hand_local() -> Vector2:
-    var shoulder := Vector2(13.0, -7.0)
-    var elbow := shoulder + Vector2(sin(arm_front_angle) * 15.0, cos(arm_front_angle) * 15.0)
+    var shoulder := Vector2(12.0, -8.0)
+    var elbow := shoulder + Vector2(sin(arm_front_angle) * 14.0, cos(arm_front_angle) * 14.0)
     var forearm_angle := arm_front_angle + elbow_front_angle
-    return elbow + Vector2(sin(forearm_angle) * 14.0, cos(forearm_angle) * 14.0)
+    return elbow + Vector2(sin(forearm_angle) * 13.0, cos(forearm_angle) * 13.0)
 
 
 func apply_hit_impulse(direction: Vector2, force: float) -> void:
@@ -337,7 +342,7 @@ func _fire_pulse() -> void:
 
     # Spawn from the hand-held blaster muzzle, not from the fighter's chest.
     var hand_world_offset := Vector2(_weapon_hand_local().x * facing, _weapon_hand_local().y)
-    var muzzle := hand_world_offset + direction * 23.0
+    var muzzle := hand_world_offset + direction * (26.0 + float(weapon_level) * 3.0)
     pulse_requested.emit(global_position + muzzle, direction, pulse_force, body_color, self)
 
 func start_reload() -> void:
@@ -445,27 +450,27 @@ func _draw() -> void:
     var foot_front_angle := leg_front_angle + knee_front_angle
     var foot_back := knee_back + Vector2(sin(foot_back_angle) * leg_len, cos(foot_back_angle) * leg_len)
     var foot_front := knee_front + Vector2(sin(foot_front_angle) * leg_len, cos(foot_front_angle) * leg_len)
-    draw_line(hip_back, knee_back, outline, 10.0, true)
-    draw_line(hip_back, knee_back, dark, 6.0, true)
-    draw_line(knee_back, foot_back, outline, 9.0, true)
-    draw_line(knee_back, foot_back, dark, 5.5, true)
+    draw_line(hip_back, knee_back, outline, 8.0, true)
+    draw_line(hip_back, knee_back, dark, 4.8, true)
+    draw_line(knee_back, foot_back, outline, 7.5, true)
+    draw_line(knee_back, foot_back, dark, 4.6, true)
     draw_line(foot_back + Vector2(-5,0), foot_back + Vector2(7,0), outline, 7.0, true)
     draw_line(foot_back + Vector2(-4,0), foot_back + Vector2(6,0), dark, 4.0, true)
 
-    var shoulder_back := Vector2(-13.0, -7.0)
-    var shoulder_front := Vector2(13.0, -7.0)
-    var upper_arm_len := 15.0
-    var forearm_len := 14.0
+    var shoulder_back := Vector2(-12.0, -8.0)
+    var shoulder_front := Vector2(12.0, -8.0)
+    var upper_arm_len := 14.0
+    var forearm_len := 13.0
     var elbow_back := shoulder_back + Vector2(sin(arm_back_angle) * upper_arm_len, cos(arm_back_angle) * upper_arm_len)
     var elbow_front := shoulder_front + Vector2(sin(arm_front_angle) * upper_arm_len, cos(arm_front_angle) * upper_arm_len)
     var wrist_back_angle := arm_back_angle + elbow_back_angle
     var wrist_front_angle := arm_front_angle + elbow_front_angle
     var hand_back := elbow_back + Vector2(sin(wrist_back_angle) * forearm_len, cos(wrist_back_angle) * forearm_len)
     var hand_front := _weapon_hand_local()
-    draw_line(shoulder_back, elbow_back, outline, 10.0, true)
-    draw_line(shoulder_back, elbow_back, dark, 6.2, true)
-    draw_line(elbow_back, hand_back, outline, 9.0, true)
-    draw_line(elbow_back, hand_back, dark, 5.7, true)
+    draw_line(shoulder_back, elbow_back, outline, 8.0, true)
+    draw_line(shoulder_back, elbow_back, dark, 5.0, true)
+    draw_line(elbow_back, hand_back, outline, 7.5, true)
+    draw_line(elbow_back, hand_back, dark, 4.7, true)
     draw_circle(hand_back, 4.0, dark)
 
     # Compact rounded torso leaves the hips and shoulders readable.
@@ -479,21 +484,21 @@ func _draw() -> void:
     draw_line(center + Vector2(-2.5,5.0), center + Vector2(2.5,5.0), Color("#102536"), 1.5, true)
 
     # Near-side leg is in front of the torso, with a visible knee and foot.
-    draw_line(hip_front, knee_front, outline, 10.0, true)
-    draw_line(hip_front, knee_front, light, 6.0, true)
+    draw_line(hip_front, knee_front, outline, 8.0, true)
+    draw_line(hip_front, knee_front, light, 4.8, true)
     draw_circle(knee_front, 3.8, body_color.lightened(0.05))
-    draw_line(knee_front, foot_front, outline, 9.0, true)
-    draw_line(knee_front, foot_front, body_color, 5.4, true)
+    draw_line(knee_front, foot_front, outline, 7.5, true)
+    draw_line(knee_front, foot_front, body_color, 4.6, true)
     draw_line(foot_front + Vector2(-5,0), foot_front + Vector2(8,0), outline, 7.0, true)
     draw_line(foot_front + Vector2(-4,0), foot_front + Vector2(7,0), light, 4.0, true)
     draw_circle(hip_front, 4.0, light)
 
     # Near-side arm stays visibly separated from the body and bends at the elbow.
-    draw_line(shoulder_front, elbow_front, outline, 10.0, true)
-    draw_line(shoulder_front, elbow_front, light, 6.2, true)
+    draw_line(shoulder_front, elbow_front, outline, 8.0, true)
+    draw_line(shoulder_front, elbow_front, light, 5.0, true)
     draw_circle(elbow_front, 4.2, light)
-    draw_line(elbow_front, hand_front, outline, 9.0, true)
-    draw_line(elbow_front, hand_front, body_color, 5.7, true)
+    draw_line(elbow_front, hand_front, outline, 7.5, true)
+    draw_line(elbow_front, hand_front, body_color, 4.7, true)
     draw_circle(hand_front, 4.0, light)
     draw_circle(shoulder_front, 4.0, light)
 
@@ -579,4 +584,8 @@ func _draw() -> void:
     if muzzle_flash > 0.0:
         var flash_size := 7.0 + muzzle_flash * 80.0
         draw_colored_polygon(PackedVector2Array([Vector2(barrel_len+1,0),Vector2(barrel_len+flash_size,-flash_size*0.4),Vector2(barrel_len+flash_size*0.55,0),Vector2(barrel_len+flash_size,flash_size*0.4)]),Color("#fff0a8",0.9))
+    # Draw the gripping hand last so the fingers visibly wrap around the pistol grip.
+    draw_circle(Vector2(-1.0, 1.5), 4.6, outline)
+    draw_circle(Vector2(-1.0, 1.5), 3.3, light)
+    draw_line(Vector2(-3.0, 1.0), Vector2(1.5, 2.0), dark, 1.2, true)
     draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
