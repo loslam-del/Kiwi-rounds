@@ -92,7 +92,7 @@ func _run_physics_checks() -> void:
     game.add_child(pulse)
     pulse.call("configure", Vector2.RIGHT, 610.0, Color.WHITE, rival)
     pulse.global_position = player.global_position - Vector2(35.0, 0.0)
-    pulse.call("_on_body_entered", player)
+    pulse.call("_resolve_impact", player, Vector2.LEFT)
     if float(player.get("hitstun_timer")) <= 0.0:
         _fail("projectile hit did not apply hitstun")
         return
@@ -104,7 +104,7 @@ func _run_physics_checks() -> void:
     var platform := StaticBody2D.new()
     platform.name = "ArenaPlatform"
     game.add_child(platform)
-    bounce.call("_on_body_entered", platform)
+    bounce.call("_resolve_impact", platform, Vector2.DOWN)
     var bounce_direction: Vector2 = bounce.get("direction")
     if bounce_direction.y <= 0.0 or int(bounce.get("ricochets_left")) != 1:
         _fail("projectile did not ricochet from a platform")
