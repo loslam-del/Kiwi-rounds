@@ -6,11 +6,11 @@ const JOYSTICK_SCRIPT = preload("res://scripts/virtual_joystick.gd")
 const MOD_LOADER_SCRIPT = preload("res://scripts/mod_loader.gd")
 
 const DEFAULT_UPGRADES := [
-    {"id":"swift","name":"ТУРБО-БОТИНКИ","icon":"➤","buff":"БАФФ  Скорость +16%","debuff":"МИНУС  Сила выстрела −10%","effect":"swift"},
-    {"id":"spring","name":"ПРУЖИННЫЙ МОДУЛЬ","icon":"↑","buff":"БАФФ  Высота прыжка +12%","debuff":"МИНУС  Скорость −8%","effect":"spring"},
-    {"id":"wave","name":"ТЯЖЁЛЫЙ КАЛИБР","icon":"✦","buff":"БАФФ  Отбрасывание +22%","debuff":"МИНУС  Перезарядка дольше на 12%","effect":"wave"},
-    {"id":"rapid","name":"БЫСТРЫЙ ЗАТВОР","icon":"⚡","buff":"БАФФ  Перезарядка быстрее на 18%","debuff":"МИНУС  Сила выстрела −10%","effect":"rapid"},
-    {"id":"sturdy","name":"БОЕВОЙ РАЗГОН","icon":"◆","buff":"БАФФ  Скорость +6%, прыжок +8%","debuff":"МИНУС  Нет","effect":"sturdy"}
+    {"id":"swift","name":"ТУРБО-БОТИНКИ","icon":"SPD","buff":"БАФФ  Скорость +16%","debuff":"МИНУС  Сила выстрела −10%","effect":"swift"},
+    {"id":"spring","name":"ПРУЖИННЫЙ МОДУЛЬ","icon":"JMP","buff":"БАФФ  Высота прыжка +12%","debuff":"МИНУС  Скорость −8%","effect":"spring"},
+    {"id":"wave","name":"ТЯЖЁЛЫЙ КАЛИБР","icon":"PWR","buff":"БАФФ  Отбрасывание +22%","debuff":"МИНУС  Перезарядка дольше на 12%","effect":"wave"},
+    {"id":"rapid","name":"БЫСТРЫЙ ЗАТВОР","icon":"RLD","buff":"БАФФ  Перезарядка быстрее на 18%","debuff":"МИНУС  Сила выстрела −10%","effect":"rapid"},
+    {"id":"sturdy","name":"БОЕВОЙ РАЗГОН","icon":"MIX","buff":"БАФФ  Скорость +6%, прыжок +8%","debuff":"МИНУС  Нет","effect":"sturdy"}
 ]
 const DEFAULT_MAPS := [
     {"name":"Сумеречная арена","platforms":[{"x":330,"y":545,"w":250,"h":24},{"x":950,"y":545,"w":250,"h":24},{"x":640,"y":420,"w":190,"h":22},{"x":130,"y":635,"w":170,"h":20},{"x":1150,"y":635,"w":170,"h":20}]},
@@ -463,9 +463,32 @@ func _open_skins() -> void:
         column.alignment = BoxContainer.ALIGNMENT_CENTER
         column.add_theme_constant_override("separation",8)
         panel.add_child(column)
-        var swatch := ColorRect.new()
-        swatch.color = color
-        swatch.custom_minimum_size = Vector2(70,55)
+        var swatch := Control.new()
+        swatch.custom_minimum_size = Vector2(70,62)
+        var swatch_bg := ColorRect.new()
+        swatch_bg.color = Color("#101722")
+        swatch_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+        swatch.add_child(swatch_bg)
+        var mini_body := ColorRect.new()
+        mini_body.color = color
+        mini_body.position = Vector2(25,25)
+        mini_body.size = Vector2(20,24)
+        swatch.add_child(mini_body)
+        var mini_head := ColorRect.new()
+        mini_head.color = Color("#efbd94")
+        mini_head.position = Vector2(28,8)
+        mini_head.size = Vector2(14,14)
+        swatch.add_child(mini_head)
+        var mini_leg_a := ColorRect.new()
+        mini_leg_a.color = Color("#dce6f3")
+        mini_leg_a.position = Vector2(26,48)
+        mini_leg_a.size = Vector2(7,10)
+        swatch.add_child(mini_leg_a)
+        var mini_leg_b := ColorRect.new()
+        mini_leg_b.color = Color("#dce6f3")
+        mini_leg_b.position = Vector2(37,48)
+        mini_leg_b.size = Vector2(7,10)
+        swatch.add_child(mini_leg_b)
         column.add_child(swatch)
         var name_label := Label.new()
         name_label.text = str(skin.get("name",skin.get("id","MOD"))) + ("  ✓" if i == skin_index else "")
