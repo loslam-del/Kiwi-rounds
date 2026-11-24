@@ -1066,14 +1066,15 @@ func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> v
         info.add_theme_color_override("font_color",Color("#a7a9b2"))
         shade.add_child(info)
     var list := VBoxContainer.new()
-    list.position = Vector2(390,285)
-    list.size = Vector2(500,340)
-    list.add_theme_constant_override("separation",12)
+    var compact := buttons.size() > 4
+    list.position = Vector2(390,265 if compact else 285)
+    list.size = Vector2(500,390 if compact else 340)
+    list.add_theme_constant_override("separation",8 if compact else 12)
     shade.add_child(list)
     for entry in buttons:
         var button := Button.new()
         button.text = str(entry[0])
-        button.custom_minimum_size = Vector2(500,58)
+        button.custom_minimum_size = Vector2(500,50 if compact else 58)
         button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         button.focus_mode = Control.FOCUS_NONE
         button.add_theme_font_size_override("font_size",20)
