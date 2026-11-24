@@ -219,7 +219,6 @@ func _think_bot(delta: float) -> void:
     bot_think -= delta
     if ammo <= 0 and reload_timer <= 0.0:
         start_reload()
-    bot_think -= delta
     if bot_think <= 0.0:
         bot_think = 0.18
         if ammo > 0 and reload_timer <= 0.0 and aim_vector.length() > 0.0 and randf() < bot_accuracy:
