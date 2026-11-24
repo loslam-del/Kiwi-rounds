@@ -28,6 +28,7 @@ var skin_button: Button
 var ammo_label: Label
 var fire_button: Button
 var training_tab := "cards"
+var skin_return_to_game := false
 var platform_nodes: Array[StaticBody2D] = []
 var mod_loader: GameModLoader
 var all_maps: Array[Dictionary] = []
@@ -410,9 +411,12 @@ func _toggle_vibration() -> void:
 
 func _open_skins() -> void:
     if phase == "fight":
+        skin_return_to_game = true
         phase = "paused"
         player.set_physics_process(false)
         rival.set_physics_process(false)
+    else:
+        skin_return_to_game = false
     var skins := _get_skins()
     _close_overlay()
     game_controls.visible = false
@@ -491,7 +495,8 @@ func _previous_skin() -> void:
 
 func _apply_skin_and_return() -> void:
     _apply_skin()
-    if phase == "fight":
+    if skin_return_to_game:
+        skin_return_to_game = false
         _resume_game()
     else:
         _show_main_menu()
