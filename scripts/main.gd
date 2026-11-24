@@ -370,7 +370,7 @@ func _apply_control_layout() -> void:
 
 func _apply_audio_settings() -> void:
     if AudioServer.bus_count > 0:
-        AudioServer.set_bus_volume_linear(0,sound_level)
+        AudioServer.set_bus_volume_db(0, linear_to_db(maxf(sound_level, 0.0001)))
         AudioServer.set_bus_mute(0,sound_level <= 0.001)
 
 func _play_sfx(kind: String) -> void:
