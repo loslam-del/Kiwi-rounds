@@ -6,11 +6,11 @@ const JOYSTICK_SCRIPT = preload("res://scripts/virtual_joystick.gd")
 const MOD_LOADER_SCRIPT = preload("res://scripts/mod_loader.gd")
 
 const DEFAULT_UPGRADES := [
-    {"id":"swift","name":"Турбоботинки","desc":"Скорость движения увеличена на 16%","effect":"swift"},
-    {"id":"spring","name":"Пружинный модуль","desc":"Прыжок становится выше на 12%","effect":"spring"},
-    {"id":"wave","name":"Тяжёлый калибр","desc":"Снаряды сильнее отбрасывают противника на 22%","effect":"wave"},
-    {"id":"rapid","name":"Быстрый затвор","desc":"Перезарядка оружия быстрее на 18%","effect":"rapid"},
-    {"id":"sturdy","name":"Боевой разгон","desc":"Скорость +6% и сила отбрасывания +10%","effect":"sturdy"}
+    {"id":"swift","name":"ТУРБО-БОТИНКИ","icon":"➤","buff":"БАФФ  Скорость +16%","debuff":"МИНУС  Сила выстрела −10%","effect":"swift"},
+    {"id":"spring","name":"ПРУЖИННЫЙ МОДУЛЬ","icon":"↑","buff":"БАФФ  Высота прыжка +12%","debuff":"МИНУС  Скорость −8%","effect":"spring"},
+    {"id":"wave","name":"ТЯЖЁЛЫЙ КАЛИБР","icon":"✦","buff":"БАФФ  Отбрасывание +22%","debuff":"МИНУС  Перезарядка дольше на 12%","effect":"wave"},
+    {"id":"rapid","name":"БЫСТРЫЙ ЗАТВОР","icon":"⚡","buff":"БАФФ  Перезарядка быстрее на 18%","debuff":"МИНУС  Сила выстрела −10%","effect":"rapid"},
+    {"id":"sturdy","name":"БОЕВОЙ РАЗГОН","icon":"◆","buff":"БАФФ  Скорость +6%, прыжок +8%","debuff":"МИНУС  Нет","effect":"sturdy"}
 ]
 const DEFAULT_MAPS := [
     {"name":"Сумеречная арена","platforms":[{"x":330,"y":545,"w":250,"h":24},{"x":950,"y":545,"w":250,"h":24},{"x":640,"y":420,"w":190,"h":22},{"x":130,"y":635,"w":170,"h":20},{"x":1150,"y":635,"w":170,"h":20}]},
@@ -25,6 +25,9 @@ var hud: Label
 var overlay: Control
 var game_controls: Control
 var skin_button: Button
+var ammo_label: Label
+var fire_button: Button
+var training_tab := "cards"
 var platform_nodes: Array[StaticBody2D] = []
 var mod_loader: GameModLoader
 var all_maps: Array[Dictionary] = []
@@ -197,9 +200,19 @@ func _make_ui() -> void:
     movement_joystick.size = Vector2(150,150)
     movement_joystick.value_changed.connect(player.set_move)
     game_controls.add_child(movement_joystick)
-    var fire_button := _add_button("ВЫСТРЕЛ",Vector2(205,585),Vector2(125,88),game_controls)
+    fire_button = _add_button("ВЫСТРЕЛ",Vector2(205,585),Vector2(145,76),game_controls)
     fire_button.button_down.connect(player.set_fire.bind(true))
     fire_button.button_up.connect(player.set_fire.bind(false))
+    var reload_button := _add_button("ПЕРЕЗАРЯДКА",Vector2(365,585),Vector2(175,76),game_controls)
+    reload_button.add_theme_font_size_override("font_size",15)
+    reload_button.pressed.connect(player.start_reload)
+    ammo_label = Label.new()
+    ammo_label.position = Vector2(190,545)
+    ammo_label.size = Vector2(360,32)
+    ammo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    ammo_label.add_theme_font_size_override("font_size",18)
+    ammo_label.add_theme_color_override("font_color",Color("#f4f7ff"))
+    game_controls.add_child(ammo_label)
     var aim_joystick: VirtualJoystick = JOYSTICK_SCRIPT.new()
     aim_joystick.position = Vector2(1080,535)
     aim_joystick.size = Vector2(150,150)
@@ -252,6 +265,8 @@ func _process(delta: float) -> void:
         return
     if phase != "fight":
         return
+    if is_instance_valid(ammo_label):
+        ammo_label.text = player.ammo_text()
     if player.global_position.y > 850:
         _finish_round(false)
     elif rival.global_position.y > 850:
@@ -269,7 +284,7 @@ func _start_game(mode: String) -> void:
     _reset_player_stats(rival)
     rival.bot_accuracy = bot_accuracy
     rival.move_speed = 340.0 if bot_difficulty == "easy" else (480.0 if bot_difficulty == "hard" else 430.0)
-    _make_arena(0)
+    _make_arena(map_index if mode == "training" else 0)
     player.reset_round(Vector2(350,390))
     rival.reset_round(Vector2(930,390))
     phase = "fight"
@@ -283,6 +298,10 @@ func _reset_player_stats(who: ArenaPlayer) -> void:
     who.jump_speed = -735.0
     who.pulse_force = 610.0
     who.pulse_interval = 0.78
+    who.magazine_size = 6
+    who.ammo = 6
+    who.reload_duration = 1.35
+    who.reload_timer = 0.0
 
 func _show_main_menu() -> void:
     phase = "menu"
