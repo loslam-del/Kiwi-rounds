@@ -168,9 +168,9 @@ func _cycle_skin() -> void:
     skin_index += 1
     _apply_skin()
 
-func _spawn_pulse(origin: Vector2, direction: Vector2, force: float, tint: Color) -> void:
+func _spawn_pulse(origin: Vector2, direction: Vector2, force: float, tint: Color, shooter: Node2D) -> void:
     var pulse: EnergyPulse = PULSE_SCRIPT.new()
-    pulse.configure(direction,force,tint)
+    pulse.configure(direction,force,tint,shooter)
     pulse.global_position = origin
     add_child(pulse)
 
