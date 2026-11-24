@@ -738,6 +738,7 @@ func _process(delta: float) -> void:
         return
     if is_instance_valid(ammo_label):
         ammo_label.text = player.ammo_text()
+    _update_hud()
     if player.health <= 0 or player.global_position.y > 850:
         _finish_round(false)
     elif rival.health <= 0 or rival.global_position.y > 850:
@@ -855,7 +856,7 @@ func _show_main_menu() -> void:
     play.add_theme_font_size_override("font_size", 25)
     play.add_theme_stylebox_override("normal", _menu_button_style(Color("#36e6df"), Color("#b5fff4")))
     play.add_theme_color_override("font_color", Color("#07151d"))
-    play.pressed.connect(_start_game.bind("bot"))
+    play.pressed.connect(_show_mode_menu)
 
     var skins := _add_button("✦   СКИНЫ", Vector2(465, 322), Vector2(350, 58), shade)
     skins.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
