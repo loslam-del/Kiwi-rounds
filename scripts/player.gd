@@ -3,6 +3,7 @@ class_name ArenaPlayer
 
 signal pulse_requested(origin: Vector2, direction: Vector2, force: float, tint: Color, shooter: Node2D)
 signal got_hit(direction: Vector2, hit_target: Node2D)
+signal reload_started
 
 @export var is_bot := false
 @export var body_color := Color("#39d6c5")
@@ -228,6 +229,7 @@ func _fire_pulse() -> void:
 func start_reload() -> void:
     if reload_timer <= 0.0 and ammo < magazine_size:
         reload_timer = reload_duration
+        reload_started.emit()
 
 func ammo_text() -> String:
     if reload_timer > 0.0:
