@@ -786,6 +786,7 @@ func _show_online_info() -> void:
 
 func _show_pause_menu() -> void:
     phase = "paused"
+    _clear_pulses()
     player.set_physics_process(false)
     rival.set_physics_process(false)
     _show_panel("ПАУЗА",[
@@ -852,6 +853,7 @@ func _open_skins() -> void:
     if phase == "fight":
         skin_return_to_game = true
         phase = "paused"
+        _clear_pulses()
         player.set_physics_process(false)
         rival.set_physics_process(false)
     else:
@@ -1066,6 +1068,7 @@ func _reload_mods() -> void:
 func _open_training_cards() -> void:
     if game_mode != "training":
         phase = "paused"
+        _clear_pulses()
         player.set_physics_process(false)
         rival.set_physics_process(false)
         _show_panel("КАРТОЧКИ",[
@@ -1074,6 +1077,7 @@ func _open_training_cards() -> void:
         ],"Карточки и выбор арены доступны в тренировке.")
         return
     phase = "paused"
+    _clear_pulses()
     player.set_physics_process(false)
     rival.set_physics_process(false)
     _close_overlay()
