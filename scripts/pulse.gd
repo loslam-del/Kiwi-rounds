@@ -18,7 +18,7 @@ func configure(dir: Vector2, force: float, color: Color, source: Node2D) -> void
 
 func _ready() -> void:
     collision_layer = 0
-    collision_mask = 1
+    collision_mask = 3
     monitoring = true
     rotation = direction.angle()
     var shape := CollisionShape2D.new()
@@ -41,6 +41,10 @@ func _on_body_entered(body: Node2D) -> void:
     if body is ArenaPlayer:
         body.velocity += direction * push_force
         body.velocity.y -= 150.0
+        body.hit_flash = 0.18
+        body.got_hit.emit(direction)
+        queue_free()
+    else:
         queue_free()
 
 func _draw() -> void:
