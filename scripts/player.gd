@@ -50,6 +50,7 @@ var recoil_kick := 0.0
 var muzzle_flash := 0.0
 var reload_visual := 0.0
 var hit_flash := 0.0
+var bot_jump_hold_timer := 0.0
 
 func _ready() -> void:
     collision_layer = 1
@@ -183,9 +184,10 @@ func _think_bot(delta: float) -> void:
         move_input = 0.0
     var aim_vector := (target.global_position - global_position).normalized()
     set_aim(aim_vector)
-    jump_held = false
-    if is_on_floor() and (target.global_position.y < global_position.y - 70.0 or (distance_x < 100.0 and randf() < 0.018)):
-        jump_held = true
+    bot_jump_hold_timer = maxf(0.0,bot_jump_hold_timer-delta)
+    if is_on_floor() and bot_jump_hold_timer <= 0.0 and (target.global_position.y < global_position.y - 70.0 or (distance_x < 100.0 and randf() < 0.018)):
+        bot_jump_hold_timer = 0.23
+    jump_held = bot_jump_hold_timer > 0.0
 
     bot_think -= delta
     if bot_think <= 0.0:
@@ -266,6 +268,7 @@ func reset_round(spawn: Vector2) -> void:
     recoil_kick = 0.0
     muzzle_flash = 0.0
     hit_flash = 0.0
+    bot_jump_hold_timer = 0.0
 
 func _draw() -> void:
     var grounded := is_on_floor()
