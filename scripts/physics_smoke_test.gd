@@ -111,6 +111,8 @@ func _run_physics_checks() -> void:
         return
 
     player.set("homing_strength", 4.2)
+    # Training intentionally has no rival target; attach one for this homing-only check.
+    player.set("target", rival)
     var guided := pulse_script.new() as Area2D
     game.add_child(guided)
     guided.call("configure", Vector2.UP, 610.0, Color.WHITE, player)
@@ -119,6 +121,7 @@ func _run_physics_checks() -> void:
     if guided_direction.x <= 0.0:
         _fail("homing projectile did not turn toward its target")
         return
+    player.set("target", null)
 
     game.set("score_player", 4)
     game.call("_finish_round", true)
