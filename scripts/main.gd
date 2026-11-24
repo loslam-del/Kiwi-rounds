@@ -115,6 +115,9 @@ var music_tracks: Array[String] = [
     "res://music/влад пиво, ЯРЧЕ СОЛНЦА, besoboy - Пообещай (hitmo.net).mp3"
 ]
 var music_last_index := -1
+var menu_record_needle: Control
+var music_track_button: Button
+var music_visualizer_bars: Array[ColorRect] = []
 var online_player_id := ""
 var online_host_id := ""
 var online_is_host := false
@@ -632,24 +635,39 @@ func _setup_music() -> void:
     add_child(music_player)
     music_player.finished.connect(_play_next_music)
     _apply_audio_settings()
-    _play_next_music()
+    _play_round_music()
 
 func _play_next_music() -> void:
     if not is_instance_valid(music_player) or music_tracks.is_empty():
         return
-    var choices: Array[int] = []
-    for i in range(music_tracks.size()):
-        if i != music_last_index:
-            choices.append(i)
-    if choices.is_empty():
-        choices.append(0)
-    music_last_index = choices.pick_random()
+    _play_music_index((music_last_index + 1) % music_tracks.size())
+
+func _play_round_music() -> void:
+    if music_tracks.is_empty():
+        return
+    var index := posmod(round_index - 1, music_tracks.size())
+    if index == music_last_index and is_instance_valid(music_player) and music_player.playing:
+        return
+    _play_music_index(index)
+
+func _play_music_index(index: int) -> void:
+    if not is_instance_valid(music_player) or music_tracks.is_empty():
+        return
+    music_last_index = posmod(index, music_tracks.size())
     var stream := load(music_tracks[music_last_index]) as AudioStream
     if stream == null:
         push_warning("Не удалось загрузить музыку: " + music_tracks[music_last_index])
         return
     music_player.stream = stream
     music_player.play()
+    _update_music_track_button()
+
+func _update_music_track_button() -> void:
+    if not is_instance_valid(music_track_button) or music_last_index < 0 or music_last_index >= music_tracks.size():
+        return
+    var track_name := music_tracks[music_last_index].get_file().get_basename()
+    music_track_button.text = "♫  " + track_name + "   ›"
+    music_track_button.tooltip_text = "Нажми, чтобы переключить трек"
 
 func _apply_audio_settings() -> void:
     if AudioServer.bus_count > 0:
@@ -751,6 +769,12 @@ func _process(delta: float) -> void:
     background_time += delta
     if is_instance_valid(menu_record_needle):
         menu_record_needle.rotation = background_time * 2.8
+    for i in range(music_visualizer_bars.size()):
+        var bar := music_visualizer_bars[i]
+        if is_instance_valid(bar):
+            var pulse := 0.25 + 0.75 * absf(sin(background_time * (5.0 + float(i) * 0.7) + float(i) * 1.2))
+            bar.scale.y = pulse
+            bar.position.y = 3.0 + (1.0 - pulse) * 8.0
     queue_redraw()
     impact_flash = maxf(0.0, impact_flash - delta * 2.8)
     if is_instance_valid(arena_camera):
@@ -978,8 +1002,38 @@ func _create_menu_record(parent: Control) -> void:
     menu_record_needle.mouse_filter = Control.MOUSE_FILTER_IGNORE
     record.add_child(menu_record_needle)
 
-    var hub := Panel.new()
-    hub.position = Vector2(39, 39)
+    var visualizer := HBoxContainer.new()
+    visualizer.position = Vector2(1000, 172)
+    visualizer.size = Vector2(190, 24)
+    visualizer.add_theme_constant_override("separation", 5)
+    visualizer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    parent.add_child(visualizer)
+    music_visualizer_bars.clear()
+    for i in range(12):
+        var bar := ColorRect.new()
+        bar.custom_minimum_size = Vector2(7, 20)
+        bar.size = Vector2(7, 20)
+        bar.color = Color("#36e6df") if i % 3 != 0 else Color("#d9ef70")
+        bar.pivot_offset = Vector2(3.5, 10)
+        bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        visualizer.add_child(bar)
+        music_visualizer_bars.append(bar)
+
+    music_track_button = Button.new()
+    music_track_button.position = Vector2(965, 202)
+    music_track_button.size = Vector2(260, 42)
+    music_track_button.text = "♫  Загрузка музыки..."
+    music_track_button.tooltip_text = "Нажми, чтобы переключить трек"
+    music_track_button.add_theme_font_size_override("font_size", 13)
+    music_track_button.add_theme_color_override("font_color", Color("#eaf2fb"))
+    music_track_button.add_theme_stylebox_override("normal", _make_button_style(Color("#172536"), Color("#526779")))
+    music_track_button.add_theme_stylebox_override("hover", _make_button_style(Color("#20394c"), Color("#36e6df")))
+    music_track_button.add_theme_stylebox_override("pressed", _make_button_style(Color("#101923"), Color("#d9ef70")))
+    music_track_button.pressed.connect(_play_next_music)
+    parent.add_child(music_track_button)
+    _update_music_track_button()
+
+    var hub := Panel.new()    hub.position = Vector2(39, 39)
     hub.size = Vector2(18, 18)
     hub.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var hub_style := StyleBoxFlat.new()
@@ -2756,6 +2810,7 @@ func _next_round() -> void:
     rival.collision_layer = 0 if game_mode == "training" else 1
     player.target = rival if game_mode != "training" else null
     round_index += 1
+    _play_round_music()
     _make_arena(map_index if game_mode == "training" else round_index - 1)
     player.reset_round(Vector2(350,390))
     if game_mode != "training":
