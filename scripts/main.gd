@@ -56,8 +56,8 @@ func _ready() -> void:
 func _boot_game() -> void:
     boot_stage = "Подготовка игровых данных..."
     # Модуль модов не создаётся при запуске. Главное меню не зависит от модов.
-    all_maps = DEFAULT_MAPS.duplicate(true)
-    all_upgrades = DEFAULT_UPGRADES.duplicate(true)
+    all_maps.assign(DEFAULT_MAPS)
+    all_upgrades.assign(DEFAULT_UPGRADES)
     boot_stage = "Создание арены..."
     _make_arena(0)
     boot_stage = "Создание персонажей..."
@@ -400,9 +400,9 @@ func _open_mods() -> void:
         mod_loader = MOD_LOADER_SCRIPT.new()
     if not mods_loaded:
         mod_loader.load_all()
-        all_maps = DEFAULT_MAPS.duplicate(true)
+        all_maps.assign(DEFAULT_MAPS)
         all_maps.append_array(mod_loader.maps)
-        all_upgrades = DEFAULT_UPGRADES.duplicate(true)
+        all_upgrades.assign(DEFAULT_UPGRADES)
         all_upgrades.append_array(mod_loader.upgrades)
         mods_loaded = true
     var description := "Найдено модов: %d\nСкинов: %d  •  карт: %d  •  карточек: %d\nПапка: user://mods/\nКаждый мод должен содержать mod.json." % [mod_loader.loaded_mod_names.size(),mod_loader.skins.size(),mod_loader.maps.size(),mod_loader.upgrades.size()]
@@ -419,9 +419,9 @@ func _reload_mods() -> void:
         mod_loader = MOD_LOADER_SCRIPT.new()
     mod_loader.load_all()
     mods_loaded = true
-    all_maps = DEFAULT_MAPS.duplicate(true)
+    all_maps.assign(DEFAULT_MAPS)
     all_maps.append_array(mod_loader.maps)
-    all_upgrades = DEFAULT_UPGRADES.duplicate(true)
+    all_upgrades.assign(DEFAULT_UPGRADES)
     all_upgrades.append_array(mod_loader.upgrades)
     _apply_skin()
     _open_mods()
