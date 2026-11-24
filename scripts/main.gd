@@ -431,6 +431,1769 @@ func _clear_control_inputs() -> void:
         fire_button.cancel_input()
     if is_instance_valid(jump_button):
         jump_button.cancel_input()
+    if is_instance_valid(reload_button):
+        reload_button.cancel_input()
+
+func _clear_pulses() -> void:
+    for node in get_children():
+        if node is EnergyPulse:
+            node.queue_free()
+
+func _spawn_pulse(origin: Vector2, direction: Vector2, force: float, tint: Color, shooter: Node2D) -> void:
+    var pulse: EnergyPulse = PULSE_SCRIPT.new()
+    pulse.configure(direction,force,tint,shooter)
+    _play_sfx("shot")
+    pulse.global_position = origin
+    add_child(pulse)
+
+func _make_ui() -> void:
+    var layer := CanvasLayer.new()
+    add_child(layer)
+    ui = Control.new()
+    ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    layer.add_child(ui)
+    hud = Label.new()
+    hud.position = Vector2(0,12)
+    hud.size = Vector2(1280,42)
+    hud.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    hud.add_theme_font_size_override("font_size",22)
+    hud.add_theme_color_override("font_color",Color("#f4f7ff"))
+    ui.add_child(hud)
+    game_controls = Control.new()
+    game_controls.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    ui.add_child(game_controls)
+    skin_button = _add_button("СКИН",Vector2(1080,18),Vector2(150,50),game_controls)
+    skin_button.pressed.connect(_open_skins)
+    movement_joystick = JOYSTICK_SCRIPT.new()
+    movement_joystick.position = Vector2(28,575)
+    movement_joystick.size = Vector2(116,116)
+    movement_joystick.value_changed.connect(player.set_move)
+    game_controls.add_child(movement_joystick)
+    fire_button = ACTION_BUTTON_SCRIPT.new()
+    fire_button.caption = "ВЫСТРЕЛ"
+    fire_button.position = Vector2(32,490)
+    fire_button.size = Vector2(116,52)
+    reload_button.size = Vector2(132,48)
+    fire_button.button_down.connect(player.set_fire.bind(true))
+    fire_button.button_up.connect(player.set_fire.bind(false))
+    game_controls.add_child(fire_button)
+    reload_button = ACTION_BUTTON_SCRIPT.new()
+    reload_button.caption = "ПЕРЕЗАРЯДКА"
+    reload_button.position = Vector2(164,625)
+    reload_button.size = Vector2(132,48)
+    reload_button.pressed.connect(player.start_reload)
+    game_controls.add_child(reload_button)
+    ammo_label = Label.new()
+    ammo_label.position = Vector2(158,590)
+    ammo_label.size = Vector2(150,28)
+    ammo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    ammo_label.add_theme_font_size_override("font_size",14)
+    ammo_label.add_theme_color_override("font_color",Color("#f4f7ff"))
+    game_controls.add_child(ammo_label)
+    aim_joystick = JOYSTICK_SCRIPT.new()
+    aim_joystick.position = Vector2(1136,575)
+    aim_joystick.size = Vector2(116,116)
+    aim_joystick.value_changed.connect(player.set_aim)
+    game_controls.add_child(aim_joystick)
+    jump_button = ACTION_BUTTON_SCRIPT.new()
+    jump_button.caption = "ПРЫЖОК"
+    jump_button.position = Vector2(1136,490)
+    jump_button.size = Vector2(112,52)
+    jump_button.button_down.connect(player.set_jump.bind(true))
+    jump_button.button_up.connect(player.set_jump.bind(false))
+    game_controls.add_child(jump_button)
+    menu_button = _add_button("МЕНЮ",Vector2(18,18),Vector2(120,50),game_controls)
+    menu_button.pressed.connect(_show_pause_menu)
+    cards_button = _add_button("КАРТОЧКИ",Vector2(150,18),Vector2(160,50),game_controls)
+    cards_button.pressed.connect(_open_training_cards)
+    _apply_skin()
+    _apply_control_layout()
+    _apply_audio_settings()
+
+func _apply_control_layout() -> void:
+    if not is_instance_valid(movement_joystick) or not is_instance_valid(aim_joystick):
+        return
+    if controls_mirrored:
+        movement_joystick.position = Vector2(1136,575)
+        aim_joystick.position = Vector2(28,575)
+        fire_button.position = Vector2(1132,490)
+        reload_button.position = Vector2(984,625)
+        reload_button.position = Vector2(984,625)
+        jump_button.position = Vector2(32,490)
+    else:
+        movement_joystick.position = Vector2(28,575)
+        aim_joystick.position = Vector2(1136,575)
+        fire_button.position = Vector2(32,490)
+        reload_button.position = Vector2(164,625)
+        reload_button.position = Vector2(164,625)
+        jump_button.position = Vector2(1136,490)
+    movement_joystick.size = Vector2(116,116)
+    aim_joystick.size = Vector2(116,116)
+    fire_button.size = Vector2(116,52)
+    reload_button.size = Vector2(132,48)
+    jump_button.size = Vector2(112,52)
+    ammo_label.position = Vector2(158 if not controls_mirrored else 972,590)
+    ammo_label.size = Vector2(150,28)
+    menu_button.position = Vector2(18,18)
+    cards_button.position = Vector2(150,18)
+
+func _apply_audio_settings() -> void:
+    if AudioServer.bus_count > 0:
+        AudioServer.set_bus_volume_db(0, linear_to_db(maxf(sound_level, 0.0001)))
+        AudioServer.set_bus_mute(0,sound_level <= 0.001)
+
+func _play_sfx(kind: String) -> void:
+    if sound_level <= 0.001:
+        return
+    var duration := 0.12
+    var start_hz := 440.0
+    var end_hz := 220.0
+    var gain := 0.45
+    match kind:
+        "shot":
+            duration = 0.10
+            start_hz = 720.0
+            end_hz = 180.0
+            gain = 0.32
+        "hit":
+            duration = 0.16
+            start_hz = 190.0
+            end_hz = 65.0
+            gain = 0.55
+        "reload":
+            duration = 0.22
+            start_hz = 380.0
+            end_hz = 620.0
+            gain = 0.25
+    var sample_rate := 22050
+    var sample_count := int(sample_rate * duration)
+    var bytes := PackedByteArray()
+    bytes.resize(sample_count * 2)
+    for i in range(sample_count):
+        var t := float(i) / float(sample_rate)
+        var progress := float(i) / float(maxi(sample_count - 1,1))
+        var frequency := lerpf(start_hz,end_hz,progress)
+        var envelope := pow(1.0-progress,2.0)
+        var sample := int(sin(TAU * frequency * t) * envelope * gain * sound_level * 18000.0)
+        bytes[i*2] = sample & 0xff
+        bytes[i*2+1] = (sample >> 8) & 0xff
+    var stream := AudioStreamWAV.new()
+    stream.format = AudioStreamWAV.FORMAT_16_BITS
+    stream.mix_rate = sample_rate
+    stream.stereo = false
+    stream.data = bytes
+    var audio := AudioStreamPlayer.new()
+    audio.stream = stream
+    audio.bus = "Master"
+    add_child(audio)
+    audio.finished.connect(audio.queue_free)
+    audio.play()
+
+func _add_button(caption: String, at: Vector2, dimensions: Vector2, parent: Control = null) -> Button:
+    var button := Button.new()
+    button.text = caption
+    button.position = at
+    button.size = dimensions
+    button.focus_mode = Control.FOCUS_NONE
+    button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+    button.add_theme_font_size_override("font_size",19)
+    button.add_theme_color_override("font_color",Color("#f6f7ee"))
+    button.add_theme_color_override("font_hover_color",Color("#ffffff"))
+    button.add_theme_color_override("font_pressed_color",Color("#e8f6a0"))
+    button.add_theme_stylebox_override("normal",_button_style(Color("#263b5b")))
+    button.add_theme_stylebox_override("hover",_button_style(Color("#354f70")))
+    button.add_theme_stylebox_override("pressed",_button_style(Color("#3d638e")))
+    button.add_theme_stylebox_override("focus",_button_style(Color("#354f70")))
+    if parent == null:
+        ui.add_child(button)
+    else:
+        parent.add_child(button)
+    return button
+
+func _button_style(color: Color) -> StyleBoxFlat:
+    var style := StyleBoxFlat.new()
+    style.bg_color = color
+    style.corner_radius_top_left = 18
+    style.corner_radius_top_right = 18
+    style.corner_radius_bottom_left = 18
+    style.corner_radius_bottom_right = 18
+    style.border_width_left = 2
+    style.border_width_right = 2
+    style.border_width_top = 2
+    style.border_width_bottom = 2
+    style.border_color = Color("#7895bc")
+    style.shadow_color = Color(0.0,0.0,0.0,0.32)
+    style.shadow_size = 7
+    style.shadow_offset = Vector2(0,3)
+    style.content_margin_left = 14
+    style.content_margin_right = 14
+    style.content_margin_top = 7
+    style.content_margin_bottom = 7
+    return style
+
+func _process(delta: float) -> void:
+    background_time += delta
+    queue_redraw()
+    impact_flash = maxf(0.0, impact_flash - delta * 2.8)
+    if is_instance_valid(arena_camera):
+        if camera_shake_timer > 0.0:
+            camera_shake_timer = maxf(0.0,camera_shake_timer-delta)
+            if shake_enabled:
+                var shake_power := camera_shake_strength * clampf(camera_shake_timer / 0.16, 0.0, 1.0)
+                arena_camera.offset = Vector2(randf_range(-shake_power,shake_power),randf_range(-shake_power,shake_power))
+            else:
+                arena_camera.offset = Vector2.ZERO
+        else:
+            arena_camera.offset = Vector2.ZERO
+    if impact_flash > 0.0:
+        queue_redraw()
+    if boot_loading:
+        if is_instance_valid(boot_status_label):
+            boot_status_label.text = boot_stage
+        boot_elapsed += delta
+        boot_angle = fmod(boot_angle + delta * 4.2, TAU)
+        queue_redraw()
+        return
+    if phase != "fight":
+        return
+    if is_instance_valid(ammo_label):
+        ammo_label.text = player.ammo_text()
+    if player.global_position.y > 850:
+        _finish_round(false)
+    elif rival.global_position.y > 850:
+        _finish_round(true)
+
+func _start_game(mode: String) -> void:
+    _clear_pulses()
+    game_mode = mode
+    player.set_physics_process(true)
+    rival.visible = mode != "training"
+    rival.set_physics_process(mode != "training")
+    rival.collision_layer = 0 if mode == "training" else 1
+    player.target = rival if mode != "training" else null
+    score_player = 0
+    score_bot = 0
+    round_index = 1
+    active_training_cards.clear()
+    _reset_player_stats(player)
+    _reset_player_stats(rival)
+    rival.bot_accuracy = bot_accuracy
+    rival.move_speed = 340.0 if bot_difficulty == "easy" else (480.0 if bot_difficulty == "hard" else 430.0)
+    _make_arena(map_index if mode == "training" else 0)
+    player.reset_round(Vector2(350,390))
+    if mode != "training":
+        rival.reset_round(Vector2(930,390))
+    phase = "fight"
+    _close_overlay()
+    game_controls.visible = true
+    hud.visible = true
+    _update_hud()
+
+func _reset_player_stats(who: ArenaPlayer) -> void:
+    who.move_speed = 430.0
+    who.jump_speed = -715.0
+    who.gravity_scale = 1.0
+    who.air_control_scale = 1.0
+    who.ground_accel_scale = 1.0
+    who.wall_jump_scale = 1.0
+    who.extra_air_jumps = 0
+    who.air_jumps_left = 1
+    who.pulse_force = 610.0
+    who.pulse_interval = 0.78
+    who.magazine_size = 6
+    who.ammo = 6
+    who.reload_duration = 1.35
+    who.reload_timer = 0.0
+    who.homing_strength = 0.0
+    who.ricochet_count = 0
+    who.projectile_speed = 1050.0
+    who.weapon_level = 0
+    who.kiwi_aura = false
+
+func _show_main_menu() -> void:
+    phase = "menu"
+    skin_return_to_game = false
+    player.set_physics_process(false)
+    rival.set_physics_process(false)
+    game_controls.visible = false
+    hud.visible = false
+    _close_overlay()
+
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#080d19")
+    ui.add_child(shade)
+    overlay = shade
+
+    # Neon frame, moving grid and title moved noticeably higher.
+    var frame := Panel.new()
+    frame.position = Vector2(34, 30)
+    frame.size = Vector2(1212, 660)
+    var frame_style := StyleBoxFlat.new()
+    frame_style.bg_color = Color("#0c1424")
+    frame_style.border_color = Color("#36e6df")
+    frame_style.set_border_width_all(2)
+    frame_style.set_corner_radius_all(22)
+    frame_style.shadow_color = Color("#27d9d0", 0.20)
+    frame_style.shadow_size = 24
+    frame.add_theme_stylebox_override("panel", frame_style)
+    shade.add_child(frame)
+
+    for i in range(13):
+        var grid_line := ColorRect.new()
+        grid_line.position = Vector2(50 + i * 91, 44)
+        grid_line.size = Vector2(1, 630)
+        grid_line.color = Color("#43c9dc", 0.055)
+        shade.add_child(grid_line)
+    for i in range(8):
+        var grid_line := ColorRect.new()
+        grid_line.position = Vector2(44, 70 + i * 82)
+        grid_line.size = Vector2(1190, 1)
+        grid_line.color = Color("#43c9dc", 0.05)
+        shade.add_child(grid_line)
+
+    var title_glow := Label.new()
+    title_glow.text = "KIWI ROUNDS"
+    title_glow.position = Vector2(80, 48)
+    title_glow.size = Vector2(850, 104)
+    title_glow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title_glow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    title_glow.add_theme_font_size_override("font_size", 88)
+    title_glow.add_theme_color_override("font_color", Color("#173b50"))
+    title_glow.add_theme_constant_override("outline_size", 7)
+    title_glow.add_theme_color_override("font_outline_color", Color("#2ce8dc"))
+    shade.add_child(title_glow)
+
+    var title := Label.new()
+    title.text = "KIWI ROUNDS"
+    title.position = Vector2(80, 44)
+    title.size = Vector2(850, 104)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 78)
+    title.add_theme_color_override("font_color", Color("#e9fbff"))
+    title.add_theme_constant_override("outline_size", 2)
+    title.add_theme_color_override("font_outline_color", Color("#557d9b"))
+    shade.add_child(title)
+
+    # Original Kiwi is the round green mascot with her twin hair buns and exact cap.
+    # Kept to the right of the title so the lettering stays fully readable.
+    var menu_kiwi: ArenaPlayer = PLAYER_SCRIPT.new()
+    menu_kiwi.skin_style = "kiwi"
+    menu_kiwi.menu_mascot = true
+    menu_kiwi.body_color = Color("#477b4c")
+    menu_kiwi.position = Vector2(1050, 151)
+    menu_kiwi.scale = Vector2(1.18, 1.18)
+    menu_kiwi.set_physics_process(false)
+    menu_kiwi.set_process(false)
+    shade.add_child(menu_kiwi)
+
+    var subtitle := Label.new()
+    subtitle.text = "NEON BOT ARENA  /  RANDOM MAPS  /  RANDOM BUILDS"
+    subtitle.position = Vector2(0, 180)
+    subtitle.size = Vector2(1280, 28)
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size", 14)
+    subtitle.add_theme_color_override("font_color", Color("#62dfe4"))
+    shade.add_child(subtitle)
+
+    var menu_panel := Panel.new()
+    menu_panel.position = Vector2(92, 258)
+    menu_panel.size = Vector2(430, 360)
+    var menu_style := StyleBoxFlat.new()
+    menu_style.bg_color = Color("#101c2d", 0.96)
+    menu_style.border_color = Color("#8b67ff", 0.72)
+    menu_style.set_border_width_all(2)
+    menu_style.set_corner_radius_all(18)
+    menu_style.shadow_color = Color("#8b67ff", 0.18)
+    menu_style.shadow_size = 18
+    menu_panel.add_theme_stylebox_override("panel", menu_style)
+    shade.add_child(menu_panel)
+
+    var play := _add_button("▶   ИГРАТЬ", Vector2(122, 292), Vector2(370, 68), shade)
+    play.add_theme_font_size_override("font_size", 25)
+    play.add_theme_stylebox_override("normal", _menu_button_style(Color("#36e6df"), Color("#b5fff4")))
+    play.add_theme_color_override("font_color", Color("#07151d"))
+    play.pressed.connect(_start_game.bind("bot"))
+
+    var skins := _add_button("✦   СКИНЫ", Vector2(122, 376), Vector2(370, 58), shade)
+    skins.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
+    skins.add_theme_color_override("font_color", Color("#e8f6ff"))
+    skins.pressed.connect(_open_skins)
+
+    var settings := _add_button("⚙   НАСТРОЙКИ", Vector2(122, 448), Vector2(370, 58), shade)
+    settings.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#36e6df")))
+    settings.add_theme_color_override("font_color", Color("#e8f6ff"))
+    settings.pressed.connect(_show_settings)
+
+    var mods := _add_button("▣   МОДЫ", Vector2(122, 520), Vector2(370, 58), shade)
+    mods.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
+    mods.add_theme_color_override("font_color", Color("#e8f6ff"))
+    mods.pressed.connect(_open_mods)
+
+    var footer := Label.new()
+    footer.text = "KIWI LABS   •   BUILD. FIGHT. REPEAT."
+    footer.position = Vector2(92, 630)
+    footer.size = Vector2(430, 22)
+    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    footer.add_theme_font_size_override("font_size", 12)
+    footer.add_theme_color_override("font_color", Color("#5e8c9d"))
+    shade.add_child(footer)
+
+    _create_menu_bot_preview(shade)
+
+func _create_menu_bot_preview(parent: Control) -> void:
+    # A live miniature duel: every menu entry rolls a different arena and random bot builds.
+    var stage := Node2D.new()
+    stage.name = "MenuBotPreview"
+    parent.add_child(stage)
+
+    var map_data: Dictionary = all_maps.pick_random() if not all_maps.is_empty() else DEFAULT_MAPS[0]
+    var map_label := Label.new()
+    map_label.text = "LIVE SIM  //  " + str(map_data.get("name", "RANDOM ARENA"))
+    map_label.position = Vector2(720, 260)
+    map_label.size = Vector2(470, 26)
+    map_label.add_theme_font_size_override("font_size", 16)
+    map_label.add_theme_color_override("font_color", Color("#b8a0ff"))
+    parent.add_child(map_label)
+
+    var ground := StaticBody2D.new()
+    ground.position = Vector2(1000, 655)
+    ground.collision_layer = 2
+    var ground_shape := CollisionShape2D.new()
+    var ground_rect := RectangleShape2D.new()
+    ground_rect.size = Vector2(570, 34)
+    ground_shape.shape = ground_rect
+    ground.add_child(ground_shape)
+    stage.add_child(ground)
+    _add_menu_preview_platform(stage, Vector2(1000, 638), Vector2(570, 18), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")), false)
+
+    var wall_left := StaticBody2D.new()
+    wall_left.position = Vector2(720, 450)
+    wall_left.collision_layer = 2
+    var wall_left_shape := CollisionShape2D.new()
+    var wall_rect := RectangleShape2D.new()
+    wall_rect.size = Vector2(24, 470)
+    wall_left_shape.shape = wall_rect
+    wall_left.add_child(wall_left_shape)
+    stage.add_child(wall_left)
+    var wall_right := StaticBody2D.new()
+    wall_right.position = Vector2(1280, 450)
+    wall_right.collision_layer = 2
+    var wall_right_shape := CollisionShape2D.new()
+    var wall_right_rect := RectangleShape2D.new()
+    wall_right_rect.size = Vector2(24, 470)
+    wall_right_shape.shape = wall_right_rect
+    wall_right.add_child(wall_right_shape)
+    stage.add_child(wall_right)
+
+    var platform_data: Array = map_data.get("platforms", [])
+    var added := 0
+    for item in platform_data:
+        if typeof(item) != TYPE_DICTIONARY:
+            continue
+        var px := float(item.get("x", 900))
+        if px < 650.0:
+            continue
+        var py := clampf(float(item.get("y", 500)), 360.0, 590.0)
+        var pw := clampf(float(item.get("w", 160)), 90.0, 260.0)
+        _add_menu_preview_platform(stage, Vector2(px, py), Vector2(pw, 16), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")), false)
+        added += 1
+        if added >= 4:
+            break
+    if added == 0:
+        _add_menu_preview_platform(stage, Vector2(900, 520), Vector2(150, 16), Color("#36e6df"), false)
+        _add_menu_preview_platform(stage, Vector2(1110, 455), Vector2(150, 16), Color("#b58cff"), false)
+
+    var bot_a: ArenaPlayer = PLAYER_SCRIPT.new()
+    bot_a.is_bot = true
+    bot_a.menu_preview_mode = true
+    bot_a.body_color = Color("#36e6df")
+    bot_a.position = Vector2(850, 510)
+    bot_a.bot_accuracy = 0.42
+    bot_a.move_speed = 390.0
+    bot_a.pulse_force = 520.0
+    bot_a.set_physics_process(true)
+    stage.add_child(bot_a)
+
+    var bot_b: ArenaPlayer = PLAYER_SCRIPT.new()
+    bot_b.is_bot = true
+    bot_b.menu_preview_mode = true
+    bot_b.body_color = Color("#ff6fae")
+    bot_b.position = Vector2(1140, 510)
+    bot_b.bot_accuracy = 0.42
+    bot_b.move_speed = 390.0
+    bot_b.pulse_force = 520.0
+    bot_b.set_physics_process(true)
+    stage.add_child(bot_b)
+    bot_a.target = bot_b
+    bot_b.target = bot_a
+    bot_a.pulse_requested.connect(_spawn_menu_preview_pulse.bind(stage))
+    bot_b.pulse_requested.connect(_spawn_menu_preview_pulse.bind(stage))
+
+    # Randomize combat cards only; mobility cards could leave preview bots airborne.
+    var preview_upgrade_pool: Array = []
+    for upgrade in all_upgrades:
+        var effect := str(upgrade.get("effect", upgrade.get("id", "")))
+        if effect in ["homing", "ricochet", "heavy", "rapid", "magazine", "piercing", "kiwi_charm"]:
+            preview_upgrade_pool.append(upgrade)
+    var upgrades_a: Array = preview_upgrade_pool.duplicate(true)
+    var upgrades_b: Array = preview_upgrade_pool.duplicate(true)
+    upgrades_a.shuffle()
+    upgrades_b.shuffle()
+    for i in range(mini(2, upgrades_a.size())):
+        bot_a.apply_upgrade(str(upgrades_a[i].get("effect", upgrades_a[i].get("id", ""))))
+    for i in range(mini(2, upgrades_b.size())):
+        bot_b.apply_upgrade(str(upgrades_b[i].get("effect", upgrades_b[i].get("id", ""))))
+
+func _add_menu_preview_platform(stage: Node2D, at: Vector2, dimensions: Vector2, accent: Color, collide: bool = true) -> void:
+    var body := StaticBody2D.new()
+    body.position = at
+    body.collision_layer = 2 if collide else 0
+    var shape := CollisionShape2D.new()
+    var rect := RectangleShape2D.new()
+    rect.size = dimensions
+    shape.shape = rect
+    body.add_child(shape)
+    var visual := Polygon2D.new()
+    visual.polygon = PackedVector2Array([
+        Vector2(-dimensions.x / 2, -dimensions.y / 2),
+        Vector2(dimensions.x / 2, -dimensions.y / 2),
+        Vector2(dimensions.x / 2, dimensions.y / 2),
+        Vector2(-dimensions.x / 2, dimensions.y / 2)
+    ])
+    visual.color = Color("#17263b")
+    body.add_child(visual)
+    var glow := Line2D.new()
+    glow.points = PackedVector2Array([Vector2(-dimensions.x / 2, -dimensions.y / 2), Vector2(dimensions.x / 2, -dimensions.y / 2)])
+    glow.width = 5.0
+    glow.default_color = accent
+    glow.antialiased = true
+    body.add_child(glow)
+    stage.add_child(body)
+
+func _spawn_menu_preview_pulse(origin: Vector2, direction: Vector2, force: float, tint: Color, shooter: Node2D, stage: Node2D) -> void:
+    var pulse: EnergyPulse = PULSE_SCRIPT.new()
+    pulse.configure(direction, force, tint, shooter)
+    pulse.global_position = origin
+    stage.add_child(pulse)
+
+
+func _add_menu_battle_scene(parent: Control) -> void:
+    # Four frozen fighter poses create a layered firefight illustration.
+    var hide_a: ArenaPlayer = PLAYER_SCRIPT.new()
+    hide_a.body_color = Color("#f2e5ce")
+    hide_a.skin_style = "kiwi"
+    hide_a.position = Vector2(790,455)
+    hide_a.facing = 1.0
+    hide_a.aim_input = Vector2(1,-0.35)
+    hide_a.scale = Vector2(1.35,1.35)
+    hide_a.set_physics_process(false)
+    hide_a.set_process(false)
+    parent.add_child(hide_a)
+
+    var hide_b: ArenaPlayer = PLAYER_SCRIPT.new()
+    hide_b.body_color = Color("#b47cff")
+    hide_b.position = Vector2(900,448)
+    hide_b.facing = 1.0
+    hide_b.aim_input = Vector2(1,-0.18)
+    hide_b.scale = Vector2(1.25,1.25)
+    hide_b.set_physics_process(false)
+    hide_b.set_process(false)
+    parent.add_child(hide_b)
+
+    var shooter_a: ArenaPlayer = PLAYER_SCRIPT.new()
+    shooter_a.body_color = Color("#ff786f")
+    shooter_a.position = Vector2(1050,390)
+    shooter_a.facing = -1.0
+    shooter_a.aim_input = Vector2(-0.9,-0.35)
+    shooter_a.scale = Vector2(1.45,1.45)
+    shooter_a.set_physics_process(false)
+    shooter_a.set_process(false)
+    parent.add_child(shooter_a)
+
+    var shooter_b: ArenaPlayer = PLAYER_SCRIPT.new()
+    shooter_b.body_color = Color("#ffc857")
+    shooter_b.position = Vector2(1160,430)
+    shooter_b.facing = -1.0
+    shooter_b.aim_input = Vector2(-1,-0.12)
+    shooter_b.scale = Vector2(1.2,1.2)
+    shooter_b.set_physics_process(false)
+    shooter_b.set_process(false)
+    parent.add_child(shooter_b)
+
+    # Muzzle streaks sit behind the cover to sell crossfire and depth.
+    var tracer_back := Line2D.new()
+    tracer_back.points = PackedVector2Array([Vector2(1015,375),Vector2(900,410),Vector2(820,430)])
+    tracer_back.width = 13.0
+    tracer_back.default_color = Color("#ff9b72",0.20)
+    tracer_back.antialiased = true
+    parent.add_child(tracer_back)
+    var tracer_front := Line2D.new()
+    tracer_front.points = PackedVector2Array([Vector2(1125,418),Vector2(1010,440),Vector2(945,450)])
+    tracer_front.width = 5.0
+    tracer_front.default_color = Color("#ffe8a1",0.72)
+    tracer_front.antialiased = true
+    parent.add_child(tracer_front)
+
+    var wall_shadow := Polygon2D.new()
+    wall_shadow.polygon = PackedVector2Array([Vector2(700,500),Vector2(1190,500),Vector2(1210,610),Vector2(680,610)])
+    wall_shadow.color = Color("#080e17",0.72)
+    parent.add_child(wall_shadow)
+    var cover := Polygon2D.new()
+    cover.polygon = PackedVector2Array([Vector2(690,475),Vector2(1195,475),Vector2(1170,590),Vector2(715,590)])
+    cover.color = Color("#34495a")
+    parent.add_child(cover)
+    var cover_top := Polygon2D.new()
+    cover_top.polygon = PackedVector2Array([Vector2(690,475),Vector2(1195,475),Vector2(1183,492),Vector2(700,492)])
+    cover_top.color = Color("#8da5a8")
+    parent.add_child(cover_top)
+    var cover_edge := Line2D.new()
+    cover_edge.points = PackedVector2Array([Vector2(690,475),Vector2(1195,475),Vector2(1170,590),Vector2(715,590),Vector2(690,475)])
+    cover_edge.width = 3.0
+    cover_edge.default_color = Color("#b9e36c",0.75)
+    cover_edge.antialiased = true
+    parent.add_child(cover_edge)
+
+    var label := Label.new()
+    label.text = "COVER FIRE  /  KIWI SQUAD"
+    label.position = Vector2(680,92)
+    label.size = Vector2(480,28)
+    label.add_theme_font_size_override("font_size",14)
+    label.add_theme_color_override("font_color",Color("#b9e36c"))
+    parent.add_child(label)
+
+func _add_kiwi_mascot(parent: Control, center: Vector2) -> void:
+    var outline := Color("#20232b")
+    var face := Polygon2D.new()
+    face.position = center
+    face.polygon = PackedVector2Array([
+        Vector2(-49,-8),Vector2(-44,-31),Vector2(-28,-48),Vector2(-5,-55),
+        Vector2(19,-50),Vector2(39,-34),Vector2(49,-9),Vector2(44,20),
+        Vector2(27,43),Vector2(0,51),Vector2(-28,42),Vector2(-45,19)
+    ])
+    face.color = Color("#f4dfc4")
+    parent.add_child(face)
+
+    var fringe := Polygon2D.new()
+    fringe.position = center
+    fringe.polygon = PackedVector2Array([
+        Vector2(-47,-10),Vector2(-42,-34),Vector2(-25,-49),Vector2(-5,-53),
+        Vector2(18,-48),Vector2(38,-32),Vector2(46,-12),Vector2(25,-21),
+        Vector2(8,-24),Vector2(-8,-19),Vector2(-24,-8)
+    ])
+    fringe.color = Color("#eee4cc")
+    parent.add_child(fringe)
+
+    var fringe_line := Line2D.new()
+    fringe_line.points = PackedVector2Array([
+        center+Vector2(-47,-10),center+Vector2(-42,-34),center+Vector2(-25,-49),
+        center+Vector2(-5,-53),center+Vector2(18,-48),center+Vector2(38,-32)
+    ])
+    fringe_line.width = 3.0
+    fringe_line.default_color = outline
+    parent.add_child(fringe_line)
+
+    for eye_x in [-17,17]:
+        var eye := ColorRect.new()
+        eye.position = center + Vector2(eye_x-3,-4)
+        eye.size = Vector2(6,12)
+        eye.color = outline
+        parent.add_child(eye)
+        var shine := ColorRect.new()
+        shine.position = center + Vector2(eye_x-1,-3)
+        shine.size = Vector2(2,3)
+        shine.color = Color.WHITE
+        parent.add_child(shine)
+
+    var mouth := Line2D.new()
+    mouth.points = PackedVector2Array([center+Vector2(-5,20),center+Vector2(0,24),center+Vector2(6,19)])
+    mouth.width = 2.5
+    mouth.default_color = Color("#9a655d")
+    parent.add_child(mouth)
+
+    var bow_left := Polygon2D.new()
+    bow_left.position = center + Vector2(-7,-48)
+    bow_left.polygon = PackedVector2Array([Vector2(0,0),Vector2(-17,-10),Vector2(-14,7)])
+    bow_left.color = Color("#86bd58")
+    parent.add_child(bow_left)
+    var bow_right := Polygon2D.new()
+    bow_right.position = center + Vector2(7,-48)
+    bow_right.polygon = PackedVector2Array([Vector2(0,0),Vector2(17,-10),Vector2(14,7)])
+    bow_right.color = Color("#86bd58")
+    parent.add_child(bow_right)
+    var bow_center := Polygon2D.new()
+    bow_center.position = center + Vector2(0,-48)
+    bow_center.polygon = PackedVector2Array([Vector2(-5,-5),Vector2(5,-5),Vector2(6,5),Vector2(-6,5)])
+    bow_center.color = Color("#4d8b43")
+    parent.add_child(bow_center)
+
+    var collar := Polygon2D.new()
+    collar.position = center + Vector2(0,40)
+    collar.polygon = PackedVector2Array([Vector2(-15,0),Vector2(0,10),Vector2(15,0),Vector2(0,17)])
+    collar.color = Color("#f8f3e7")
+    parent.add_child(collar)
+    var collar_edge := Line2D.new()
+    collar_edge.points = PackedVector2Array([
+        center+Vector2(-15,40),center+Vector2(0,50),center+Vector2(15,40)
+    ])
+    collar_edge.width = 2.0
+    collar_edge.default_color = outline
+    parent.add_child(collar_edge)
+
+func _show_mode_menu() -> void:
+    _show_panel("ВЫБОР РЕЖИМА",[
+        ["ОНЛАЙН — ПОЗЖЕ",Callable(self,"_show_online_info")],
+        ["ПРОТИВ БОТОВ",Callable(self,"_show_difficulty_menu")],
+        ["ТРЕНИРОВКА",Callable(self,"_start_training")],
+        ["НАЗАД",Callable(self,"_show_main_menu")]
+    ],"Выбери, как хочешь играть")
+
+func _show_difficulty_menu() -> void:
+    _show_panel("СЛОЖНОСТЬ БОТОВ",[
+        ["ЛЁГКАЯ",Callable(self,"_set_easy")],
+        ["ОБЫЧНАЯ",Callable(self,"_set_normal")],
+        ["СЛОЖНАЯ",Callable(self,"_set_hard")],
+        ["НАЗАД",Callable(self,"_show_mode_menu")]
+    ],"Сейчас: " + bot_difficulty.to_upper())
+
+func _set_easy() -> void:
+    bot_difficulty = "easy"
+    bot_accuracy = 0.38
+    _start_game("bot")
+
+func _set_normal() -> void:
+    bot_difficulty = "normal"
+    bot_accuracy = 0.64
+    _start_game("bot")
+
+func _set_hard() -> void:
+    bot_difficulty = "hard"
+    bot_accuracy = 0.88
+    _start_game("bot")
+
+func _start_training() -> void:
+    # Training begins immediately. Cards are opened only from the dedicated CARDS menu.
+    _start_game("training")
+
+func _show_online_info() -> void:
+    _show_panel("ОНЛАЙН",[
+        ["НАЗАД",Callable(self,"_show_mode_menu")]
+    ],"Сетевой режим пока не подключён. Сейчас доступны полноценные бои с ботом и тренировка.")
+
+func _show_pause_menu() -> void:
+    phase = "paused"
+    _clear_control_inputs()
+    _clear_pulses()
+    player.set_physics_process(false)
+    rival.set_physics_process(false)
+    _show_panel("ПАУЗА",[
+        ["ПРОДОЛЖИТЬ",Callable(self,"_resume_game")],
+        ["КАРТОЧКИ",Callable(self,"_open_training_cards")],
+        ["В ГЛАВНОЕ МЕНЮ",Callable(self,"_show_main_menu")]
+    ],"Игра приостановлена")
+
+func _resume_game() -> void:
+    _close_overlay()
+    player.set_physics_process(true)
+    rival.visible = game_mode != "training"
+    rival.set_physics_process(game_mode != "training")
+    rival.collision_layer = 0 if game_mode == "training" else 1
+    player.target = rival if game_mode != "training" else null
+    phase = "fight"
+    game_controls.visible = true
+
+func _show_settings() -> void:
+    _show_panel("НАСТРОЙКИ",[
+        ["ЗВУК: " + ("ВКЛ" if sound_enabled else "ВЫКЛ"),Callable(self,"_toggle_sound")],
+        ["ГРОМКОСТЬ: " + str(roundi(sound_level*100)) + "%  ↻",Callable(self,"_cycle_volume")],
+        ["ВИБРАЦИЯ: " + ("ВКЛ" if vibration_enabled else "ВЫКЛ"),Callable(self,"_toggle_vibration")],
+        ["ТРЯСКА КАМЕРЫ: " + ("ВКЛ" if shake_enabled else "ВЫКЛ"),Callable(self,"_toggle_shake")],
+        ["РАСКЛАДКА: " + ("ЛЕВША" if controls_mirrored else "ПРАВША"),Callable(self,"_toggle_controls")],
+        ["НАЗАД",Callable(self,"_show_main_menu")]
+    ],"Настройки применяются сразу. Нажми на громкость, чтобы переключить уровень.")
+
+func _toggle_sound() -> void:
+    sound_enabled = not sound_enabled
+    sound_level = 0.72 if sound_enabled else 0.0
+    _apply_audio_settings()
+    _save_settings()
+    _show_settings()
+
+func _toggle_vibration() -> void:
+    vibration_enabled = not vibration_enabled
+    _save_settings()
+    _show_settings()
+
+func _cycle_volume() -> void:
+    if sound_level <= 0.001:
+        sound_level = 0.35
+    elif sound_level < 0.5:
+        sound_level = 0.72
+    elif sound_level < 0.9:
+        sound_level = 1.0
+    else:
+        sound_level = 0.0
+    sound_enabled = sound_level > 0.001
+    _apply_audio_settings()
+    _save_settings()
+    _show_settings()
+
+func _toggle_shake() -> void:
+    shake_enabled = not shake_enabled
+    _save_settings()
+    _show_settings()
+
+func _toggle_controls() -> void:
+    controls_mirrored = not controls_mirrored
+    _apply_control_layout()
+    _save_settings()
+    _show_settings()
+
+func _open_skins() -> void:
+    if phase == "fight":
+        skin_return_to_game = true
+        phase = "paused"
+        _clear_control_inputs()
+        _clear_pulses()
+        player.set_physics_process(false)
+        rival.set_physics_process(false)
+    else:
+        skin_return_to_game = false
+
+    var skins := _get_skins()
+    if skins.is_empty():
+        return
+    skin_index = clampi(skin_index, 0, skins.size() - 1)
+    _close_overlay()
+    game_controls.visible = false
+
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#0b111b")
+    ui.add_child(shade)
+    overlay = shade
+    _add_menu_ornaments(shade)
+
+    var title := Label.new()
+    title.text = "ВЫБОР БОЙЦА"
+    title.position = Vector2(0, 28)
+    title.size = Vector2(1280, 54)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 38)
+    title.add_theme_color_override("font_color", Color("#f3f1e8"))
+    shade.add_child(title)
+
+    var skin: Dictionary = skins[skin_index]
+    var skin_color := Color.from_string(str(skin.get("color", "#39d6c5")), Color("#39d6c5"))
+
+    var preview_panel := Panel.new()
+    preview_panel.position = Vector2(430, 112)
+    preview_panel.size = Vector2(420, 360)
+    var preview_style := StyleBoxFlat.new()
+    preview_style.bg_color = Color("#172333")
+    preview_style.border_color = skin_color
+    preview_style.set_border_width_all(2)
+    preview_style.set_corner_radius_all(22)
+    preview_panel.add_theme_stylebox_override("panel", preview_style)
+    shade.add_child(preview_panel)
+
+    var preview_area := Control.new()
+    preview_area.position = Vector2(10, 10)
+    preview_area.size = Vector2(400, 340)
+    preview_area.clip_contents = true
+    preview_panel.add_child(preview_area)
+
+    var floor_line := ColorRect.new()
+    floor_line.position = Vector2(28, 290)
+    floor_line.size = Vector2(344, 3)
+    floor_line.color = Color(skin_color, 0.75)
+    preview_area.add_child(floor_line)
+
+    var fighter: ArenaPlayer = PLAYER_SCRIPT.new()
+    fighter.body_color = skin_color
+    fighter.skin_style = str(skin.get("style", "default"))
+    fighter.facing = 1.0
+    fighter.aim_input = Vector2(0.85, -0.16)
+    fighter.position = Vector2(200, 225)
+    fighter.scale = Vector2(1.4, 1.4)
+    fighter.set_physics_process(false)
+    fighter.set_process(false)
+    fighter.z_index = 2
+    preview_area.add_child(fighter)
+
+    var name_label := Label.new()
+    name_label.text = str(skin.get("name", skin.get("id", "MOD"))).to_upper()
+    name_label.position = Vector2(300, 490)
+    name_label.size = Vector2(680, 48)
+    name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    name_label.add_theme_font_size_override("font_size", 28)
+    name_label.add_theme_color_override("font_color", Color("#f3f1e8"))
+    shade.add_child(name_label)
+
+    var count_label := Label.new()
+    count_label.text = "%d / %d" % [skin_index + 1, skins.size()]
+    count_label.position = Vector2(0, 535)
+    count_label.size = Vector2(1280, 28)
+    count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    count_label.add_theme_font_size_override("font_size", 15)
+    count_label.add_theme_color_override("font_color", Color("#9baabd"))
+    shade.add_child(count_label)
+
+    var previous := _add_button("‹", Vector2(300, 245), Vector2(100, 76), shade)
+    previous.add_theme_font_size_override("font_size", 42)
+    previous.add_theme_stylebox_override("normal", _menu_button_style(Color("#253446"), Color("#b9e36c")))
+    previous.pressed.connect(_select_skin.bind(posmod(skin_index - 1, skins.size())))
+
+    var next := _add_button("›", Vector2(880, 245), Vector2(100, 76), shade)
+    next.add_theme_font_size_override("font_size", 42)
+    next.add_theme_stylebox_override("normal", _menu_button_style(Color("#253446"), Color("#b9e36c")))
+    next.pressed.connect(_select_skin.bind(posmod(skin_index + 1, skins.size())))
+
+    var back := _add_button("НАЗАД", Vector2(360, 600), Vector2(250, 58), shade)
+    back.add_theme_stylebox_override("normal", _menu_button_style(Color("#303d4d"), Color("#718ba1")))
+    back.pressed.connect(_apply_skin_and_return)
+
+    var equip := _add_button("НАДЕТО  ✓", Vector2(670, 600), Vector2(250, 58), shade)
+    equip.add_theme_stylebox_override("normal", _menu_button_style(Color("#596b32"), Color("#d9ef70")))
+    equip.pressed.connect(_apply_skin_and_return)
+
+func _select_skin(index: int) -> void:
+    skin_index = index
+    _apply_skin()
+    _open_skins()
+
+func _previous_skin() -> void:
+    skin_index -= 1
+    _apply_skin()
+    _open_skins()
+
+func _apply_skin_and_return() -> void:
+    _apply_skin()
+    if skin_return_to_game:
+        skin_return_to_game = false
+        _resume_game()
+    else:
+        _show_main_menu()
+
+func _open_mods() -> void:
+    _get_skins()
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#101722")
+    ui.add_child(shade)
+    overlay = shade
+    var title := Label.new()
+    title.text = "МАСТЕР МОДОВ"
+    title.position = Vector2(0,24)
+    title.size = Vector2(1280,58)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",38)
+    title.add_theme_color_override("font_color",Color("#f4f7ff"))
+    shade.add_child(title)
+    var summary := Label.new()
+    summary.text = "Модов: %d   •   Скинов: %d   •   Арен: %d   •   Карточек: %d" % [mod_loader.loaded_mod_names.size(),mod_loader.skins.size(),mod_loader.maps.size(),mod_loader.upgrades.size()]
+    summary.position = Vector2(80,88)
+    summary.size = Vector2(1120,30)
+    summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    summary.add_theme_font_size_override("font_size",17)
+    summary.add_theme_color_override("font_color",Color("#b9e36c"))
+    shade.add_child(summary)
+    var help := Label.new()
+    help.text = "Вставь JSON мода из буфера обмена. Он сохранится внутри игры на телефоне."
+    help.position = Vector2(100,125)
+    help.size = Vector2(1080,34)
+    help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    help.add_theme_font_size_override("font_size",15)
+    help.add_theme_color_override("font_color",Color("#a7b1c2"))
+    shade.add_child(help)
+    mod_json_input = TextEdit.new()
+    mod_json_input.position = Vector2(120,170)
+    mod_json_input.size = Vector2(1040,365)
+    mod_json_input.text = mod_json_buffer if mod_json_buffer != "" else '{"name":"Мой мод","skins":[{"name":"Мятный","color":"#39d6c5"}],"maps":[{"name":"Моя арена","platforms":[{"x":300,"y":550,"w":180,"h":22},{"x":950,"y":550,"w":180,"h":22}]}],"upgrades":[]}'
+    mod_json_input.add_theme_font_size_override("font_size",16)
+    mod_json_input.add_theme_color_override("font_color",Color("#e9eef8"))
+    mod_json_input.add_theme_color_override("background_color",Color("#202938"))
+    mod_json_input.add_theme_color_override("caret_color",Color("#d9ef70"))
+    shade.add_child(mod_json_input)
+    var status := Label.new()
+    status.text = mod_status_message
+    status.position = Vector2(100,545)
+    status.size = Vector2(1080,30)
+    status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    status.add_theme_font_size_override("font_size",14)
+    status.add_theme_color_override("font_color",Color("#d9ef70"))
+    shade.add_child(status)
+    var import_button := _add_button("ИМПОРТИРОВАТЬ",Vector2(260,590),Vector2(260,58),shade)
+    import_button.add_theme_stylebox_override("normal",_menu_button_style(Color("#596b32"),Color("#d9ef70")))
+    import_button.add_theme_color_override("font_color",Color("#ffffff"))
+    import_button.pressed.connect(_import_mod_from_text)
+    var reload_button_ui := _add_button("ОБНОВИТЬ",Vector2(520,590),Vector2(220,58),shade)
+    reload_button_ui.pressed.connect(_reload_mods)
+    var back := _add_button("НАЗАД",Vector2(760,590),Vector2(220,58),shade)
+    back.pressed.connect(_show_main_menu)
+    var footer := Label.new()
+    footer.text = "ПОДДЕРЖИВАЮТСЯ СКИНЫ, АРЕНЫ И КАРТОЧКИ С ГОТОВЫМИ ЭФФЕКТАМИ"
+    footer.position = Vector2(0,675)
+    footer.size = Vector2(1280,24)
+    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    footer.add_theme_font_size_override("font_size",12)
+    footer.add_theme_color_override("font_color",Color("#626875"))
+    shade.add_child(footer)
+
+func _import_mod_from_text() -> void:
+    if not is_instance_valid(mod_json_input):
+        return
+    mod_json_buffer = mod_json_input.text
+    var parsed: Variant = JSON.parse_string(mod_json_input.text)
+    if typeof(parsed) != TYPE_DICTIONARY:
+        mod_status_message = "Ошибка: проверь JSON — скобки, кавычки и запятые."
+        _open_mods()
+        return
+    if not parsed.has("name"):
+        mod_status_message = "Ошибка: у мода должно быть поле name."
+        _open_mods()
+        return
+    var directory := DirAccess.open("user://")
+    if directory == null:
+        mod_status_message = "Не удалось открыть папку данных игры."
+        _open_mods()
+        return
+    var make_error := directory.make_dir_recursive("mods/quick_import")
+    if make_error != OK and make_error != ERR_ALREADY_EXISTS:
+        mod_status_message = "Не удалось создать папку для мода."
+        _open_mods()
+        return
+    var file := FileAccess.open("user://mods/quick_import/mod.json",FileAccess.WRITE)
+    if file == null:
+        mod_status_message = "Не удалось сохранить mod.json."
+        _open_mods()
+        return
+    file.store_string(mod_json_input.text)
+    file.close()
+    mod_status_message = "Мод сохранён. Проверяю его содержимое..."
+    _reload_mods()
+
+func _reload_mods() -> void:
+    if mod_loader == null:
+        mod_loader = MOD_LOADER_SCRIPT.new()
+    mod_loader.load_all()
+    mods_loaded = true
+    all_maps.assign(DEFAULT_MAPS)
+    all_maps.append_array(mod_loader.maps)
+    all_upgrades.assign(DEFAULT_UPGRADES)
+    all_upgrades.append_array(mod_loader.upgrades)
+    _apply_skin()
+    mod_status_message = "Загрузка завершена: %d модов, %d скинов, %d арен, %d карточек. Предупреждений: %d." % [mod_loader.loaded_mod_names.size(),mod_loader.skins.size(),mod_loader.maps.size(),mod_loader.upgrades.size(),mod_loader.warnings.size()]
+    _open_mods()
+
+func _open_training_cards() -> void:
+    if game_mode != "training":
+        phase = "paused"
+        _clear_control_inputs()
+        _clear_pulses()
+        player.set_physics_process(false)
+        rival.set_physics_process(false)
+        _show_panel("КАРТОЧКИ",[
+            ["ОТКРЫТЬ ТРЕНИРОВКУ",Callable(self,"_start_training")],
+            ["НАЗАД",Callable(self,"_resume_game")]
+        ],"Карточки и выбор арены доступны в тренировке.")
+        return
+    phase = "paused"
+    _clear_control_inputs()
+    _clear_pulses()
+    player.set_physics_process(false)
+    rival.set_physics_process(false)
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#101722")
+    ui.add_child(shade)
+    overlay = shade
+    var title := Label.new()
+    title.text = "ТРЕНИРОВКА"
+    title.position = Vector2(0,24)
+    title.size = Vector2(1280,55)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",36)
+    title.add_theme_color_override("font_color",Color("#f4f7ff"))
+    shade.add_child(title)
+    var tabs := HBoxContainer.new()
+    tabs.position = Vector2(330,90)
+    tabs.size = Vector2(620,55)
+    tabs.add_theme_constant_override("separation",14)
+    shade.add_child(tabs)
+    var upgrades_tab := Button.new()
+    upgrades_tab.text = "КАРТОЧКИ"
+    upgrades_tab.custom_minimum_size = Vector2(300,52)
+    upgrades_tab.pressed.connect(_set_training_tab.bind("cards"))
+    tabs.add_child(upgrades_tab)
+    var maps_tab := Button.new()
+    maps_tab.text = "ВЫБОР АРЕНЫ"
+    maps_tab.custom_minimum_size = Vector2(300,52)
+    maps_tab.pressed.connect(_set_training_tab.bind("maps"))
+    tabs.add_child(maps_tab)
+    if training_tab == "maps":
+        _get_skins()
+        _build_training_maps(shade)
+    else:
+        _build_upgrade_cards(shade)
+    var done := _add_button("ГОТОВО",Vector2(500,635),Vector2(280,58),shade)
+    done.pressed.connect(_resume_game)
+
+func _set_training_tab(tab: String) -> void:
+    training_tab = tab
+    _open_training_cards()
+
+func _add_card_illustration(parent: Control, card_id: String, active: bool) -> void:
+    var tint := Color("#d9ef70") if active else Color("#91a7c4")
+    var dark := Color("#101a28")
+    var glow := Color(tint,0.12)
+    var halo := Polygon2D.new()
+    halo.position = Vector2(157,59)
+    halo.polygon = PackedVector2Array([Vector2(-115,-54),Vector2(115,-54),Vector2(137,0),Vector2(115,54),Vector2(-115,54),Vector2(-137,0)])
+    halo.color = glow
+    parent.add_child(halo)
+    var frame := Line2D.new()
+    frame.points = PackedVector2Array([Vector2(30,59),Vector2(48,14),Vector2(85,5),Vector2(108,14),Vector2(126,59),Vector2(108,104),Vector2(85,113),Vector2(48,104),Vector2(30,59)])
+    frame.width = 2.0
+    frame.default_color = Color(tint,0.28)
+    frame.antialiased = true
+    parent.add_child(frame)
+    # Custom illustrated emblem for each card, with a shared hand-painted tech-art language.
+    var emblem := Polygon2D.new()
+    emblem.position = Vector2(157,58)
+    emblem.color = tint
+    parent.add_child(emblem)
+    match card_id:
+        "homing":
+            emblem.polygon = PackedVector2Array([Vector2(-8,-43),Vector2(9,-18),Vector2(34,-10),Vector2(14,8),Vector2(7,38),Vector2(-8,20),Vector2(-25,37),Vector2(-20,7),Vector2(-40,-9),Vector2(-15,-18)])
+            var target_ring := Line2D.new()
+            var pts := PackedVector2Array()
+            for i in range(49):
+                var a := TAU * float(i) / 48.0
+                pts.append(Vector2(cos(a),sin(a))*49.0)
+            target_ring.points = pts
+            target_ring.width = 2.2
+            target_ring.default_color = Color(tint,0.8)
+            target_ring.antialiased = true
+            parent.add_child(target_ring)
+            var dot := Polygon2D.new()
+            dot.polygon = PackedVector2Array([Vector2(-5,-5),Vector2(5,-5),Vector2(5,5),Vector2(-5,5)])
+            dot.position = Vector2(157,58)
+            dot.color = Color.WHITE
+            parent.add_child(dot)
+        "ricochet":
+            emblem.polygon = PackedVector2Array([Vector2(-12,-43),Vector2(12,-43),Vector2(12,-5),Vector2(42,-5),Vector2(42,17),Vector2(-12,17)])
+            var bounce := Line2D.new()
+            bounce.points = PackedVector2Array([Vector2(90,86),Vector2(90,27),Vector2(207,27),Vector2(207,86)])
+            bounce.width = 4.0
+            bounce.default_color = tint
+            bounce.antialiased = true
+            parent.add_child(bounce)
+        "heavy":
+            emblem.polygon = PackedVector2Array([Vector2(-55,-17),Vector2(27,-17),Vector2(27,-30),Vector2(58,0),Vector2(27,30),Vector2(27,17),Vector2(-55,17)])
+            var weight := Polygon2D.new()
+            weight.position = Vector2(157,58)
+            weight.polygon = PackedVector2Array([Vector2(-13,-43),Vector2(13,-43),Vector2(13,-17),Vector2(40,-17),Vector2(40,17),Vector2(13,17),Vector2(13,43),Vector2(-13,43),Vector2(-13,17),Vector2(-40,17),Vector2(-40,-17),Vector2(-13,-17)])
+            weight.color = Color(tint,0.5)
+            parent.add_child(weight)
+        "rapid":
+            emblem.polygon = PackedVector2Array([Vector2(13,-47),Vector2(-34,7),Vector2(-7,7),Vector2(-22,47),Vector2(39,-15),Vector2(11,-15)])
+            var speed_lines := Line2D.new()
+            speed_lines.points = PackedVector2Array([Vector2(55,43),Vector2(96,43),Vector2(115,31)])
+            speed_lines.width = 4.0
+            speed_lines.default_color = tint
+            parent.add_child(speed_lines)
+        "magazine":
+            emblem.polygon = PackedVector2Array([Vector2(-35,-37),Vector2(35,-37),Vector2(35,38),Vector2(-35,38)])
+            for i in range(3):
+                var slot := ColorRect.new()
+                slot.position = Vector2(134.0+float(i)*16.0,37.0)
+                slot.size = Vector2(8,42)
+                slot.color = dark
+                parent.add_child(slot)
+        "piercing":
+            emblem.polygon = PackedVector2Array([Vector2(-60,-9),Vector2(24,-9),Vector2(24,-24),Vector2(61,0),Vector2(24,24),Vector2(24,9),Vector2(-60,9)])
+            var streak := Line2D.new()
+            streak.points = PackedVector2Array([Vector2(84,59),Vector2(224,59)])
+            streak.width = 2.0
+            streak.default_color = Color.WHITE
+            parent.add_child(streak)
+        "kiwi":
+            emblem.polygon = PackedVector2Array([Vector2(0,-48),Vector2(17,-22),Vector2(42,-12),Vector2(20,10),Vector2(10,43),Vector2(-8,23),Vector2(-39,34),Vector2(-25,3),Vector2(-43,-18),Vector2(-13,-20)])
+            var leaf_vein := Line2D.new()
+            leaf_vein.points = PackedVector2Array([Vector2(157,58),Vector2(157,25),Vector2(177,10)])
+            leaf_vein.width = 3.0
+            leaf_vein.default_color = Color("#f3f0d8")
+            parent.add_child(leaf_vein)
+        "spring":
+            emblem.polygon = PackedVector2Array([Vector2(-35,-42),Vector2(35,-42),Vector2(-15,-14),Vector2(35,-14),Vector2(-15,14),Vector2(35,14),Vector2(8,42),Vector2(-35,42)])
+        "feather":
+            emblem.polygon = PackedVector2Array([Vector2(-42,26),Vector2(-15,-36),Vector2(6,-45),Vector2(31,-15),Vector2(38,18),Vector2(5,42),Vector2(-9,8)])
+        "wall":
+            emblem.polygon = PackedVector2Array([Vector2(-42,-35),Vector2(-20,-35),Vector2(-20,25),Vector2(20,25),Vector2(20,4),Vector2(44,4),Vector2(44,45),Vector2(-42,45)])
+        "air":
+            emblem.polygon = PackedVector2Array([Vector2(-10,-46),Vector2(10,-46),Vector2(10,-10),Vector2(46,-10),Vector2(46,10),Vector2(10,10),Vector2(10,46),Vector2(-10,46),Vector2(-10,10),Vector2(-46,10),Vector2(-46,-10),Vector2(-10,-10)])
+        "boots":
+            emblem.polygon = PackedVector2Array([Vector2(-39,-42),Vector2(-4,-42),Vector2(-4,15),Vector2(40,15),Vector2(40,39),Vector2(-39,39)])
+        _:
+            emblem.polygon = PackedVector2Array([Vector2(-44,-34),Vector2(0,-49),Vector2(44,-34),Vector2(35,26),Vector2(0,48),Vector2(-35,26)])
+    var shine := Line2D.new()
+    shine.points = PackedVector2Array([Vector2(126,30),Vector2(145,19),Vector2(169,18)])
+    shine.width = 2.0
+    shine.default_color = Color(1.0,1.0,1.0,0.55)
+    parent.add_child(shine)
+
+func _build_upgrade_cards(shade: Control) -> void:
+    var info := Label.new()
+    info.text = "СОБЕРИ СВОЙ БИЛД  •  КАЖДУЮ КАРТУ МОЖНО УСИЛИТЬ ДО 3 СТАКОВ"
+    info.position = Vector2(0,145)
+    info.size = Vector2(1280,28)
+    info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    info.add_theme_font_size_override("font_size",15)
+    info.add_theme_color_override("font_color",Color("#a7a9b2"))
+    shade.add_child(info)
+    var scroll := ScrollContainer.new()
+    scroll.position = Vector2(55,185)
+    scroll.size = Vector2(1170,425)
+    shade.add_child(scroll)
+    var grid := GridContainer.new()
+    grid.columns = 3
+    grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    grid.add_theme_constant_override("h_separation",16)
+    grid.add_theme_constant_override("v_separation",16)
+    scroll.add_child(grid)
+    for card in all_upgrades:
+        var id := str(card.get("effect",card.get("id","")))
+        var stack_count := active_training_cards.count(id)
+        var active := stack_count > 0
+        var panel := PanelContainer.new()
+        panel.custom_minimum_size = Vector2(355,385)
+        var style := StyleBoxFlat.new()
+        style.bg_color = Color("#20291f") if active else Color("#171d29")
+        style.border_color = Color("#d9ef70") if active else Color("#53647b")
+        style.set_border_width_all(3 if active else 2)
+        style.set_corner_radius_all(15)
+        style.shadow_color = Color(0.0,0.0,0.0,0.42)
+        style.shadow_size = 10
+        style.shadow_offset = Vector2(0,4)
+        style.content_margin_left = 12
+        style.content_margin_right = 12
+        style.content_margin_top = 10
+        style.content_margin_bottom = 10
+        panel.add_theme_stylebox_override("panel",style)
+        var column := VBoxContainer.new()
+        column.alignment = BoxContainer.ALIGNMENT_CENTER
+        column.add_theme_constant_override("separation",10)
+        panel.add_child(column)
+        var art_area := Panel.new()
+        art_area.custom_minimum_size = Vector2(315,125)
+        var art_style := StyleBoxFlat.new()
+        art_style.bg_color = Color("#34452f") if active else Color("#222d3c")
+        art_style.border_color = Color("#91b75d") if active else Color("#64758e")
+        art_style.set_border_width_all(1)
+        art_style.set_corner_radius_all(11)
+        art_area.add_theme_stylebox_override("panel",art_style)
+        column.add_child(art_area)
+        _add_card_illustration(art_area, id, active)
+        var icon_label := Label.new()
+        icon_label.text = str(card.get("icon",""))
+        icon_label.position = Vector2(0,91)
+        icon_label.size = Vector2(315,24)
+        icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        icon_label.add_theme_font_size_override("font_size",13)
+        icon_label.add_theme_color_override("font_color",Color("#f3f1e8"))
+        art_area.add_child(icon_label)
+        var stack_label := Label.new()
+        stack_label.text = "АКТИВНО  ×%d / 3" % stack_count if stack_count > 0 else "МОЖНО УСИЛИТЬ ДО 3 РАЗ"
+        stack_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        stack_label.add_theme_font_size_override("font_size",12)
+        stack_label.add_theme_color_override("font_color",Color("#b9e36c") if stack_count > 0 else Color("#7f8a9b"))
+        column.add_child(stack_label)
+        var name_label := Label.new()
+        name_label.text = str(card.get("name",id))
+        name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        name_label.add_theme_font_size_override("font_size",18)
+        name_label.add_theme_color_override("font_color",Color("#f3f1e8"))
+        column.add_child(name_label)
+        var primary := Label.new()
+        primary.text = str(card.get("primary","ОСНОВНОЙ ЭФФЕКТ"))
+        primary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        primary.add_theme_font_size_override("font_size",14)
+        primary.add_theme_color_override("font_color",Color("#f0d88a"))
+        column.add_child(primary)
+        var buff := Label.new()
+        buff.text = "▲  " + str(card.get("buff",card.get("desc","")))
+        buff.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        buff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        buff.add_theme_font_size_override("font_size",13)
+        buff.add_theme_color_override("font_color",Color("#b9e36c"))
+        column.add_child(buff)
+        var debuff := Label.new()
+        debuff.text = "▼  " + str(card.get("debuff","МИНУС  Нет"))
+        debuff.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        debuff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        debuff.add_theme_font_size_override("font_size",13)
+        debuff.add_theme_color_override("font_color",Color("#ff897d"))
+        column.add_child(debuff)
+        var choose := Button.new()
+        choose.text = "СБРОСИТЬ СТАКИ" if stack_count >= 3 else ("ДОБАВИТЬ СТАК  ×%d" % (stack_count + 1))
+        choose.custom_minimum_size = Vector2(290,44)
+        choose.add_theme_stylebox_override("normal",_menu_button_style(Color("#596b32") if active else Color("#343b4b"),Color("#d9ef70") if active else Color("#667087")))
+        choose.pressed.connect(_toggle_training_card.bind(id))
+        column.add_child(choose)
+        grid.add_child(panel)
+
+func _build_training_maps(shade: Control) -> void:
+    var info := Label.new()
+    info.text = "АРЕНЫ: %d  •  У КАЖДОЙ СВОЯ АТМОСФЕРА И РАСКЛАДКА" % all_maps.size()
+    info.position = Vector2(0,155)
+    info.size = Vector2(1280,32)
+    info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    info.add_theme_font_size_override("font_size",16)
+    info.add_theme_color_override("font_color",Color("#aab8cc"))
+    shade.add_child(info)
+
+    var scroll := ScrollContainer.new()
+    scroll.position = Vector2(70,195)
+    scroll.size = Vector2(1140,425)
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+    scroll.clip_contents = true
+    shade.add_child(scroll)
+
+    var grid := GridContainer.new()
+    grid.columns = 2
+    grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    grid.add_theme_constant_override("h_separation",18)
+    grid.add_theme_constant_override("v_separation",16)
+    scroll.add_child(grid)
+
+    for i in range(all_maps.size()):
+        var map_data: Dictionary = all_maps[i]
+        var accent := Color.from_string(str(map_data.get("accent", "#8da9cb")), Color("#8da9cb"))
+        var selected := i == map_index
+        var platforms: Array = map_data.get("platforms", [])
+
+        var panel := PanelContainer.new()
+        panel.custom_minimum_size = Vector2(520,188)
+        var style := StyleBoxFlat.new()
+        style.bg_color = Color("#203b38") if selected else Color("#182333")
+        style.border_color = accent if selected else Color("#40556e")
+        style.set_border_width_all(3 if selected else 1)
+        style.set_corner_radius_all(16)
+        style.content_margin_left = 12
+        style.content_margin_right = 12
+        style.content_margin_top = 9
+        style.content_margin_bottom = 9
+        style.shadow_color = Color(0.0,0.0,0.0,0.3)
+        style.shadow_size = 8
+        style.shadow_offset = Vector2(0,3)
+        panel.add_theme_stylebox_override("panel",style)
+
+        var column := VBoxContainer.new()
+        column.add_theme_constant_override("separation",6)
+        panel.add_child(column)
+
+        var header := HBoxContainer.new()
+        header.add_theme_constant_override("separation",8)
+        column.add_child(header)
+        var name_label := Label.new()
+        name_label.text = str(map_data.get("name","АРЕНА"))
+        name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        name_label.add_theme_font_size_override("font_size",18)
+        name_label.add_theme_color_override("font_color",Color("#f4f7ff"))
+        header.add_child(name_label)
+        var state_label := Label.new()
+        state_label.text = "АКТИВНАЯ" if selected else "%d ПЛАТФОРМ" % platforms.size()
+        state_label.add_theme_font_size_override("font_size",11)
+        state_label.add_theme_color_override("font_color",accent)
+        header.add_child(state_label)
+
+        var preview := Control.new()
+        preview.custom_minimum_size = Vector2(490,88)
+        preview.clip_contents = true
+        column.add_child(preview)
+        var backdrop := ColorRect.new()
+        backdrop.position = Vector2.ZERO
+        backdrop.size = Vector2(490,88)
+        backdrop.color = Color.from_string(str(map_data.get("bg_top","#172234")),Color("#172234"))
+        preview.add_child(backdrop)
+        for line_index in range(6):
+            var grid_line := ColorRect.new()
+            grid_line.position = Vector2(0,12.0 + float(line_index) * 12.0)
+            grid_line.size = Vector2(490,1)
+            grid_line.color = Color(accent,0.08)
+            preview.add_child(grid_line)
+
+        var ground := ColorRect.new()
+        ground.position = Vector2(0,81)
+        ground.size = Vector2(490,7)
+        ground.color = Color.from_string(str(map_data.get("platform","#283b54")),Color("#283b54"))
+        preview.add_child(ground)
+
+        for platform_value in platforms:
+            if typeof(platform_value) != TYPE_DICTIONARY:
+                continue
+            var platform: Dictionary = platform_value
+            var center_x := 12.0 + clampf(float(platform.get("x",640)) / 1280.0,0.0,1.0) * 466.0
+            var center_y := 5.0 + clampf(float(platform.get("y",500)) / 720.0,0.0,1.0) * 70.0
+            var platform_w := clampf(float(platform.get("w",180)) / 1280.0 * 466.0,18.0,190.0)
+            var platform_h := clampf(float(platform.get("h",20)) / 720.0 * 88.0,3.0,6.0)
+            var bar := ColorRect.new()
+            bar.position = Vector2(clampf(center_x - platform_w * 0.5,0.0,490.0-platform_w),clampf(center_y-platform_h*0.5,2.0,76.0))
+            bar.size = Vector2(platform_w,platform_h)
+            bar.color = accent if selected else accent.darkened(0.12)
+            preview.add_child(bar)
+
+        var spawn_left := ColorRect.new()
+        spawn_left.position = Vector2(32,69)
+        spawn_left.size = Vector2(7,12)
+        spawn_left.color = Color("#f2e5ce")
+        preview.add_child(spawn_left)
+        var spawn_right := ColorRect.new()
+        spawn_right.position = Vector2(451,69)
+        spawn_right.size = Vector2(7,12)
+        spawn_right.color = Color("#ff786f")
+        preview.add_child(spawn_right)
+
+        var select := Button.new()
+        select.text = "АРЕНА ВЫБРАНА  ✓" if selected else "ВЫБРАТЬ АРЕНУ"
+        select.custom_minimum_size = Vector2(470,34)
+        select.focus_mode = Control.FOCUS_NONE
+        select.add_theme_stylebox_override("normal",_menu_button_style(Color("#526b35") if selected else Color("#29394d"),accent))
+        select.pressed.connect(_select_training_map.bind(i))
+        column.add_child(select)
+        grid.add_child(panel)
+
+func _select_training_map(index: int) -> void:
+    if all_maps.is_empty():
+        return
+    map_index = posmod(index,all_maps.size())
+    _make_arena(map_index)
+    player.reset_round(Vector2(350,390))
+    _open_training_cards()
+
+func _toggle_training_card(card_id: String) -> void:
+    var stack_count := active_training_cards.count(card_id)
+    if stack_count >= 3:
+        while active_training_cards.has(card_id):
+            active_training_cards.erase(card_id)
+    else:
+        active_training_cards.append(card_id)
+    _reset_player_stats(player)
+    for active_id in active_training_cards:
+        player.apply_upgrade(active_id)
+    _open_training_cards()
+
+func _add_menu_ornaments(parent: Control) -> void:
+    var top_glow := ColorRect.new()
+    top_glow.position = Vector2(0,0)
+    top_glow.size = Vector2(1280,5)
+    top_glow.color = Color("#d9ef70")
+    parent.add_child(top_glow)
+    var left_rail := ColorRect.new()
+    left_rail.position = Vector2(26,215)
+    left_rail.size = Vector2(3,290)
+    left_rail.color = Color(0.48,0.66,0.83,0.22)
+    parent.add_child(left_rail)
+    var right_rail := ColorRect.new()
+    right_rail.position = Vector2(1251,215)
+    right_rail.size = Vector2(3,290)
+    right_rail.color = Color(0.48,0.66,0.83,0.22)
+    parent.add_child(right_rail)
+    for i in range(9):
+        var dot := ColorRect.new()
+        dot.position = Vector2(72.0 + float(i)*142.0, 690.0)
+        dot.size = Vector2(3,3)
+        dot.color = Color(0.85,0.93,0.57,0.48)
+        parent.add_child(dot)
+
+func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> void:
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#0b1019")
+    ui.add_child(shade)
+    overlay = shade
+    _add_menu_ornaments(shade)
+    var panel := Panel.new()
+    panel.position = Vector2(300,45)
+    panel.size = Vector2(680,630)
+    var ps := StyleBoxFlat.new()
+    ps.bg_color = Color("#1c2029")
+    ps.border_color = Color("#414858")
+    ps.set_border_width_all(2)
+    ps.set_corner_radius_all(24)
+    ps.shadow_color = Color(0.0,0.0,0.0,0.48)
+    ps.shadow_size = 22
+    ps.shadow_offset = Vector2(0,9)
+    panel.add_theme_stylebox_override("panel",ps)
+    shade.add_child(panel)
+    var title := Label.new()
+    title.text = title_text
+    title.position = Vector2(0,78)
+    title.size = Vector2(1280,75)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",42)
+    title.add_theme_color_override("font_color",Color("#f3f1e8"))
+    shade.add_child(title)
+    var accent := ColorRect.new()
+    accent.position = Vector2(535,166)
+    accent.size = Vector2(210,4)
+    accent.color = Color("#d9ef70")
+    shade.add_child(accent)
+    if subtitle != "":
+        var info := Label.new()
+        info.text = subtitle
+        info.position = Vector2(340,185)
+        info.size = Vector2(600,75)
+        info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        info.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        info.add_theme_font_size_override("font_size",16)
+        info.add_theme_color_override("font_color",Color("#a7a9b2"))
+        shade.add_child(info)
+    var list := VBoxContainer.new()
+    var compact := buttons.size() > 4
+    list.position = Vector2(390,265 if compact else 285)
+    list.size = Vector2(500,390 if compact else 340)
+    list.add_theme_constant_override("separation",8 if compact else 12)
+    shade.add_child(list)
+    for entry in buttons:
+        var button := Button.new()
+        button.text = str(entry[0])
+        button.custom_minimum_size = Vector2(500,50 if compact else 58)
+        button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        button.focus_mode = Control.FOCUS_NONE
+        button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+        button.add_theme_font_size_override("font_size",20)
+        button.add_theme_color_override("font_color",Color("#f3f1e8"))
+        button.add_theme_color_override("font_hover_color",Color("#ffffff"))
+        button.add_theme_stylebox_override("normal",_menu_button_style(Color("#303644"),Color("#596174")))
+        button.add_theme_stylebox_override("hover",_menu_button_style(Color("#414a5b"),Color("#d9ef70")))
+        button.add_theme_stylebox_override("pressed",_menu_button_style(Color("#596b32"),Color("#d9ef70")))
+        button.add_theme_stylebox_override("focus",_menu_button_style(Color("#414a5b"),Color("#d9ef70")))
+        button.pressed.connect(entry[1])
+        list.add_child(button)
+    var footer := Label.new()
+    footer.text = "KIWI ROUNDS  /  ARENA PROTOTYPE"
+    footer.position = Vector2(0,675)
+    footer.size = Vector2(1280,24)
+    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    footer.add_theme_font_size_override("font_size",12)
+    footer.add_theme_color_override("font_color",Color("#626875"))
+    shade.add_child(footer)
+
+func _menu_button_style(fill: Color, outline: Color) -> StyleBoxFlat:
+    var style := StyleBoxFlat.new()
+    style.bg_color = fill
+    style.border_color = outline
+    style.border_width_left = 2
+    style.border_width_right = 2
+    style.border_width_top = 2
+    style.border_width_bottom = 2
+    style.corner_radius_top_left = 12
+    style.corner_radius_top_right = 12
+    style.corner_radius_bottom_left = 12
+    style.corner_radius_bottom_right = 12
+    style.content_margin_left = 18
+    style.content_margin_right = 18
+    style.content_margin_top = 8
+    style.content_margin_bottom = 8
+    style.shadow_color = Color(0.0,0.0,0.0,0.30)
+    style.shadow_size = 5
+    style.shadow_offset = Vector2(0,2)
+    return style
+
+func _close_overlay() -> void:
+    if is_instance_valid(overlay):
+        overlay.queue_free()
+    overlay = null
+
+func _finish_round(player_won: bool) -> void:
+    if phase != "fight":
+        return
+    _clear_control_inputs()
+    _clear_pulses()
+    phase = "upgrade"
+    player.set_physics_process(false)
+    rival.set_physics_process(false)
+    if player_won:
+        score_player += 1
+    else:
+        score_bot += 1
+    _update_hud()
+    if game_mode == "training":
+        _show_training_round_end()
+    elif score_player >= 5 or score_bot >= 5:
+        _show_match_end()
+    elif player_won:
+        # Only the losing side receives an upgrade.
+        if not all_upgrades.is_empty():
+            var bot_choice: Dictionary = all_upgrades.pick_random()
+            rival.apply_upgrade(str(bot_choice.get("effect",bot_choice.get("id",""))))
+        _next_round()
+    else:
+        _show_upgrade_panel()
+
+func _update_hud() -> void:
+    if not is_instance_valid(hud):
+        return
+    var arena_name := "АРЕНА"
+    if not all_maps.is_empty():
+        arena_name = str(all_maps[clampi(map_index, 0, all_maps.size() - 1)].get("name", "АРЕНА"))
+    if game_mode == "training":
+        hud.text = "ТРЕНИРОВКА  •  " + arena_name
+    else:
+        hud.text = "%s     РАУНД %d     ТЫ  %d : %d  CPU" % [arena_name,round_index,score_player,score_bot]
+
+func _show_training_round_end() -> void:
+    _show_panel("РАУНД ЗАВЕРШЁН",[
+        ["КАРТОЧКИ",Callable(self,"_open_training_cards")],
+        ["СЛЕДУЮЩИЙ РАУНД",Callable(self,"_next_round")],
+        ["В ГЛАВНОЕ МЕНЮ",Callable(self,"_show_main_menu")]
+    ],"В тренировке можно свободно выдавать и убирать карточки.")
+
+func _show_upgrade_panel() -> void:
+    var choices: Array = all_upgrades.duplicate(true)
+    choices.shuffle()
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#10141c")
+    ui.add_child(shade)
+    overlay = shade
+
+    var title := Label.new()
+    title.text = "ТЫ ПРОИГРАЛ РАУНД"
+    title.position = Vector2(0,54)
+    title.size = Vector2(1280,58)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",38)
+    title.add_theme_color_override("font_color",Color("#f2f0e8"))
+    shade.add_child(title)
+
+    var subtitle := Label.new()
+    subtitle.text = "Выбери усиление — теперь твой ход"
+    subtitle.position = Vector2(0,118)
+    subtitle.size = Vector2(1280,34)
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size",18)
+    subtitle.add_theme_color_override("font_color",Color("#aeb7c7"))
+    shade.add_child(subtitle)
+
+    for i in range(mini(3,choices.size())):
+        var item: Dictionary = choices[i]
+        var card := PanelContainer.new()
+        card.position = Vector2(105.0 + float(i)*365.0,205.0)
+        card.size = Vector2(330,390)
+        var style := StyleBoxFlat.new()
+        style.bg_color = Color("#202a35")
+        style.border_color = Color("#8ba66a")
+        style.set_border_width_all(2)
+        style.set_corner_radius_all(16)
+        card.add_theme_stylebox_override("panel",style)
+        shade.add_child(card)
+
+        var column := VBoxContainer.new()
+        column.alignment = BoxContainer.ALIGNMENT_CENTER
+        column.add_theme_constant_override("separation",12)
+        card.add_child(column)
+
+        var symbol := Label.new()
+        symbol.text = str(item.get("icon","✦"))
+        symbol.custom_minimum_size = Vector2(290,92)
+        symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        symbol.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        symbol.add_theme_font_size_override("font_size",58)
+        symbol.add_theme_color_override("font_color",Color("#d9ef70"))
+        column.add_child(symbol)
+
+        var name_label := Label.new()
+        name_label.text = str(item.get("name","УЛУЧШЕНИЕ"))
+        name_label.custom_minimum_size = Vector2(290,54)
+        name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        name_label.add_theme_font_size_override("font_size",20)
+        name_label.add_theme_color_override("font_color",Color("#f4f1e8"))
+        column.add_child(name_label)
+
+        var buff := Label.new()
+        buff.text = "▲  " + str(item.get("buff",""))
+        buff.custom_minimum_size = Vector2(290,54)
+        buff.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        buff.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        buff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        buff.add_theme_font_size_override("font_size",15)
+        buff.add_theme_color_override("font_color",Color("#b9e36c"))
+        column.add_child(buff)
+
+        var debuff := Label.new()
+        debuff.text = "▼  " + str(item.get("debuff",""))
+        debuff.custom_minimum_size = Vector2(290,48)
+        debuff.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        debuff.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        debuff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        debuff.add_theme_font_size_override("font_size",14)
+        debuff.add_theme_color_override("font_color",Color("#ff9a91"))
+        column.add_child(debuff)
+
+        var choose := Button.new()
+        choose.text = "ВЫБРАТЬ"
+        choose.custom_minimum_size = Vector2(286,52)
+        choose.add_theme_font_size_override("font_size",18)
+        choose.add_theme_stylebox_override("normal",_menu_button_style(Color("#d9ef70"),Color("#eff9bf")))
+        choose.add_theme_color_override("font_color",Color("#172015"))
+        choose.pressed.connect(_choose_upgrade.bind(str(item.get("effect",item.get("id","")))))
+        column.add_child(choose)
+
+    var footer := Label.new()
+    footer.text = "KIWI ROUNDS  •  BUILD YOUR MOVEMENT"
+    footer.position = Vector2(0,675)
+    footer.size = Vector2(1280,24)
+    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    footer.add_theme_font_size_override("font_size",12)
+    footer.add_theme_color_override("font_color",Color("#626875"))
+    shade.add_child(footer)
+
+func _choose_upgrade(upgrade_id: String) -> void:
+    player.apply_upgrade(upgrade_id)
+    _next_round()
+
+func _next_round() -> void:
+    _clear_pulses()
+    _close_overlay()
+    player.set_physics_process(true)
+    rival.visible = game_mode != "training"
+    rival.set_physics_process(game_mode != "training")
+    rival.collision_layer = 0 if game_mode == "training" else 1
+    player.target = rival if game_mode != "training" else null
+    round_index += 1
+    _make_arena(map_index if game_mode == "training" else round_index - 1)
+    player.reset_round(Vector2(350,390))
+    if game_mode != "training":
+        rival.reset_round(Vector2(930,390))
+    phase = "fight"
+    game_controls.visible = true
+    _update_hud()
+
+func _show_match_end() -> void:
+    var result := "ПОБЕДА!" if score_player >= 5 else "ПОБЕДИЛ CPU"
+    _show_panel(result,[
+        ["СЫГРАТЬ ЕЩЁ",Callable(self,"_restart_match")],
+        ["ГЛАВНОЕ МЕНЮ",Callable(self,"_show_main_menu")]
+    ],"Первый до 5 побед. Счёт: %d : %d" % [score_player,score_bot])
+
+func _restart_match() -> void:
+    _start_game(game_mode)
 
 func _clear_pulses() -> void:
     for node in get_children():
@@ -474,7 +2237,12 @@ func _make_ui() -> void:
     fire_button.button_down.connect(player.set_fire.bind(true))
     fire_button.button_up.connect(player.set_fire.bind(false))
     game_controls.add_child(fire_button)
-    ammo_label = Label.new()
+    reload_button = ACTION_BUTTON_SCRIPT.new()
+    reload_button.caption = "ПЕРЕЗАРЯДКА"
+    reload_button.position = Vector2(164,625)
+    reload_button.size = Vector2(132,48)
+    reload_button.pressed.connect(player.start_reload)
+    game_controls.add_child(reload_button)    ammo_label = Label.new()
     ammo_label.position = Vector2(158,590)
     ammo_label.size = Vector2(150,28)
     ammo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
