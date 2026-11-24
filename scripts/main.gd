@@ -636,12 +636,27 @@ func _build_upgrade_cards(shade: Control) -> void:
         icon_panel.color = Color("#245b58") if active else Color("#344967")
         icon_panel.custom_minimum_size = Vector2(92,125)
         row.add_child(icon_panel)
+        var art := Polygon2D.new()
+        art.position = Vector2(46,52)
+        art.color = Color("#9de8d8")
+        match id:
+            "swift":
+                art.polygon = PackedVector2Array([Vector2(-28,-8),Vector2(2,-8),Vector2(2,-20),Vector2(30,0),Vector2(2,20),Vector2(2,8),Vector2(-28,8)])
+            "spring":
+                art.polygon = PackedVector2Array([Vector2(-24,-25),Vector2(8,-25),Vector2(-8,-8),Vector2(24,-8),Vector2(-8,9),Vector2(24,9),Vector2(2,27),Vector2(-24,27),Vector2(-7,9),Vector2(-30,9),Vector2(-8,-8)])
+            "wave":
+                art.polygon = PackedVector2Array([Vector2(0,-31),Vector2(9,-10),Vector2(30,-8),Vector2(14,6),Vector2(19,28),Vector2(0,16),Vector2(-19,28),Vector2(-14,6),Vector2(-30,-8),Vector2(-9,-10)])
+            "rapid":
+                art.polygon = PackedVector2Array([Vector2(4,-30),Vector2(-20,4),Vector2(-4,4),Vector2(-12,30),Vector2(22,-9),Vector2(5,-9)])
+            "sturdy":
+                art.polygon = PackedVector2Array([Vector2(0,-29),Vector2(26,-17),Vector2(21,12),Vector2(0,30),Vector2(-21,12),Vector2(-26,-17)])
+        icon_panel.add_child(art)
         var icon_label := Label.new()
-        icon_label.text = str(card.get("icon","✦"))
-        icon_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+        icon_label.text = str(card.get("icon",""))
+        icon_label.position = Vector2(0,96)
+        icon_label.size = Vector2(92,25)
         icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-        icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-        icon_label.add_theme_font_size_override("font_size",44)
+        icon_label.add_theme_font_size_override("font_size",14)
         icon_label.add_theme_color_override("font_color",Color("#f5f7fb"))
         icon_panel.add_child(icon_label)
         var column := VBoxContainer.new()
