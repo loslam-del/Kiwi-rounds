@@ -67,6 +67,7 @@ var ragdoll_angles := {
     "leg_l": -0.12, "shin_l": -0.08,
     "leg_r": 0.12, "shin_r": 0.08
 }
+var ragdoll_anchor_body: StaticBody2D
 var ragdoll_parts: Array[RigidBody2D] = []
 var ragdoll_joints: Array[PinJoint2D] = []
 var ragdoll_root_joints: Array[PinJoint2D] = []
@@ -322,6 +323,9 @@ func _rebuild_physics_ragdoll() -> void:
             part.queue_free()
     ragdoll_parts.clear()
     ragdoll_joints.clear()
+    if is_instance_valid(ragdoll_anchor_body):
+        ragdoll_anchor_body.queue_free()
+    ragdoll_anchor_body = null
     ragdoll_root_joints.clear()
     ragdoll_anchor_offsets.clear()
     call_deferred("_create_physics_ragdoll")
@@ -332,6 +336,12 @@ func _create_physics_ragdoll() -> void:
     var world := get_tree().current_scene
     if world == null:
         return
+    ragdoll_anchor_body = StaticBody2D.new()
+    ragdoll_anchor_body.name = "RagdollTorsoAnchor"
+    ragdoll_anchor_body.collision_layer = 0
+    ragdoll_anchor_body.collision_mask = 0
+    ragdoll_anchor_body.global_position = global_position
+    world.add_child(ragdoll_anchor_body)
     _create_limb_chain(world, Vector2(-17.0, -5.0), -0.95, -0.72, 16.0, 15.0)
     _create_limb_chain(world, Vector2(17.0, -5.0), 0.95, 0.72, 16.0, 15.0)
     _create_limb_chain(world, Vector2(-7.5, 10.0), -0.12, -0.08, 15.0, 13.0)
@@ -348,7 +358,7 @@ func _create_limb_chain(world: Node, anchor_local: Vector2, upper_angle: float, 
     var lower_direction := _limb_vector(lower_angle, 1.0).normalized()
     var lower_center := elbow + lower_direction * (lower_length * 0.5)
     var lower := _make_ragdoll_part(world, lower_length, lower_center, lower_angle)
-    _connect_ragdoll_parts(world, self, upper, anchor, true, anchor_local)
+    _connect_ragdoll_parts(world, ragdoll_anchor_body, upper, anchor, true, anchor_local)
     _connect_ragdoll_parts(world, upper, lower, elbow, false, Vector2.ZERO)
 
 func _make_ragdoll_part(world: Node, segment_length: float, at: Vector2, segment_angle: float) -> RigidBody2D:
@@ -398,6 +408,8 @@ func _connect_ragdoll_parts(world: Node, body_a: PhysicsBody2D, body_b: PhysicsB
         ragdoll_anchor_offsets.append(anchor_local)
 
 func _sync_ragdoll_anchor_joints() -> void:
+    if is_instance_valid(ragdoll_anchor_body):
+        ragdoll_anchor_body.global_position = global_position
     for i in range(mini(ragdoll_root_joints.size(), ragdoll_anchor_offsets.size())):
         var joint := ragdoll_root_joints[i]
         if is_instance_valid(joint):
