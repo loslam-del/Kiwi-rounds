@@ -207,7 +207,7 @@ func _think_bot(delta: float) -> void:
     else:
         move_input = 0.0
     var direct_vector := target.global_position - global_position
-    var travel_time := direct_vector.length() / 1050.0
+    var travel_time := direct_vector.length() / maxf(projectile_speed, 1.0)
     var predicted_target: Vector2 = target.global_position + target.velocity * minf(travel_time,0.32)
     var aim_vector: Vector2 = (predicted_target - global_position).normalized()
     set_aim(aim_vector)
