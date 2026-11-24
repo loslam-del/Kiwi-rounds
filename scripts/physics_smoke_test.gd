@@ -155,7 +155,23 @@ func _run_physics_checks() -> void:
         return
 
     game.set("game_mode", "bot")
+    player.call("set_move", Vector2.RIGHT)
+    player.call("set_jump", true)
+    player.call("set_fire", true)
+    game.get("movement_joystick").set("active_index", 4)
+    game.get("movement_joystick").set("value", Vector2.RIGHT)
+    game.get("aim_joystick").set("active_index", 5)
+    game.get("fire_button").set("active_touch", 6)
     game.call("_open_training_cards")
+    if player.get("move_stick") != Vector2.ZERO or bool(player.get("touch_jump")) or bool(player.get("touch_fire")):
+        _fail("held mobile controls were not cleared when opening a menu")
+        return
+    if int(game.get("movement_joystick").get("active_index")) != -1 or int(game.get("aim_joystick").get("active_index")) != -1:
+        _fail("joystick touch remained captured after opening a menu")
+        return
+    if int(game.get("fire_button").get("active_touch")) != -1:
+        _fail("fire button touch remained captured after opening a menu")
+        return
     if player.is_physics_processing() or rival.is_physics_processing():
         _fail("match continued running behind the card information panel")
         return
