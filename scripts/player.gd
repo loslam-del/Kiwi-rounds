@@ -735,6 +735,9 @@ func _draw_two_hand_blaster(center: Vector2) -> void:
     var gun_origin := center + Vector2(0.0, 9.0) + local_aim * 7.0
     var grip_hand := gun_origin - local_aim * 2.0 + side * 4.0
     var support_hand := gun_origin + local_aim * 9.0 + side * 4.0
+    # Hands stay below the eye line even when the weapon is aimed upward.
+    grip_hand.y = maxf(grip_hand.y, center.y + 3.0)
+    support_hand.y = maxf(support_hand.y, center.y + 3.0)
     var shoulder_a := Vector2(-12.0, 3.0)
     var shoulder_b := Vector2(12.0, 3.0)
     var elbow_a := shoulder_a.lerp(grip_hand, 0.52) + side * 3.5
