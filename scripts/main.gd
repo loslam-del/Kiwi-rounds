@@ -18,7 +18,8 @@ const DEFAULT_UPGRADES := [
     {"id":"heavy","name":"ТЯЖЁЛЫЙ КАЛИБР","icon":"▰","art":"heavy","primary":"УСИЛЕННЫЙ ВЫСТРЕЛ","buff":"ОТБРАСЫВАНИЕ +24%","debuff":"СКОРОСТЬ СТРЕЛЬБЫ −15%","effect":"heavy"},
     {"id":"rapid","name":"ШТУРМОВОЙ МОДУЛЬ","icon":"»","art":"rapid","primary":"УСКОРЕННАЯ СТРЕЛЬБА","buff":"ПЕРЕЗАРЯДКА МЕЖДУ ВЫСТРЕЛАМИ −22%","debuff":"СИЛА ВЫСТРЕЛА −9%","effect":"rapid"},
     {"id":"magazine","name":"ДВОЙНОЙ МАГАЗИН","icon":"▥","art":"magazine","primary":"9 ЗАРЯДОВ В ОБОЙМЕ","buff":"МАГАЗИН +3 ПАТРОНА","debuff":"ПЕРЕЗАРЯДКА ДОЛЬШЕ +12%","effect":"magazine"},
-    {"id":"piercing","name":"РАЗГОННЫЙ СТВОЛ","icon":"➤","art":"piercing","primary":"РАЗОГНАННЫЙ СНАРЯД","buff":"СКОРОСТЬ СНАРЯДА +22%","debuff":"ПЕРЕЗАРЯДКА ДОЛЬШЕ +16%","effect":"piercing"}
+    {"id":"piercing","name":"РАЗГОННЫЙ СТВОЛ","icon":"➤","art":"piercing","primary":"РАЗОГНАННЫЙ СНАРЯД","buff":"СКОРОСТЬ СНАРЯДА +22%","debuff":"ПЕРЕЗАРЯДКА ДОЛЬШЕ +16%","effect":"piercing"},
+    {"id":"kiwi_charm","name":"ОБЕРЕГ КИВИ","icon":"✿","art":"kiwi","primary":"КОСМЕТИЧЕСКИЙ ЭФФЕКТ","buff":"ЗЕЛЁНЫЕ ЛИСТЬЯ И МЯГКОЕ СИЯНИЕ","debuff":"БЕЗ ИЗМЕНЕНИЯ ХАРАКТЕРИСТИК","effect":"kiwi_charm"}
 ]
 const DEFAULT_MAPS := [
     {"name":"КОРОТКИЙ МОСТ","platforms":[{"x":330,"y":555,"w":230,"h":20},{"x":950,"y":555,"w":230,"h":20},{"x":640,"y":420,"w":170,"h":20},{"x":190,"y":430,"w":150,"h":18},{"x":1090,"y":430,"w":150,"h":18}]},
@@ -56,6 +57,7 @@ var bot_difficulty := "normal"
 var bot_accuracy := 0.64
 var active_training_cards: Array[String] = []
 var selected_skin_color := Color("#39d6c5")
+var selected_skin_style := "default"
 var sound_enabled := true
 var vibration_enabled := true
 var boot_loading := true
@@ -259,6 +261,7 @@ func _add_platform(at: Vector2, dimensions: Vector2) -> void:
 func _make_players() -> void:
     player = PLAYER_SCRIPT.new()
     player.body_color = selected_skin_color
+    player.skin_style = selected_skin_style
     player.position = Vector2(350,390)
     player.pulse_requested.connect(_spawn_pulse)
     player.got_hit.connect(_on_player_hit)
@@ -295,7 +298,8 @@ func _get_skins() -> Array[Dictionary]:
         {"name":"Лазурный","color":"#4b9cff"},
         {"name":"Фиолетовый","color":"#b47cff"},
         {"name":"Золотой","color":"#ffc857"},
-        {"name":"Розовый","color":"#ff78b7"}
+        {"name":"Розовый","color":"#ff78b7"},
+        {"id":"kiwi_araga","name":"Киви Арага","color":"#f2e5ce","style":"kiwi"}
     ]
     skins.append_array(mod_loader.skins)
     return skins
@@ -315,8 +319,10 @@ func _apply_skin() -> void:
     skin_index = posmod(skin_index, skins.size())
     var skin: Dictionary = skins[skin_index]
     selected_skin_color = Color.from_string(str(skin.get("color","#39d6c5")),Color("#39d6c5"))
+    selected_skin_style = str(skin.get("style","default"))
     if is_instance_valid(player):
         player.body_color = selected_skin_color
+        player.skin_style = selected_skin_style
         player.queue_redraw()
     if is_instance_valid(skin_button):
         skin_button.text = "СКИН: " + str(skin.get("name",skin.get("id","MOD")))
@@ -958,6 +964,7 @@ func _open_skins() -> void:
         column.add_child(preview_area)
         var fighter: ArenaPlayer = PLAYER_SCRIPT.new()
         fighter.body_color = color
+        fighter.skin_style = str(skin.get("style","default"))
         fighter.scale = Vector2(1.45,1.45)
         fighter.position = Vector2(117,105)
         fighter.set_physics_process(false)
@@ -1248,6 +1255,13 @@ func _add_card_illustration(parent: Control, card_id: String, active: bool) -> v
             streak.width = 2.0
             streak.default_color = Color.WHITE
             parent.add_child(streak)
+        "kiwi":
+            emblem.polygon = PackedVector2Array([Vector2(0,-48),Vector2(17,-22),Vector2(42,-12),Vector2(20,10),Vector2(10,43),Vector2(-8,23),Vector2(-39,34),Vector2(-25,3),Vector2(-43,-18),Vector2(-13,-20)])
+            var leaf_vein := Line2D.new()
+            leaf_vein.points = PackedVector2Array([Vector2(157,58),Vector2(157,25),Vector2(177,10)])
+            leaf_vein.width = 3.0
+            leaf_vein.default_color = Color("#f3f0d8")
+            parent.add_child(leaf_vein)
         "spring":
             emblem.polygon = PackedVector2Array([Vector2(-35,-42),Vector2(35,-42),Vector2(-15,-14),Vector2(35,-14),Vector2(-15,14),Vector2(35,14),Vector2(8,42),Vector2(-35,42)])
         "feather":
@@ -1287,7 +1301,8 @@ func _build_upgrade_cards(shade: Control) -> void:
     scroll.add_child(grid)
     for card in all_upgrades:
         var id := str(card.get("effect",card.get("id","")))
-        var active := active_training_cards.has(id)
+        var stack_count := active_training_cards.count(id)
+        var active := stack_count > 0
         var panel := PanelContainer.new()
         panel.custom_minimum_size = Vector2(355,385)
         var style := StyleBoxFlat.new()
@@ -1316,6 +1331,12 @@ func _build_upgrade_cards(shade: Control) -> void:
         icon_label.add_theme_font_size_override("font_size",13)
         icon_label.add_theme_color_override("font_color",Color("#f3f1e8"))
         art_area.add_child(icon_label)
+        var stack_label := Label.new()
+        stack_label.text = "СТАК ×%d" % stack_count if stack_count > 0 else "СТАКИРУЕТСЯ"
+        stack_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        stack_label.add_theme_font_size_override("font_size",12)
+        stack_label.add_theme_color_override("font_color",Color("#b9e36c") if stack_count > 0 else Color("#7f8a9b"))
+        column.add_child(stack_label)
         var name_label := Label.new()
         name_label.text = str(card.get("name",id))
         name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
