@@ -173,6 +173,18 @@ func _run_physics_checks() -> void:
         return
     game.call("_resume_game")
 
+    var action_button := load("res://scripts/virtual_action_button.gd").new() as Control
+    action_button.position = Vector2(120.0, 120.0)
+    action_button.size = Vector2(120.0, 60.0)
+    game.add_child(action_button)
+    await process_frame
+    if not action_button.call("_event_inside", Vector2(150.0, 140.0)):
+        _fail("touch button rejected a release inside its bounds")
+        return
+    if action_button.call("_event_inside", Vector2(20.0, 20.0)):
+        _fail("touch button accepted a release outside its bounds")
+        return
+
     await create_timer(0.35).timeout
     print("PHYSICS TEST PASSED: movement, jump, firing, bot reload, projectile hit")
     quit(0)
