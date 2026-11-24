@@ -328,7 +328,8 @@ func _fire_pulse() -> void:
     if absf(direction.x) > 0.12:
         facing = signf(direction.x)
 
-    var muzzle := Vector2(facing * 13.0, -7.0) + direction * 38.0
+    # Spawn from the hand-held blaster muzzle, not from the fighter's chest.
+    var muzzle := Vector2(facing * 39.0, -6.0) + direction * 29.0
     pulse_requested.emit(global_position + muzzle, direction, pulse_force, body_color, self)
 
 func start_reload() -> void:
