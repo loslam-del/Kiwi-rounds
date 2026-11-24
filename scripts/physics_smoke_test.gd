@@ -111,10 +111,15 @@ func _run_physics_checks() -> void:
         return
 
     player.set("homing_strength", 4.2)
-    # Training intentionally has no rival target; attach one for this homing-only check.
-    player.set("target", rival)
+    # Use a deterministic target to the right: the live rival may be on either side
+    # depending on the selected arena and should not make this directional check flaky.
+    var homing_target := Node2D.new()
+    game.add_child(homing_target)
     var guided := pulse_script.new() as Area2D
     game.add_child(guided)
+    guided.global_position = player.global_position + Vector2(0.0, -100.0)
+    homing_target.global_position = guided.global_position + Vector2(300.0, 0.0)
+    player.set("target", homing_target)
     guided.call("configure", Vector2.UP, 610.0, Color.WHITE, player)
     guided.call("_physics_process", 0.1)
     var guided_direction: Vector2 = guided.get("direction")
@@ -122,6 +127,7 @@ func _run_physics_checks() -> void:
         _fail("homing projectile did not turn toward its target")
         return
     player.set("target", null)
+    homing_target.queue_free()
 
     game.set("score_player", 4)
     game.call("_finish_round", true)
