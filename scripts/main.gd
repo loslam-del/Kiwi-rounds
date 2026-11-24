@@ -46,6 +46,7 @@ var boot_loading := true
 var boot_elapsed := 0.0
 var boot_angle := 0.0
 var boot_stage := "Подготовка игры..."
+var mods_loaded := false
 
 func _ready() -> void:
     randomize()
@@ -54,12 +55,10 @@ func _ready() -> void:
 
 func _boot_game() -> void:
     boot_stage = "Загрузка модов..."
+    # Loading mods is deferred so a bad mod cannot block the main menu.
     mod_loader = MOD_LOADER_SCRIPT.new()
-    mod_loader.load_all()
     all_maps = DEFAULT_MAPS.duplicate(true)
-    all_maps.append_array(mod_loader.maps)
     all_upgrades = DEFAULT_UPGRADES.duplicate(true)
-    all_upgrades.append_array(mod_loader.upgrades)
     boot_stage = "Создание арены..."
     _make_arena(0)
     boot_stage = "Создание персонажей..."
@@ -396,6 +395,13 @@ func _apply_skin_and_return() -> void:
         _show_main_menu()
 
 func _open_mods() -> void:
+    if not mods_loaded:
+        mod_loader.load_all()
+        all_maps = DEFAULT_MAPS.duplicate(true)
+        all_maps.append_array(mod_loader.maps)
+        all_upgrades = DEFAULT_UPGRADES.duplicate(true)
+        all_upgrades.append_array(mod_loader.upgrades)
+        mods_loaded = true
     var description := "Найдено модов: %d\nСкинов: %d  •  карт: %d  •  карточек: %d\nПапка: user://mods/\nКаждый мод должен содержать mod.json." % [mod_loader.loaded_mod_names.size(),mod_loader.skins.size(),mod_loader.maps.size(),mod_loader.upgrades.size()]
     if not mod_loader.loaded_mod_names.is_empty():
         for mod_name in mod_loader.loaded_mod_names:
@@ -407,6 +413,7 @@ func _open_mods() -> void:
 
 func _reload_mods() -> void:
     mod_loader.load_all()
+    mods_loaded = true
     all_maps = DEFAULT_MAPS.duplicate(true)
     all_maps.append_array(mod_loader.maps)
     all_upgrades = DEFAULT_UPGRADES.duplicate(true)
