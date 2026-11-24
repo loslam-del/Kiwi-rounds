@@ -32,11 +32,13 @@ func _gui_input(event: InputEvent) -> void:
         if event.pressed and active_touch == -1:
             active_touch = event.index
             button_down.emit()
+            queue_redraw()
             accept_event()
         elif not event.pressed and event.index == active_touch:
             active_touch = -1
             button_up.emit()
             pressed.emit()
+            queue_redraw()
             accept_event()
     elif event is InputEventScreenDrag and event.index == active_touch:
         accept_event()
@@ -44,10 +46,12 @@ func _gui_input(event: InputEvent) -> void:
         if event.pressed and not mouse_active:
             mouse_active = true
             button_down.emit()
+            queue_redraw()
         elif not event.pressed and mouse_active:
             mouse_active = false
             button_up.emit()
             pressed.emit()
+            queue_redraw()
         accept_event()
 
 func _draw() -> void:
