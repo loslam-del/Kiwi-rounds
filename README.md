@@ -10,14 +10,15 @@ Original 2D round-based arena prototype for Android.
 - Keyboard test: A/D or arrows to move, W/up to jump, Space to fire, I/J/K/L to aim.
 
 ## Mod support (data-only JSON)
-Mods are loaded from `user://mods/<folder>/mod.json`. On Android this is the game's writable user-data folder; create a folder for each mod and put a `mod.json` file inside. Mods are read at game startup. No scripts are executed by mods.
+Mods are loaded from `user://mods/<folder>/mod.json` when the game starts. On Android this is the game's writable user-data folder; create a folder for each mod and put a `mod.json` file inside. Mods only provide data; the game does not execute mod scripts.
 
 Example:
 ```json
 {
   "name": "My first mod",
   "skins": [
-    {"id": "violet", "name": "Violet", "color": "#a77bff"}
+    {"id": "violet", "name": "Violet", "color": "#a77bff"},
+    {"id": "mint", "name": "Mint", "color": "#70e0b4"}
   ],
   "maps": [
     {
@@ -41,9 +42,9 @@ Example:
 }
 ```
 
-Supported skin fields: `id`, `name`, `color` (hex color).
-Supported map fields: `id`, `name`, `platforms` (array of x/y/w/h platform objects).
-Supported upgrade fields: `id`, `name`, `desc`, `effect`. Effects currently supported: `swift`, `spring`, `wave`, `rapid`, `sturdy`. A mod can add new names/descriptions and use one of these existing effects.
+Supported skins: `id`, `name`, `color` (hex color). Use the in-game SKIN button to cycle loaded mod skins.
+Supported maps: `id`, `name`, `platforms` (array of x/y/w/h platform objects). Built-in and mod maps rotate between rounds.
+Supported upgrades: `id`, `name`, `desc`, `effect`. Effects currently supported: `swift`, `spring`, `wave`, `rapid`, `sturdy`. Mod upgrades can add new names/descriptions and reuse one of these effects.
 
 ## Open and build
 Import this folder in Godot 4.3+ and run `scenes/main.tscn`. Android export requires matching Godot export templates and Android build tools. No APK has been built or device-tested yet.
