@@ -1268,7 +1268,7 @@ func _poll_online_socket() -> void:
     elif state == WebSocketPeer.STATE_CLOSED and (online_connected or online_connecting):
         online_connected = false
         online_connecting = false
-        _online_set_status("Связь потеряна. Нажми ПЕРЕПОДКЛЮЧИТЬСЯ.", Color("#ff8b8b"))
+        _online_set_status("Связь потеряна. Вернись назад и снова открой онлайн.", Color("#ff8b8b"))
 
 func _online_send(data: Dictionary) -> void:
     if online_socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
@@ -1313,7 +1313,7 @@ func _online_handle_message(data: Dictionary) -> void:
             for person in room.get("players", []):
                 if typeof(person) == TYPE_DICTIONARY:
                     names.append(str(person.get("name", "Игрок")))
-            _online_set_status(str(room.get("name", "Комната")) + " • " + ", ".join(names), Color("#9be89b"))
+            _online_set_status(str(room.get("name", "Комната")) + " • " + str(names), Color("#9be89b"))
         "error":
             _online_set_status(str(data.get("message", "Ошибка сервера")), Color("#ff8b8b"))
 
