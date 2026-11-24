@@ -196,6 +196,8 @@ func _draw() -> void:
         var orbit := 92.0 + float(i) * 22.0
         var phase_offset := background_time * (0.16 if i % 2 == 0 else -0.12)
         draw_arc(Vector2(640,435),orbit,phase_offset,phase_offset+PI*0.62,48,Color(0.42,0.82,0.78,0.045),1.2,true)
+    if phase == "menu":
+        _draw_menu_record()
     # Soft arena halos and a faint central light column.
     draw_circle(Vector2(640,450),250.0,Color(0.28,0.62,0.68,0.025))
     draw_arc(Vector2(640,470),430,PI,TAU,80,Color(0.38,0.65,0.82,0.12),2.0,true)
@@ -243,6 +245,20 @@ func _make_arena(index: int) -> void:
                 var platform_h := clampf(float(item.get("h", 22)), 12.0, 42.0)
                 _add_platform(Vector2(platform_x, platform_y), Vector2(platform_w, platform_h))
     queue_redraw()
+
+func _draw_menu_record() -> void:
+    var center := Vector2(1170.0, 112.0)
+    draw_circle(center + Vector2(0, 3), 48.0, Color(0, 0, 0, 0.28))
+    draw_circle(center, 46.0, Color("#111923"))
+    draw_arc(center, 43.0, 0.0, TAU, 72, Color("#526173", 0.9), 1.4, true)
+    for ring in range(5):
+        var radius := 12.0 + float(ring) * 6.2
+        draw_arc(center, radius, 0.0, TAU, 56, Color("#718095", 0.30), 1.0, true)
+    var spin := background_time * 2.8
+    draw_line(center, center + Vector2(cos(spin), sin(spin)) * 40.0, Color("#36e6df", 0.8), 2.0, true)
+    draw_line(center, center + Vector2(cos(spin + PI), sin(spin + PI)) * 40.0, Color("#36e6df", 0.8), 2.0, true)
+    draw_circle(center, 10.0, Color("#d9ef70"))
+    draw_circle(center, 3.0, Color("#101923"))
 
 func _draw_arena_backdrop() -> void:
     var soft_accent := Color(arena_accent, 0.10)
@@ -407,7 +423,7 @@ func _get_skins() -> Array[Dictionary]:
         {"name":"Фиолетовый","color":"#b47cff"},
         {"name":"Золотой","color":"#ffc857"},
         {"name":"Розовый","color":"#ff78b7"},
-        {"id":"kiwi_araga","name":"Киви Арага","color":"#f2e5ce","style":"kiwi"}
+        {"id":"kiwi_araga","name":"Киви Арага","color":"#e9c5a8","style":"kiwi_human"}
     ]
     skins.append_array(mod_loader.skins)
     return skins
@@ -448,6 +464,8 @@ func _on_player_hit(_direction: Vector2, hit_target: Node2D) -> void:
     _play_sfx("hit")
     if hit_target == player and vibration_enabled:
         Input.vibrate_handheld(55,0.25)
+    if phase == "fight" and (player.health <= 0 or rival.health <= 0):
+        call_deferred("_finish_round", player.health > 0)
 
 func _clear_control_inputs() -> void:
     if is_instance_valid(player):
@@ -522,6 +540,7 @@ func _make_ui() -> void:
     aim_joystick.position = Vector2(1136,575)
     aim_joystick.size = Vector2(116,116)
     aim_joystick.value_changed.connect(player.set_aim)
+    aim_joystick.released.connect(player.shoot_once)
     game_controls.add_child(aim_joystick)
     jump_button = ACTION_BUTTON_SCRIPT.new()
     jump_button.caption = "ПРЫЖОК"
@@ -719,9 +738,9 @@ func _process(delta: float) -> void:
         return
     if is_instance_valid(ammo_label):
         ammo_label.text = player.ammo_text()
-    if player.global_position.y > 850:
+    if player.health <= 0 or player.global_position.y > 850:
         _finish_round(false)
-    elif rival.global_position.y > 850:
+    elif rival.health <= 0 or rival.global_position.y > 850:
         _finish_round(true)
 
 func _start_game(mode: String) -> void:
@@ -773,6 +792,7 @@ func _reset_player_stats(who: ArenaPlayer) -> void:
     who.projectile_speed = 1050.0
     who.weapon_level = 0
     who.kiwi_aura = false
+    who.health = who.max_health
 
 func _show_main_menu() -> void:
     phase = "menu"
@@ -793,17 +813,20 @@ func _show_main_menu() -> void:
     # Full-screen live arena is created first, so all menu controls render above it.
     _create_menu_bot_preview(shade)
 
-    var logo_texture := load("res://assets/1795552443370.jpg") as Texture2D
-    if logo_texture != null:
-        var logo := TextureRect.new()
-        logo.name = "MenuLogo"
-        logo.texture = logo_texture
-        logo.position = Vector2(510, 18)
-        logo.size = Vector2(260, 78)
-        logo.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-        logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-        logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        shade.add_child(logo)
+    var logo := Label.new()
+    logo.name = "MenuLogo"
+    logo.text = "KIWI  ROUNDS"
+    logo.position = Vector2(390, 22)
+    logo.size = Vector2(500, 66)
+    logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    logo.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    logo.add_theme_font_size_override("font_size", 42)
+    logo.add_theme_color_override("font_color", Color("#f4f7ff"))
+    logo.add_theme_color_override("font_shadow_color", Color("#36e6df", 0.65))
+    logo.add_theme_constant_override("shadow_offset_x", 0)
+    logo.add_theme_constant_override("shadow_offset_y", 2)
+    logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    shade.add_child(logo)
 
     var subtitle := Label.new()
     subtitle.text = "NEON BOT ARENA  •  RANDOM MAPS  •  RANDOM BUILDS"
@@ -2482,11 +2505,11 @@ func _update_hud() -> void:
     if not all_maps.is_empty():
         arena_name = str(all_maps[clampi(map_index, 0, all_maps.size() - 1)].get("name", "АРЕНА"))
     if game_mode == "training":
-        hud.text = "ТРЕНИРОВКА  •  " + arena_name
+        hud.text = "ТРЕНИРОВКА  •  " + arena_name + "     HP %d/%d" % [player.health,player.max_health]
     elif game_mode == "online":
         hud.text = "%s     РАУНД %d     ТЫ  %d : %d  СОПЕРНИК" % [arena_name,round_index,score_player,score_bot]
     else:
-        hud.text = "%s     РАУНД %d     ТЫ  %d : %d  CPU" % [arena_name,round_index,score_player,score_bot]
+        hud.text = "%s     РАУНД %d     ТЫ  %d : %d  CPU     HP %d/%d" % [arena_name,round_index,score_player,score_bot,player.health,player.max_health]
 
 func _show_training_round_end() -> void:
     _show_panel("РАУНД ЗАВЕРШЁН",[
