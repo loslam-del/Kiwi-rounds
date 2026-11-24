@@ -75,25 +75,31 @@ func _boot_game() -> void:
     queue_redraw()
 
 func _draw() -> void:
-    draw_rect(Rect2(0, 0, 1280, 720), Color("#111111"))
+    draw_rect(Rect2(0,0,1280,720),Color("#101723"))
+    draw_rect(Rect2(0,0,1280,470),Color("#172234"))
+    draw_rect(Rect2(0,470,1280,250),Color("#121a27"))
+    for i in range(7):
+        var y := 80.0 + float(i)*74.0
+        draw_line(Vector2(0,y),Vector2(1280,y),Color(0.35,0.47,0.62,0.07),1.0)
+    for i in range(13):
+        var x := float((i*173+61)%1280)
+        var y := float((i*97+43)%650)
+        draw_circle(Vector2(x,y),1.5 if i%3==0 else 1.0,Color(0.72,0.84,1.0,0.25))
+    draw_arc(Vector2(640,470),430,PI,TAU,80,Color(0.38,0.55,0.77,0.09),2.0,true)
+    draw_arc(Vector2(640,470),520,PI,TAU,80,Color(0.38,0.55,0.77,0.06),2.0,true)
+    draw_rect(Rect2(0,0,1280,5),Color("#d9ef70"))
+    draw_rect(Rect2(0,700,1280,20),Color("#0b111b"))
+    draw_line(Vector2(0,700),Vector2(1280,700),Color("#526a87"),2.0)
     if boot_loading:
-        draw_rect(Rect2(0, 0, 1280, 5), Color("#eeeeee"))
-        draw_rect(Rect2(0, 715, 1280, 5), Color("#333333"))
-        draw_string(ThemeDB.fallback_font, Vector2(0, 295), "KIWI ROUNDS", HORIZONTAL_ALIGNMENT_CENTER, 1280, 54, Color("#f2f2f2"))
-        draw_string(ThemeDB.fallback_font, Vector2(0, 345), "ЗАПУСК ИГРЫ", HORIZONTAL_ALIGNMENT_CENTER, 1280, 18, Color("#888888"))
-        var center := Vector2(640, 430)
-        draw_arc(center, 27.0, boot_angle, boot_angle + 4.4, 48, Color("#777777"), 6.0, true)
-        draw_circle(center + Vector2(cos(boot_angle) * 27.0, sin(boot_angle) * 27.0), 5.0, Color("#f2f2f2"))
-        draw_string(ThemeDB.fallback_font, Vector2(0, 500), boot_stage, HORIZONTAL_ALIGNMENT_CENTER, 1280, 18, Color("#aaaaaa"))
-        draw_string(ThemeDB.fallback_font, Vector2(0, 675), "Пожалуйста, подожди", HORIZONTAL_ALIGNMENT_CENTER, 1280, 15, Color("#666666"))
+        draw_rect(Rect2(0,0,1280,720),Color(0.03,0.04,0.06,0.82))
+        draw_string(ThemeDB.fallback_font,Vector2(0,295),"KIWI ROUNDS",HORIZONTAL_ALIGNMENT_CENTER,1280,54,Color("#f2f2f2"))
+        draw_string(ThemeDB.fallback_font,Vector2(0,345),"ЗАПУСК ИГРЫ",HORIZONTAL_ALIGNMENT_CENTER,1280,18,Color("#aab4c4"))
+        var center := Vector2(640,430)
+        draw_arc(center,27.0,boot_angle,boot_angle+4.4,48,Color("#d9ef70"),6.0,true)
+        draw_circle(center+Vector2(cos(boot_angle)*27.0,sin(boot_angle)*27.0),5.0,Color.WHITE)
+        draw_string(ThemeDB.fallback_font,Vector2(0,500),boot_stage,HORIZONTAL_ALIGNMENT_CENTER,1280,18,Color("#aaaaaa"))
+        draw_string(ThemeDB.fallback_font,Vector2(0,675),"Пожалуйста, подожди",HORIZONTAL_ALIGNMENT_CENTER,1280,15,Color("#777f8e"))
         return
-    draw_rect(Rect2(0, 0, 1280, 8), Color("#e6e6e6"))
-    draw_rect(Rect2(0, 680, 1280, 40), Color("#202020"))
-    for i in range(14):
-        var x := float((i * 113 + 45) % 1280)
-        var y := float((i * 67 + 30) % 650)
-        draw_circle(Vector2(x,y),1.5,Color("#3a3a3a"))
-    draw_rect(Rect2(0, 0, 1280, 720), Color(0,0,0,0), false, 2.0, true)
 
 func _make_arena(index: int) -> void:
     for old_platform in platform_nodes:
@@ -125,12 +131,17 @@ func _add_platform(at: Vector2, dimensions: Vector2) -> void:
     platform_nodes.append(body)
     var visual := Polygon2D.new()
     visual.polygon = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(-dimensions.x/2,dimensions.y/2)])
-    visual.color = Color("#354766")
+    visual.color = Color("#283b54")
     body.add_child(visual)
+    var lower_glow := Polygon2D.new()
+    lower_glow.polygon = PackedVector2Array([Vector2(-dimensions.x/2,dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2+5),Vector2(-dimensions.x/2,dimensions.y/2+5)])
+    lower_glow.color = Color("#6d8fb8",0.55)
+    body.add_child(lower_glow)
     var stripe := Line2D.new()
     stripe.points = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2)])
-    stripe.width = 4.0
-    stripe.default_color = Color("#6f91b9")
+    stripe.width = 5.0
+    stripe.default_color = Color("#d9ef70")
+    stripe.antialiased = true
     body.add_child(stripe)
 
 func _make_players() -> void:
