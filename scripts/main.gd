@@ -326,16 +326,104 @@ func _reset_player_stats(who: ArenaPlayer) -> void:
 
 func _show_main_menu() -> void:
     phase = "menu"
+    skin_return_to_game = false
     player.set_physics_process(false)
     rival.set_physics_process(false)
     game_controls.visible = false
     hud.visible = false
-    _show_panel("KIWI ROUNDS",[
-        ["ИГРАТЬ",Callable(self,"_show_mode_menu")],
-        ["НАСТРОЙКИ",Callable(self,"_show_settings")],
-        ["СКИНЫ",Callable(self,"_open_skins")],
-        ["МОДЫ",Callable(self,"_open_mods")]
-    ],"ARENA FIGHTER     •     ANDROID")
+    _close_overlay()
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#101116")
+    ui.add_child(shade)
+    overlay = shade
+    var ring := Panel.new()
+    ring.position = Vector2(365,95)
+    ring.size = Vector2(550,535)
+    var rs := StyleBoxFlat.new()
+    rs.bg_color = Color("#151923")
+    rs.border_color = Color("#343a4b")
+    rs.set_border_width_all(2)
+    rs.set_corner_radius_all(260)
+    ring.add_theme_stylebox_override("panel",rs)
+    shade.add_child(ring)
+    var logo := Panel.new()
+    logo.position = Vector2(548,55)
+    logo.size = Vector2(184,184)
+    var ls := StyleBoxFlat.new()
+    ls.bg_color = Color("#242b25")
+    ls.border_color = Color("#b9e36c")
+    ls.set_border_width_all(5)
+    ls.set_corner_radius_all(92)
+    logo.add_theme_stylebox_override("panel",ls)
+    shade.add_child(logo)
+    _add_kiwi_mascot(logo,Vector2(92,92))
+    var title := Label.new()
+    title.text = "KIWI ROUNDS"
+    title.position = Vector2(0,235)
+    title.size = Vector2(1280,62)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",48)
+    title.add_theme_color_override("font_color",Color("#f2f1e9"))
+    shade.add_child(title)
+    var subtitle := Label.new()
+    subtitle.text = "ONE ARENA. TWO FIGHTERS. NO MERCY."
+    subtitle.position = Vector2(0,292)
+    subtitle.size = Vector2(1280,28)
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size",14)
+    subtitle.add_theme_color_override("font_color",Color("#9a9da8"))
+    shade.add_child(subtitle)
+    var play := _add_button("ИГРАТЬ",Vector2(440,345),Vector2(400,82),shade)
+    play.add_theme_font_size_override("font_size",30)
+    play.add_theme_stylebox_override("normal",_menu_button_style(Color("#d9ef70"),Color("#f1f7bb")))
+    play.add_theme_color_override("font_color",Color("#171b13"))
+    play.pressed.connect(_show_mode_menu)
+    var settings := _add_button("НАСТРОЙКИ",Vector2(180,470),Vector2(245,66),shade)
+    settings.add_theme_stylebox_override("normal",_menu_button_style(Color("#292e3a"),Color("#596174")))
+    settings.pressed.connect(_show_settings)
+    var mods := _add_button("МОДЫ",Vector2(855,470),Vector2(245,66),shade)
+    mods.add_theme_stylebox_override("normal",_menu_button_style(Color("#292e3a"),Color("#596174")))
+    mods.pressed.connect(_open_mods)
+    var skins := _add_button("СКИНЫ",Vector2(518,570),Vector2(245,66),shade)
+    skins.add_theme_stylebox_override("normal",_menu_button_style(Color("#292e3a"),Color("#b9e36c")))
+    skins.pressed.connect(_open_skins)
+    var footer := Label.new()
+    footer.text = "KIWI ROUNDS  •  ANDROID BUILD"
+    footer.position = Vector2(0,675)
+    footer.size = Vector2(1280,24)
+    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    footer.add_theme_font_size_override("font_size",12)
+    footer.add_theme_color_override("font_color",Color("#666b78"))
+    shade.add_child(footer)
+
+func _add_kiwi_mascot(parent: Control, center: Vector2) -> void:
+    var kiwi := Polygon2D.new()
+    kiwi.position = center
+    kiwi.polygon = PackedVector2Array([Vector2(-48,-30),Vector2(-30,-52),Vector2(0,-58),Vector2(31,-45),Vector2(49,-17),Vector2(43,22),Vector2(20,49),Vector2(-14,54),Vector2(-43,34),Vector2(-55,0)])
+    kiwi.color = Color("#9bcf4a")
+    parent.add_child(kiwi)
+    var belly := Polygon2D.new()
+    belly.position = center + Vector2(0,8)
+    belly.polygon = PackedVector2Array([Vector2(-34,-8),Vector2(-20,-29),Vector2(12,-34),Vector2(34,-10),Vector2(30,19),Vector2(8,37),Vector2(-22,28),Vector2(-38,7)])
+    belly.color = Color("#d8ed9a")
+    parent.add_child(belly)
+    var leaf := Polygon2D.new()
+    leaf.position = center + Vector2(0,-51)
+    leaf.polygon = PackedVector2Array([Vector2(-4,4),Vector2(0,-27),Vector2(23,-17),Vector2(10,2)])
+    leaf.color = Color("#65a94c")
+    parent.add_child(leaf)
+    for eye_x in [-18,12]:
+        var eye := ColorRect.new()
+        eye.position = center + Vector2(eye_x,-9)
+        eye.size = Vector2(8,13)
+        eye.color = Color("#20252b")
+        parent.add_child(eye)
+    var smile := ColorRect.new()
+    smile.position = center + Vector2(-4,17)
+    smile.size = Vector2(13,4)
+    smile.color = Color("#52643b")
+    parent.add_child(smile)
 
 func _show_mode_menu() -> void:
     _show_panel("ВЫБОР РЕЖИМА",[
@@ -613,16 +701,16 @@ func _build_upgrade_cards(shade: Control) -> void:
     scroll.size = Vector2(1130,420)
     shade.add_child(scroll)
     var grid := GridContainer.new()
-    grid.columns = 2
+    grid.columns = 3
     grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    grid.add_theme_constant_override("h_separation",18)
+    grid.add_theme_constant_override("h_separation",16)
     grid.add_theme_constant_override("v_separation",14)
     scroll.add_child(grid)
     for card in all_upgrades:
         var id := str(card.get("effect",card.get("id","")))
         var active := active_training_cards.has(id)
         var panel := PanelContainer.new()
-        panel.custom_minimum_size = Vector2(520,175)
+        panel.custom_minimum_size = Vector2(355,365)
         var style := StyleBoxFlat.new()
         style.bg_color = Color("#1d4543") if active else Color("#202e42")
         style.border_color = Color("#64d6bd") if active else Color("#526b8c")
@@ -634,10 +722,10 @@ func _build_upgrade_cards(shade: Control) -> void:
         panel.add_child(row)
         var icon_panel := ColorRect.new()
         icon_panel.color = Color("#245b58") if active else Color("#344967")
-        icon_panel.custom_minimum_size = Vector2(92,125)
+        icon_panel.custom_minimum_size = Vector2(315,115)
         row.add_child(icon_panel)
         var art := Polygon2D.new()
-        art.position = Vector2(46,52)
+        art.position = Vector2(157,55)
         art.color = Color("#9de8d8")
         match id:
             "swift":
@@ -653,8 +741,8 @@ func _build_upgrade_cards(shade: Control) -> void:
         icon_panel.add_child(art)
         var icon_label := Label.new()
         icon_label.text = str(card.get("icon",""))
-        icon_label.position = Vector2(0,96)
-        icon_label.size = Vector2(92,25)
+        icon_label.position = Vector2(110,88)
+        icon_label.size = Vector2(95,22)
         icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
         icon_label.add_theme_font_size_override("font_size",14)
         icon_label.add_theme_color_override("font_color",Color("#f5f7fb"))
@@ -682,7 +770,7 @@ func _build_upgrade_cards(shade: Control) -> void:
         column.add_child(debuff)
         var choose := Button.new()
         choose.text = "УБРАТЬ" if active else "ВЫБРАТЬ"
-        choose.custom_minimum_size = Vector2(210,38)
+        choose.custom_minimum_size = Vector2(270,44)
         choose.pressed.connect(_toggle_training_card.bind(id))
         column.add_child(choose)
         grid.add_child(panel)
@@ -774,89 +862,68 @@ func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> v
     game_controls.visible = false
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color("#101722")
+    shade.color = Color("#101116")
     ui.add_child(shade)
     overlay = shade
-    var top_glow := ColorRect.new()
-    top_glow.position = Vector2(0,0)
-    top_glow.size = Vector2(1280,8)
-    top_glow.color = Color("#64d6bd")
-    shade.add_child(top_glow)
-    var bottom_glow := ColorRect.new()
-    bottom_glow.position = Vector2(0,712)
-    bottom_glow.size = Vector2(1280,8)
-    bottom_glow.color = Color("#263b5b")
-    shade.add_child(bottom_glow)
-    var side_panel := Panel.new()
-    side_panel.position = Vector2(280,55)
-    side_panel.size = Vector2(720,610)
-    var panel_style := StyleBoxFlat.new()
-    panel_style.bg_color = Color("#172336")
-    panel_style.border_color = Color("#354b68")
-    panel_style.set_border_width_all(2)
-    panel_style.set_corner_radius_all(24)
-    side_panel.add_theme_stylebox_override("panel",panel_style)
-    shade.add_child(side_panel)
-
+    var panel := Panel.new()
+    panel.position = Vector2(300,45)
+    panel.size = Vector2(680,630)
+    var ps := StyleBoxFlat.new()
+    ps.bg_color = Color("#1c2029")
+    ps.border_color = Color("#414858")
+    ps.set_border_width_all(2)
+    ps.set_corner_radius_all(24)
+    panel.add_theme_stylebox_override("panel",ps)
+    shade.add_child(panel)
     var title := Label.new()
     title.text = title_text
-    title.position = Vector2(0,82)
-    title.size = Vector2(1280,100)
+    title.position = Vector2(0,78)
+    title.size = Vector2(1280,75)
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size",58 if title_text == "KIWI ROUNDS" else 38)
-    title.add_theme_color_override("font_color",Color("#f2f2f2"))
-    title.add_theme_color_override("font_shadow_color",Color("#000000"))
-    title.add_theme_constant_override("shadow_offset_x",3)
-    title.add_theme_constant_override("shadow_offset_y",3)
+    title.add_theme_font_size_override("font_size",42)
+    title.add_theme_color_override("font_color",Color("#f3f1e8"))
     shade.add_child(title)
-
     var accent := ColorRect.new()
-    accent.position = Vector2(500,195)
-    accent.size = Vector2(280,5)
-    accent.color = Color("#64d6bd")
+    accent.position = Vector2(535,166)
+    accent.size = Vector2(210,4)
+    accent.color = Color("#d9ef70")
     shade.add_child(accent)
-
     if subtitle != "":
         var info := Label.new()
         info.text = subtitle
-        info.position = Vector2(300,215)
-        info.size = Vector2(680,70)
+        info.position = Vector2(340,185)
+        info.size = Vector2(600,75)
         info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
         info.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
         info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-        info.add_theme_font_size_override("font_size",17)
-        info.add_theme_color_override("font_color",Color("#aaaaaa"))
+        info.add_theme_font_size_override("font_size",16)
+        info.add_theme_color_override("font_color",Color("#a7a9b2"))
         shade.add_child(info)
-
     var list := VBoxContainer.new()
-    list.position = Vector2(390,295)
-    list.size = Vector2(500,350)
-    list.add_theme_constant_override("separation",9)
+    list.position = Vector2(390,285)
+    list.size = Vector2(500,340)
+    list.add_theme_constant_override("separation",12)
     shade.add_child(list)
-    for index in range(buttons.size()):
-        var entry: Array = buttons[index]
+    for entry in buttons:
         var button := Button.new()
         button.text = str(entry[0])
-        button.custom_minimum_size = Vector2(500,62)
+        button.custom_minimum_size = Vector2(500,58)
         button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         button.focus_mode = Control.FOCUS_NONE
-        button.add_theme_font_size_override("font_size",23)
-        button.add_theme_color_override("font_color",Color("#f0f0f0"))
-        button.add_theme_color_override("font_hover_color",Color("#111111"))
-        button.add_theme_stylebox_override("normal",_menu_button_style(Color("#263b5b"),Color("#526b8c")))
-        button.add_theme_stylebox_override("hover",_menu_button_style(Color("#34577a"),Color("#8cb8df")))
-        button.add_theme_stylebox_override("pressed",_menu_button_style(Color("#245b58"),Color("#64d6bd")))
+        button.add_theme_font_size_override("font_size",20)
+        button.add_theme_color_override("font_color",Color("#f3f1e8"))
+        button.add_theme_stylebox_override("normal",_menu_button_style(Color("#303644"),Color("#596174")))
+        button.add_theme_stylebox_override("hover",_menu_button_style(Color("#414a5b"),Color("#d9ef70")))
+        button.add_theme_stylebox_override("pressed",_menu_button_style(Color("#596b32"),Color("#d9ef70")))
         button.pressed.connect(entry[1])
         list.add_child(button)
-
     var footer := Label.new()
-    footer.text = "KIWI ROUNDS  /  v0.2"
-    footer.position = Vector2(0,665)
-    footer.size = Vector2(1280,30)
+    footer.text = "KIWI ROUNDS  /  ARENA PROTOTYPE"
+    footer.position = Vector2(0,675)
+    footer.size = Vector2(1280,24)
     footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    footer.add_theme_font_size_override("font_size",13)
-    footer.add_theme_color_override("font_color",Color("#666666"))
+    footer.add_theme_font_size_override("font_size",12)
+    footer.add_theme_color_override("font_color",Color("#626875"))
     shade.add_child(footer)
 
 func _menu_button_style(fill: Color, outline: Color) -> StyleBoxFlat:
