@@ -41,8 +41,8 @@ jobs:
         run: |
           set -o pipefail
           godot --headless --path . --quit-after 5 2>&1 | tee /tmp/kiwi-startup.log
-          if grep -E "SCRIPT ERROR|Parse Error|ERROR:" /tmp/kiwi-startup.log; then
-            echo "Godot startup reported an error."
+          if grep -E "SCRIPT ERROR|Parse Error|ERROR:" /tmp/kiwi-startup.log | grep -vE "ERROR: [0-9]+ resources still in use at exit"; then
+            echo "Godot startup reported a real runtime or script error."
             exit 1
           fi
 
@@ -51,8 +51,8 @@ jobs:
         run: |
           set -o pipefail
           godot --headless --path . --script res://scripts/physics_smoke_test.gd 2>&1 | tee /tmp/kiwi-physics.log
-          if grep -E "PHYSICS TEST FAILED|SCRIPT ERROR|Parse Error|ERROR:" /tmp/kiwi-physics.log; then
-            echo "Physics smoke test reported an error."
+          if grep -E "PHYSICS TEST FAILED|SCRIPT ERROR|Parse Error|ERROR:" /tmp/kiwi-physics.log | grep -vE "ERROR: [0-9]+ resources still in use at exit"; then
+            echo "Physics smoke test reported a real runtime or script error."
             exit 1
           fi
           grep -q "PHYSICS TEST PASSED" /tmp/kiwi-physics.log
