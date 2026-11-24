@@ -1033,7 +1033,8 @@ func _create_menu_record(parent: Control) -> void:
     parent.add_child(music_track_button)
     _update_music_track_button()
 
-    var hub := Panel.new()    hub.position = Vector2(39, 39)
+    var hub := Panel.new()
+    hub.position = Vector2(39, 39)
     hub.size = Vector2(18, 18)
     hub.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var hub_style := StyleBoxFlat.new()
