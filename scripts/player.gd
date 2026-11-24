@@ -60,6 +60,20 @@ var air_control_scale := 1.0
 var ground_accel_scale := 1.0
 var wall_jump_scale := 1.0
 
+# Lightweight articulated ragdoll: every limb segment has its own angular inertia.
+var ragdoll_angles := {
+    "arm_l": -0.95, "forearm_l": -0.72,
+    "arm_r": 0.95, "forearm_r": 0.72,
+    "leg_l": -0.12, "shin_l": -0.08,
+    "leg_r": 0.12, "shin_r": 0.08
+}
+var ragdoll_speeds := {
+    "arm_l": 0.0, "forearm_l": 0.0,
+    "arm_r": 0.0, "forearm_r": 0.0,
+    "leg_l": 0.0, "shin_l": 0.0,
+    "leg_r": 0.0, "shin_r": 0.0
+}
+
 func _ready() -> void:
     collision_layer = 1
     collision_mask = 3
@@ -67,8 +81,8 @@ func _ready() -> void:
     floor_snap_length = 8.0
     safe_margin = 0.08
     var capsule := CapsuleShape2D.new()
-    capsule.radius = 18.0
-    capsule.height = 88.0
+    capsule.radius = 20.0
+    capsule.height = 62.0
     shape.shape = capsule
     add_child(shape)
 
@@ -164,6 +178,7 @@ func _physics_process(delta: float) -> void:
         else:
             start_reload()
     move_and_slide()
+    _update_ragdoll(delta)
     if is_on_wall() and not is_on_floor() and velocity.y > 160.0:
         velocity.y = minf(velocity.y, 270.0)
     queue_redraw()
@@ -299,79 +314,125 @@ func reset_round(spawn: Vector2) -> void:
     bot_jump_hold_timer = 0.0
     air_jumps_left = 1 + extra_air_jumps
 
-func _draw() -> void:
+func _update_ragdoll(delta: float) -> void:
     var grounded := is_on_floor()
-    var moving := absf(velocity.x) > 30.0 and grounded
-    var stride := sin(animation_time) * 10.0 if moving else 0.0
-    var bob := absf(sin(animation_time * 2.0)) * 2.8 if moving else 0.0
-    var body_center := Vector2(0.0,-8.0+bob)
-    var outline := Color("#20232b")
-    var hair := Color("#f0e6c9")
-    var hair_shadow := Color("#c9bd9e")
-    var green := body_color
+    var run_cycle := sin(animation_time) if absf(velocity.x) > 35.0 and grounded else 0.0
+    var air := 0.0 if grounded else clampf(absf(velocity.y) / 850.0, 0.0, 1.0)
+    var local_aim := Vector2(aim_input.x * facing, aim_input.y).normalized()
+    if local_aim.length() < 0.1:
+        local_aim = Vector2.RIGHT
+    var weapon_angle := PI * 0.5 - local_aim.angle()
+    var targets := {
+        "arm_l": -0.92 - run_cycle * 0.28 - air * 0.55,
+        "forearm_l": -0.62 - run_cycle * 0.18 - air * 0.35,
+        "arm_r": lerpf(0.88, weapon_angle, 0.82) + air * 0.48,
+        "forearm_r": lerpf(0.62, weapon_angle + 0.18, 0.86) + air * 0.32,
+        "leg_l": -0.10 + run_cycle * 0.58 + air * -0.22,
+        "shin_l": -0.05 + maxf(0.0, run_cycle) * 0.48 + air * 0.72,
+        "leg_r": 0.10 - run_cycle * 0.58 + air * 0.22,
+        "shin_r": 0.05 + maxf(0.0, -run_cycle) * 0.48 - air * 0.72
+    }
+    targets["arm_r"] = float(targets["arm_r"]) - recoil_kick * 0.035
+    targets["forearm_r"] = float(targets["forearm_r"]) - recoil_kick * 0.055
+    for key in ragdoll_angles.keys():
+        var angle_now: float = ragdoll_angles[key]
+        var speed_now: float = ragdoll_speeds[key]
+        var target_angle: float = float(targets[key])
+        var stiffness := 17.0 if key.begins_with("shin") or key.begins_with("forearm") else 12.0
+        var damping := 5.2
+        var gravity_torque := -sin(angle_now) * (2.2 + air * 1.5)
+        var acceleration := (target_angle - angle_now) * stiffness + gravity_torque - speed_now * damping
+        speed_now += acceleration * delta
+        angle_now += speed_now * delta
+        ragdoll_speeds[key] = speed_now
+        ragdoll_angles[key] = angle_now
+
+func _limb_vector(angle: float, length: float) -> Vector2:
+    return Vector2(sin(angle), cos(angle)) * length
+
+func _draw_limb(from_point: Vector2, to_point: Vector2, width: float, fill: Color, outline: Color) -> void:
+    draw_line(from_point, to_point, outline, width + 4.0, true)
+    draw_line(from_point, to_point, fill, width, true)
+    draw_circle(from_point, width * 0.53, outline)
+    draw_circle(from_point, width * 0.34, fill)
+    draw_circle(to_point, width * 0.48, outline)
+    draw_circle(to_point, width * 0.30, fill)
+
+func _draw() -> void:
+    var bob := absf(sin(animation_time * 2.0)) * 1.8 if absf(velocity.x) > 35.0 and is_on_floor() else 0.0
+    var body_center := Vector2(0.0, -8.0 + bob)
+    var outline := Color("#252833")
+    var cream := Color("#f2e7d0")
     var skin := Color("#f4d9c5")
+    var accent := body_color
+    draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
 
-    # Noodle legs: deliberately simple and elastic, like an arena fighter.
-    var hip_left := Vector2(-9.0,13.0+bob)
-    var hip_right := Vector2(9.0,13.0+bob)
-    var foot_left := Vector2(-12.0+stride,43.0)
-    var foot_right := Vector2(12.0-stride,43.0)
-    draw_line(hip_left,foot_left,outline,7.0,true)
-    draw_line(hip_right,foot_right,outline,7.0,true)
-    draw_line(foot_left+Vector2(-5,1),foot_left+Vector2(6,1),hair,7.0,true)
-    draw_line(foot_right+Vector2(-5,1),foot_right+Vector2(6,1),hair,7.0,true)
+    # Two independently swinging legs with loose knees and rounded shoes.
+    var hip_l := Vector2(-9.0, 12.0 + bob)
+    var hip_r := Vector2(9.0, 12.0 + bob)
+    var knee_l := hip_l + _limb_vector(ragdoll_angles["leg_l"], 15.0)
+    var knee_r := hip_r + _limb_vector(ragdoll_angles["leg_r"], 15.0)
+    var foot_l := knee_l + _limb_vector(ragdoll_angles["leg_l"] + ragdoll_angles["shin_l"], 15.0)
+    var foot_r := knee_r + _limb_vector(ragdoll_angles["leg_r"] + ragdoll_angles["shin_r"], 15.0)
+    _draw_limb(hip_l, knee_l, 7.0, cream, outline)
+    _draw_limb(knee_l, foot_l, 6.5, cream, outline)
+    _draw_limb(hip_r, knee_r, 7.0, cream, outline)
+    _draw_limb(knee_r, foot_r, 6.5, cream, outline)
+    draw_line(foot_l + Vector2(-4.5, 1.0), foot_l + Vector2(5.5, 1.0), outline, 8.0, true)
+    draw_line(foot_r + Vector2(-4.5, 1.0), foot_r + Vector2(5.5, 1.0), outline, 8.0, true)
+    draw_line(foot_l + Vector2(-4.0, 0.0), foot_l + Vector2(4.0, 0.0), accent, 3.0, true)
+    draw_line(foot_r + Vector2(-4.0, 0.0), foot_r + Vector2(4.0, 0.0), accent, 3.0, true)
 
-    # Small dress-like body with a green waist ribbon.
+    # Arms articulate at shoulders and elbows; recoil and aim move the weapon arm.
+    var shoulder_l := Vector2(-17.0, -5.0 + bob)
+    var shoulder_r := Vector2(17.0, -5.0 + bob)
+    var elbow_l := shoulder_l + _limb_vector(ragdoll_angles["arm_l"], 14.0)
+    var elbow_r := shoulder_r + _limb_vector(ragdoll_angles["arm_r"], 14.0)
+    var hand_l := elbow_l + _limb_vector(ragdoll_angles["arm_l"] + ragdoll_angles["forearm_l"], 13.0)
+    var hand_r := elbow_r + _limb_vector(ragdoll_angles["arm_r"] + ragdoll_angles["forearm_r"], 13.0)
+    _draw_limb(shoulder_l, elbow_l, 6.5, cream, outline)
+    _draw_limb(elbow_l, hand_l, 5.5, cream, outline)
+    _draw_limb(shoulder_r, elbow_r, 6.5, cream, outline)
+    _draw_limb(elbow_r, hand_r, 5.5, cream, outline)
+    draw_circle(hand_l, 4.2, skin)
+    draw_circle(hand_r, 4.2, skin)
+
+    # ROUNDS-like compact ball fighter: one clean round silhouette.
+    draw_circle(body_center, 28.0, outline)
+    draw_circle(body_center, 24.5, cream)
+    draw_arc(body_center + Vector2(0.0, 1.0), 22.0, 0.12, PI - 0.12, 32, Color("#d4c8ae"), 1.8, true)
+    draw_circle(Vector2(-8.5, -9.0 + bob), 2.7, outline)
+    draw_circle(Vector2(8.5, -9.0 + bob), 2.7, outline)
+    draw_circle(Vector2(-7.7, -9.8 + bob), 0.85, Color.WHITE)
+    draw_circle(Vector2(9.3, -9.8 + bob), 0.85, Color.WHITE)
+    draw_arc(Vector2(0.0, -1.0 + bob), 4.8, 0.18, PI - 0.18, 16, Color("#9a655d"), 1.7, true)
+    draw_circle(Vector2(-17.0, 1.0 + bob), 3.0, Color("#eaa59c", 0.52))
+    draw_circle(Vector2(17.0, 1.0 + bob), 3.0, Color("#eaa59c", 0.52))
+
+    # Kiwi's cream fringe and tiny green leaf.
     draw_colored_polygon(PackedVector2Array([
-        Vector2(-12,-2+bob),Vector2(12,-2+bob),Vector2(15,20+bob),
-        Vector2(20,31+bob),Vector2(-20,31+bob),Vector2(-15,20+bob)
-    ]),hair)
+        Vector2(-23.0, -16.0 + bob), Vector2(-20.0, -28.0 + bob),
+        Vector2(-8.0, -35.0 + bob), Vector2(7.0, -33.0 + bob),
+        Vector2(21.0, -24.0 + bob), Vector2(24.0, -12.0 + bob),
+        Vector2(13.0, -17.0 + bob), Vector2(2.0, -20.0 + bob),
+        Vector2(-9.0, -17.0 + bob)
+    ]), cream)
     draw_polyline(PackedVector2Array([
-        Vector2(-12,-2+bob),Vector2(12,-2+bob),Vector2(15,20+bob),
-        Vector2(20,31+bob),Vector2(-20,31+bob),Vector2(-15,20+bob),
-        Vector2(-12,-2+bob)
-    ]),outline,2.5,true)
-    draw_line(Vector2(-14,13+bob),Vector2(14,13+bob),green,5.0,true)
+        Vector2(-23.0, -16.0 + bob), Vector2(-20.0, -28.0 + bob),
+        Vector2(-8.0, -35.0 + bob), Vector2(7.0, -33.0 + bob),
+        Vector2(21.0, -24.0 + bob), Vector2(24.0, -12.0 + bob)
+    ]), outline, 2.2, true)
     draw_colored_polygon(PackedVector2Array([
-        Vector2(0,10+bob),Vector2(7,15+bob),Vector2(0,20+bob),Vector2(-7,15+bob)
-    ]),green)
+        Vector2(-4.0, -33.0 + bob), Vector2(4.0, -43.0 + bob),
+        Vector2(17.0, -40.0 + bob), Vector2(9.0, -31.0 + bob),
+        Vector2(2.0, -27.0 + bob)
+    ]), accent)
+    draw_line(Vector2(-14.0, 17.0 + bob), Vector2(14.0, 17.0 + bob), accent, 3.0, true)
 
-    # Loose noodle arms swing with movement.
-    var swing := sin(animation_time)*5.0 if moving else 0.0
-    var shoulder_left := Vector2(-13,-1+bob)
-    var shoulder_right := Vector2(13,-1+bob)
-    var hand_left := Vector2(-27-swing,-8+bob)
-    var hand_right := Vector2(27+swing,-8+bob)
-    draw_line(shoulder_left,hand_left,outline,6.0,true)
-    draw_line(shoulder_right,hand_right,outline,6.0,true)
-    draw_circle(hand_left,4.0,skin)
-    draw_circle(hand_right,4.0,skin)
-
-    # Round Kiwi face, cream fringe, green leaf pin and bold outline.
-    draw_circle(body_center,27.0,outline)
-    draw_circle(body_center,23.5,skin)
-    draw_colored_polygon(PackedVector2Array([
-        Vector2(-23,-16+bob),Vector2(-20,-29+bob),Vector2(-8,-35+bob),
-        Vector2(7,-33+bob),Vector2(21,-24+bob),Vector2(24,-12+bob),
-        Vector2(13,-17+bob),Vector2(2,-20+bob),Vector2(-9,-17+bob)
-    ]),hair)
-    draw_polyline(PackedVector2Array([
-        Vector2(-23,-16+bob),Vector2(-20,-29+bob),Vector2(-8,-35+bob),
-        Vector2(7,-33+bob),Vector2(21,-24+bob),Vector2(24,-12+bob)
-    ]),outline,2.4,true)
-    draw_colored_polygon(PackedVector2Array([
-        Vector2(-4,-33+bob),Vector2(4,-43+bob),Vector2(17,-40+bob),
-        Vector2(9,-31+bob),Vector2(2,-27+bob)
-    ]),green)
-    draw_circle(Vector2(-8,-8+bob),2.5,outline)
-    draw_circle(Vector2(9,-8+bob),2.5,outline)
-    draw_circle(Vector2(-7,-9+bob),0.8,Color.WHITE)
-    draw_circle(Vector2(10,-9+bob),0.8,Color.WHITE)
-    draw_arc(Vector2(1,1+bob),5.0,0.15,PI-0.15,16,Color("#9a655d"),1.8,true)
-    draw_circle(Vector2(-17,1+bob),3.0,Color("#eaa59c",0.55))
-    draw_circle(Vector2(17,1+bob),3.0,Color("#eaa59c",0.55))
-
+    if muzzle_flash > 0.0:
+        draw_circle(hand_r + _limb_vector(ragdoll_angles["arm_r"] + ragdoll_angles["forearm_r"], 5.0), 5.0, Color("#fff0a8", muzzle_flash / 0.075))
     if hit_flash > 0.0:
-        draw_circle(body_center,31.0,Color(1.0,0.35,0.28,hit_flash*0.35))
+        draw_circle(body_center, 31.0, Color(1.0, 0.35, 0.28, hit_flash * 0.35))
     if reload_visual > 0.0:
-        draw_arc(body_center,32.0,-PI/2.0,-PI/2.0+TAU*(1.0-reload_visual),32,green,3.0,true)
+        draw_arc(body_center, 32.0, -PI / 2.0, -PI / 2.0 + TAU * (1.0 - reload_visual), 32, accent, 3.0, true)
+    draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
