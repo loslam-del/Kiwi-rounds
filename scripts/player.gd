@@ -485,10 +485,11 @@ func _draw() -> void:
     draw_circle(center, 20.0, outline)
     draw_circle(center, 17.5, body_color)
     draw_arc(center, 17.2, 0.0, TAU, 48, light, 1.5, true)
-    draw_circle(center + Vector2(-4.5,-6.0), 5.5, Color(1,1,1,0.12))
-    draw_circle(center + Vector2(-5.5,-2.0), 1.8, Color("#102536"))
-    draw_circle(center + Vector2(5.5,-2.0), 1.8, Color("#102536"))
-    draw_line(center + Vector2(-2.5,5.0), center + Vector2(2.5,5.0), Color("#102536"), 1.5, true)
+    if skin_style != "kiwi":
+        draw_circle(center + Vector2(-4.5,-6.0), 5.5, Color(1,1,1,0.12))
+        draw_circle(center + Vector2(-5.5,-2.0), 1.8, Color("#102536"))
+        draw_circle(center + Vector2(5.5,-2.0), 1.8, Color("#102536"))
+        draw_line(center + Vector2(-2.5,5.0), center + Vector2(2.5,5.0), Color("#102536"), 1.5, true)
 
     # Near-side leg is in front of the torso, with a visible knee and foot.
     draw_line(hip_front, knee_front, outline, 10.0, true)
