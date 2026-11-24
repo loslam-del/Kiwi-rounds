@@ -61,6 +61,9 @@ var mods_loaded := false
 var arena_camera: Camera2D
 var camera_shake_timer := 0.0
 var camera_shake_strength := 0.0
+var background_time := 0.0
+var impact_flash := 0.0
+var impact_flash_color := Color.WHITE
 var shake_enabled := true
 var controls_mirrored := false
 var sound_level := 0.72
@@ -128,15 +131,21 @@ func _draw() -> void:
     for i in range(7):
         var y := 80.0 + float(i)*74.0
         draw_line(Vector2(0,y),Vector2(1280,y),Color(0.35,0.47,0.62,0.07),1.0)
-    for i in range(13):
+    for i in range(25):
         var x := float((i*173+61)%1280)
-        var y := float((i*97+43)%650)
-        draw_circle(Vector2(x,y),1.5 if i%3==0 else 1.0,Color(0.72,0.84,1.0,0.25))
-    draw_arc(Vector2(640,470),430,PI,TAU,80,Color(0.38,0.55,0.77,0.09),2.0,true)
+        var base_y := float((i*97+43)%650)
+        var y := fposmod(base_y + sin(background_time * 0.7 + float(i)) * 5.0, 660.0)
+        var twinkle := 0.12 + (sin(background_time * 2.0 + float(i) * 1.7) + 1.0) * 0.09
+        draw_circle(Vector2(x,y),1.5 if i%3==0 else 1.0,Color(0.72,0.88,1.0,twinkle))
+    # Soft arena halos and a faint central light column.
+    draw_circle(Vector2(640,450),250.0,Color(0.28,0.62,0.68,0.025))
+    draw_arc(Vector2(640,470),430,PI,TAU,80,Color(0.38,0.65,0.82,0.12),2.0,true)
     draw_arc(Vector2(640,470),520,PI,TAU,80,Color(0.38,0.55,0.77,0.06),2.0,true)
     draw_rect(Rect2(0,0,1280,5),Color("#d9ef70"))
     draw_rect(Rect2(0,700,1280,20),Color("#0b111b"))
     draw_line(Vector2(0,700),Vector2(1280,700),Color("#526a87"),2.0)
+    if impact_flash > 0.0:
+        draw_rect(Rect2(0,0,1280,720),Color(impact_flash_color, impact_flash * 0.13))
     if boot_loading:
         draw_rect(Rect2(0,0,1280,720),Color(0.03,0.04,0.06,0.82))
         draw_string(ThemeDB.fallback_font,Vector2(0,295),"KIWI ROUNDS",HORIZONTAL_ALIGNMENT_CENTER,1280,54,Color("#f2f2f2"))
@@ -208,12 +217,24 @@ func _add_platform(at: Vector2, dimensions: Vector2) -> void:
     lower_glow.polygon = PackedVector2Array([Vector2(-dimensions.x/2,dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2+5),Vector2(-dimensions.x/2,dimensions.y/2+5)])
     lower_glow.color = Color("#6d8fb8",0.55)
     body.add_child(lower_glow)
+    var glow := Line2D.new()
+    glow.points = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2)])
+    glow.width = 12.0
+    glow.default_color = Color("#d9ef70",0.12)
+    glow.antialiased = true
+    body.add_child(glow)
     var stripe := Line2D.new()
     stripe.points = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2)])
-    stripe.width = 5.0
+    stripe.width = 3.5
     stripe.default_color = Color("#d9ef70")
     stripe.antialiased = true
     body.add_child(stripe)
+    var edge := Line2D.new()
+    edge.points = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(-dimensions.x/2,dimensions.y/2),Vector2(-dimensions.x/2,-dimensions.y/2)])
+    edge.width = 1.2
+    edge.default_color = Color("#8fb3d8",0.45)
+    edge.antialiased = true
+    body.add_child(edge)
 
 func _make_players() -> void:
     player = PLAYER_SCRIPT.new()
@@ -287,7 +308,10 @@ func _cycle_skin() -> void:
 func _on_player_hit(_direction: Vector2, hit_target: Node2D) -> void:
     if shake_enabled:
         camera_shake_timer = 0.16
-        camera_shake_strength = 7.0
+        camera_shake_strength = 9.0
+    impact_flash = 0.12
+    impact_flash_color = Color("#ff806f") if hit_target == player else Color("#72e6d3")
+    queue_redraw()
     _play_sfx("hit")
     if hit_target == player and vibration_enabled:
         Input.vibrate_handheld(55,0.25)
@@ -468,15 +492,20 @@ func _button_style(color: Color) -> StyleBoxFlat:
     return style
 
 func _process(delta: float) -> void:
+    background_time += delta
+    impact_flash = maxf(0.0, impact_flash - delta * 2.8)
     if is_instance_valid(arena_camera):
         if camera_shake_timer > 0.0:
             camera_shake_timer = maxf(0.0,camera_shake_timer-delta)
             if shake_enabled:
-                arena_camera.offset = Vector2(randf_range(-camera_shake_strength,camera_shake_strength),randf_range(-camera_shake_strength,camera_shake_strength))
+                var shake_power := camera_shake_strength * clampf(camera_shake_timer / 0.16, 0.0, 1.0)
+                arena_camera.offset = Vector2(randf_range(-shake_power,shake_power),randf_range(-shake_power,shake_power))
             else:
                 arena_camera.offset = Vector2.ZERO
         else:
             arena_camera.offset = Vector2.ZERO
+    if impact_flash > 0.0:
+        queue_redraw()
     if boot_loading:
         if is_instance_valid(boot_status_label):
             boot_status_label.text = boot_stage
