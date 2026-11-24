@@ -164,6 +164,15 @@ func _run_physics_checks() -> void:
         _fail("resume did not restore both fighters")
         return
 
+    var pause_pulse := pulse_script.new() as Area2D
+    game.add_child(pause_pulse)
+    pause_pulse.call("configure", Vector2.RIGHT, 610.0, Color.WHITE, player)
+    game.call("_show_pause_menu")
+    if not pause_pulse.is_queued_for_deletion():
+        _fail("projectiles were not cleared when the game was paused")
+        return
+    game.call("_resume_game")
+
     await create_timer(0.35).timeout
     print("PHYSICS TEST PASSED: movement, jump, firing, bot reload, projectile hit")
     quit(0)
