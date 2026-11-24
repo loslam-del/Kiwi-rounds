@@ -509,10 +509,15 @@ func _add_button(caption: String, at: Vector2, dimensions: Vector2, parent: Cont
     button.position = at
     button.size = dimensions
     button.focus_mode = Control.FOCUS_NONE
+    button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
     button.add_theme_font_size_override("font_size",19)
-    button.add_theme_color_override("font_color",Color("#ffffff"))
+    button.add_theme_color_override("font_color",Color("#f6f7ee"))
+    button.add_theme_color_override("font_hover_color",Color("#ffffff"))
+    button.add_theme_color_override("font_pressed_color",Color("#e8f6a0"))
     button.add_theme_stylebox_override("normal",_button_style(Color("#263b5b")))
+    button.add_theme_stylebox_override("hover",_button_style(Color("#354f70")))
     button.add_theme_stylebox_override("pressed",_button_style(Color("#3d638e")))
+    button.add_theme_stylebox_override("focus",_button_style(Color("#354f70")))
     if parent == null:
         ui.add_child(button)
     else:
@@ -531,6 +536,13 @@ func _button_style(color: Color) -> StyleBoxFlat:
     style.border_width_top = 2
     style.border_width_bottom = 2
     style.border_color = Color("#7895bc")
+    style.shadow_color = Color(0.0,0.0,0.0,0.32)
+    style.shadow_size = 7
+    style.shadow_offset = Vector2(0,3)
+    style.content_margin_left = 14
+    style.content_margin_right = 14
+    style.content_margin_top = 7
+    style.content_margin_bottom = 7
     return style
 
 func _process(delta: float) -> void:
@@ -1399,14 +1411,38 @@ func _toggle_training_card(card_id: String) -> void:
         player.apply_upgrade(active_id)
     _open_training_cards()
 
+func _add_menu_ornaments(parent: Control) -> void:
+    var top_glow := ColorRect.new()
+    top_glow.position = Vector2(0,0)
+    top_glow.size = Vector2(1280,5)
+    top_glow.color = Color("#d9ef70")
+    parent.add_child(top_glow)
+    var left_rail := ColorRect.new()
+    left_rail.position = Vector2(26,215)
+    left_rail.size = Vector2(3,290)
+    left_rail.color = Color(0.48,0.66,0.83,0.22)
+    parent.add_child(left_rail)
+    var right_rail := ColorRect.new()
+    right_rail.position = Vector2(1251,215)
+    right_rail.size = Vector2(3,290)
+    right_rail.color = Color(0.48,0.66,0.83,0.22)
+    parent.add_child(right_rail)
+    for i in range(9):
+        var dot := ColorRect.new()
+        dot.position = Vector2(72.0 + float(i)*142.0, 690.0)
+        dot.size = Vector2(3,3)
+        dot.color = Color(0.85,0.93,0.57,0.48)
+        parent.add_child(dot)
+
 func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> void:
     _close_overlay()
     game_controls.visible = false
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color("#101116")
+    shade.color = Color("#0b1019")
     ui.add_child(shade)
     overlay = shade
+    _add_menu_ornaments(shade)
     var panel := Panel.new()
     panel.position = Vector2(300,45)
     panel.size = Vector2(680,630)
@@ -1415,6 +1451,9 @@ func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> v
     ps.border_color = Color("#414858")
     ps.set_border_width_all(2)
     ps.set_corner_radius_all(24)
+    ps.shadow_color = Color(0.0,0.0,0.0,0.48)
+    ps.shadow_size = 22
+    ps.shadow_offset = Vector2(0,9)
     panel.add_theme_stylebox_override("panel",ps)
     shade.add_child(panel)
     var title := Label.new()
@@ -1453,11 +1492,14 @@ func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> v
         button.custom_minimum_size = Vector2(500,50 if compact else 58)
         button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         button.focus_mode = Control.FOCUS_NONE
+        button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
         button.add_theme_font_size_override("font_size",20)
         button.add_theme_color_override("font_color",Color("#f3f1e8"))
+        button.add_theme_color_override("font_hover_color",Color("#ffffff"))
         button.add_theme_stylebox_override("normal",_menu_button_style(Color("#303644"),Color("#596174")))
         button.add_theme_stylebox_override("hover",_menu_button_style(Color("#414a5b"),Color("#d9ef70")))
         button.add_theme_stylebox_override("pressed",_menu_button_style(Color("#596b32"),Color("#d9ef70")))
+        button.add_theme_stylebox_override("focus",_menu_button_style(Color("#414a5b"),Color("#d9ef70")))
         button.pressed.connect(entry[1])
         list.add_child(button)
     var footer := Label.new()
@@ -1483,6 +1525,11 @@ func _menu_button_style(fill: Color, outline: Color) -> StyleBoxFlat:
     style.corner_radius_bottom_right = 12
     style.content_margin_left = 18
     style.content_margin_right = 18
+    style.content_margin_top = 8
+    style.content_margin_bottom = 8
+    style.shadow_color = Color(0.0,0.0,0.0,0.30)
+    style.shadow_size = 5
+    style.shadow_offset = Vector2(0,2)
     return style
 
 func _close_overlay() -> void:
