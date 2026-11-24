@@ -13,7 +13,7 @@ var active_index := -1
 var mouse_active := false
 
 func _ready() -> void:
-    custom_minimum_size = Vector2(150, 150)
+    custom_minimum_size = Vector2(116, 116)
     mouse_filter = Control.MOUSE_FILTER_STOP
     queue_redraw()
 
