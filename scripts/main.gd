@@ -1026,9 +1026,9 @@ func _create_menu_record(parent: Control) -> void:
     music_track_button.tooltip_text = "Нажми, чтобы переключить трек"
     music_track_button.add_theme_font_size_override("font_size", 13)
     music_track_button.add_theme_color_override("font_color", Color("#eaf2fb"))
-    music_track_button.add_theme_stylebox_override("normal", _make_button_style(Color("#172536"), Color("#526779")))
-    music_track_button.add_theme_stylebox_override("hover", _make_button_style(Color("#20394c"), Color("#36e6df")))
-    music_track_button.add_theme_stylebox_override("pressed", _make_button_style(Color("#101923"), Color("#d9ef70")))
+    music_track_button.add_theme_stylebox_override("normal", _menu_button_style(Color("#172536"), Color("#526779")))
+    music_track_button.add_theme_stylebox_override("hover", _menu_button_style(Color("#20394c"), Color("#36e6df")))
+    music_track_button.add_theme_stylebox_override("pressed", _menu_button_style(Color("#101923"), Color("#d9ef70")))
     music_track_button.pressed.connect(_play_next_music)
     parent.add_child(music_track_button)
     _update_music_track_button()
