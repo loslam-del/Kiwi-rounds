@@ -22,7 +22,12 @@ Original 2D round-based arena prototype for Android.
 - Keyboard test: A/D or arrows to move, W/up to jump, Space to fire, I/J/K/L to aim.
 
 ## Online mode
-The menu entry is present, but online matchmaking and network play are not implemented yet. Selecting it displays this status instead of pretending that a network match is available.
+- Connects to the WebSocket service at `wss://kiwi-rounds-server.onrender.com/ws`.
+- Players can create password-protected rooms, browse the room list, and join a room.
+- The room host can start a two-player match when both players are present.
+- The host simulates the authoritative match; the guest sends movement, aim, jump, fire and reload input.
+- Position, velocity, score, round, arena, ammo and upgrade statistics are replicated to the guest.
+- Online play is still a prototype: projectile visuals/hit effects are not yet replicated, and network latency/reconnect handling needs more testing. The host currently owns match progression.
 
 ## Mod support (data-only JSON)
 Mods are loaded from `user://mods/<folder>/mod.json`. Each mod folder contains one `mod.json`. Mods provide data only; arbitrary mod scripts are never executed.
