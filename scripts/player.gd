@@ -2,6 +2,7 @@ extends CharacterBody2D
 class_name ArenaPlayer
 
 signal pulse_requested(origin: Vector2, direction: Vector2, force: float, tint: Color, shooter: Node2D)
+signal got_hit(direction: Vector2)
 
 @export var is_bot := false
 @export var body_color := Color("#39d6c5")
@@ -48,6 +49,7 @@ var wall_jump_lock := 0.0
 var recoil_kick := 0.0
 var muzzle_flash := 0.0
 var reload_visual := 0.0
+var hit_flash := 0.0
 
 func _ready() -> void:
     collision_layer = 1
@@ -81,6 +83,7 @@ func _physics_process(delta: float) -> void:
     pulse_cooldown = maxf(0.0, pulse_cooldown - delta)
     recoil_kick = move_toward(recoil_kick, 0.0, delta * 38.0)
     muzzle_flash = maxf(0.0, muzzle_flash - delta)
+    hit_flash = maxf(0.0, hit_flash - delta)
     if reload_timer > 0.0:
         reload_timer = maxf(0.0, reload_timer - delta)
         reload_visual = reload_timer / maxf(reload_duration, 0.01)
@@ -171,10 +174,18 @@ func _think_bot(delta: float) -> void:
         return
 
     var delta_x := target.global_position.x - global_position.x
-    move_input = signf(delta_x) if absf(delta_x) > 130.0 else 0.0
+    var distance_x := absf(delta_x)
+    if distance_x > 235.0:
+        move_input = signf(delta_x)
+    elif distance_x < 115.0:
+        move_input = -signf(delta_x)
+    else:
+        move_input = 0.0
     var aim_vector := (target.global_position - global_position).normalized()
     set_aim(aim_vector)
-    jump_held = is_on_floor() and target.global_position.y < global_position.y - 65.0
+    jump_held = false
+    if is_on_floor() and (target.global_position.y < global_position.y - 70.0 or (distance_x < 100.0 and randf() < 0.018)):
+        jump_held = true
 
     bot_think -= delta
     if bot_think <= 0.0:
@@ -254,12 +265,15 @@ func reset_round(spawn: Vector2) -> void:
     wall_jump_lock = 0.0
     recoil_kick = 0.0
     muzzle_flash = 0.0
+    hit_flash = 0.0
 
 func _draw() -> void:
     var grounded := is_on_floor()
     var moving := absf(velocity.x) > 35.0 and grounded
     var stride := sin(animation_time) * 9.0 if moving else 0.0
     var bob := absf(sin(animation_time * 2.0)) * 2.0 if moving else 0.0
+    if hit_flash > 0.0:
+        draw_circle(Vector2(0,-8),37.0,Color(1.0,0.32,0.28,hit_flash*0.8))
     var skin := Color("#efbd94")
     var outline := Color("#18212d")
     var suit := body_color
