@@ -718,49 +718,268 @@ func _show_main_menu() -> void:
 
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color("#0b111b")
+    shade.color = Color("#080d19")
     ui.add_child(shade)
     overlay = shade
 
-    # Large title sits behind the centered menu buttons.
-    var title_shadow := Label.new()
-    title_shadow.text = "KIWI ROUNDS"
-    title_shadow.position = Vector2(0, 204)
-    title_shadow.size = Vector2(1280, 150)
-    title_shadow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title_shadow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    title_shadow.add_theme_font_size_override("font_size", 104)
-    title_shadow.add_theme_color_override("font_color", Color("#26394a"))
-    title_shadow.add_theme_constant_override("outline_size", 2)
-    title_shadow.add_theme_color_override("font_outline_color", Color("#172536"))
-    shade.add_child(title_shadow)
+    # Neon frame, moving grid and title moved noticeably higher.
+    var frame := Panel.new()
+    frame.position = Vector2(34, 30)
+    frame.size = Vector2(1212, 660)
+    var frame_style := StyleBoxFlat.new()
+    frame_style.bg_color = Color("#0c1424")
+    frame_style.border_color = Color("#36e6df")
+    frame_style.set_border_width_all(2)
+    frame_style.set_corner_radius_all(22)
+    frame_style.shadow_color = Color("#27d9d0", 0.20)
+    frame_style.shadow_size = 24
+    frame.add_theme_stylebox_override("panel", frame_style)
+    shade.add_child(frame)
+
+    for i in range(13):
+        var grid_line := ColorRect.new()
+        grid_line.position = Vector2(50 + i * 91, 44)
+        grid_line.size = Vector2(1, 630)
+        grid_line.color = Color("#43c9dc", 0.055)
+        shade.add_child(grid_line)
+    for i in range(8):
+        var grid_line := ColorRect.new()
+        grid_line.position = Vector2(44, 70 + i * 82)
+        grid_line.size = Vector2(1190, 1)
+        grid_line.color = Color("#43c9dc", 0.05)
+        shade.add_child(grid_line)
+
+    var title_glow := Label.new()
+    title_glow.text = "KIWI ROUNDS"
+    title_glow.position = Vector2(0, 62)
+    title_glow.size = Vector2(1280, 112)
+    title_glow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title_glow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    title_glow.add_theme_font_size_override("font_size", 88)
+    title_glow.add_theme_color_override("font_color", Color("#173b50"))
+    title_glow.add_theme_constant_override("outline_size", 7)
+    title_glow.add_theme_color_override("font_outline_color", Color("#2ce8dc"))
+    shade.add_child(title_glow)
+
+    var title := Label.new()
+    title.text = "KIWI ROUNDS"
+    title.position = Vector2(0, 58)
+    title.size = Vector2(1280, 112)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 84)
+    title.add_theme_color_override("font_color", Color("#e9fbff"))
+    title.add_theme_constant_override("outline_size", 2)
+    title.add_theme_color_override("font_outline_color", Color("#557d9b"))
+    shade.add_child(title)
+
+    # Kiwi mascot sits on the title as the menu's signature detail.
+    var mascot_body := Polygon2D.new()
+    mascot_body.position = Vector2(642, 136)
+    mascot_body.polygon = PackedVector2Array([
+        Vector2(-19,18), Vector2(19,18), Vector2(24,56),
+        Vector2(12,72), Vector2(-12,72), Vector2(-24,56)
+    ])
+    mascot_body.color = Color("#477b4c")
+    shade.add_child(mascot_body)
+    var mascot_leg_a := Line2D.new()
+    mascot_leg_a.points = PackedVector2Array([Vector2(630,192),Vector2(606,207),Vector2(583,205)])
+    mascot_leg_a.width = 12
+    mascot_leg_a.default_color = Color("#294c38")
+    mascot_leg_a.begin_cap_mode = Line2D.LINE_CAP_ROUND
+    mascot_leg_a.end_cap_mode = Line2D.LINE_CAP_ROUND
+    shade.add_child(mascot_leg_a)
+    var mascot_leg_b := Line2D.new()
+    mascot_leg_b.points = PackedVector2Array([Vector2(654,192),Vector2(676,207),Vector2(698,205)])
+    mascot_leg_b.width = 12
+    mascot_leg_b.default_color = Color("#294c38")
+    mascot_leg_b.begin_cap_mode = Line2D.LINE_CAP_ROUND
+    mascot_leg_b.end_cap_mode = Line2D.LINE_CAP_ROUND
+    shade.add_child(mascot_leg_b)
+    _add_kiwi_mascot(shade, Vector2(642, 125))
 
     var subtitle := Label.new()
-    subtitle.text = "BOT ARENA"
-    subtitle.position = Vector2(0, 285)
-    subtitle.size = Vector2(1280, 30)
+    subtitle.text = "NEON BOT ARENA  /  RANDOM MAPS  /  RANDOM BUILDS"
+    subtitle.position = Vector2(0, 180)
+    subtitle.size = Vector2(1280, 28)
     subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    subtitle.add_theme_font_size_override("font_size", 15)
-    subtitle.add_theme_color_override("font_color", Color("#8da0b3"))
+    subtitle.add_theme_font_size_override("font_size", 14)
+    subtitle.add_theme_color_override("font_color", Color("#62dfe4"))
     shade.add_child(subtitle)
 
-    var play := _add_button("ИГРАТЬ", Vector2(440, 330), Vector2(400, 68), shade)
+    var menu_panel := Panel.new()
+    menu_panel.position = Vector2(92, 258)
+    menu_panel.size = Vector2(430, 360)
+    var menu_style := StyleBoxFlat.new()
+    menu_style.bg_color = Color("#101c2d", 0.96)
+    menu_style.border_color = Color("#8b67ff", 0.72)
+    menu_style.set_border_width_all(2)
+    menu_style.set_corner_radius_all(18)
+    menu_style.shadow_color = Color("#8b67ff", 0.18)
+    menu_style.shadow_size = 18
+    menu_panel.add_theme_stylebox_override("panel", menu_style)
+    shade.add_child(menu_panel)
+
+    var play := _add_button("▶   ИГРАТЬ", Vector2(122, 292), Vector2(370, 68), shade)
     play.add_theme_font_size_override("font_size", 25)
-    play.add_theme_stylebox_override("normal", _menu_button_style(Color("#d9ef70"), Color("#f1f7bb")))
-    play.add_theme_color_override("font_color", Color("#171b13"))
+    play.add_theme_stylebox_override("normal", _menu_button_style(Color("#36e6df"), Color("#b5fff4")))
+    play.add_theme_color_override("font_color", Color("#07151d"))
     play.pressed.connect(_start_game.bind("bot"))
 
-    var skins := _add_button("СКИНЫ", Vector2(440, 414), Vector2(400, 58), shade)
-    skins.add_theme_stylebox_override("normal", _menu_button_style(Color("#202d3b"), Color("#b9e36c")))
+    var skins := _add_button("✦   СКИНЫ", Vector2(122, 376), Vector2(370, 58), shade)
+    skins.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
+    skins.add_theme_color_override("font_color", Color("#e8f6ff"))
     skins.pressed.connect(_open_skins)
 
-    var settings := _add_button("НАСТРОЙКИ", Vector2(440, 486), Vector2(400, 58), shade)
-    settings.add_theme_stylebox_override("normal", _menu_button_style(Color("#202d3b"), Color("#61778c")))
+    var settings := _add_button("⚙   НАСТРОЙКИ", Vector2(122, 448), Vector2(370, 58), shade)
+    settings.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#36e6df")))
+    settings.add_theme_color_override("font_color", Color("#e8f6ff"))
     settings.pressed.connect(_show_settings)
 
-    var mods := _add_button("МОДЫ", Vector2(440, 558), Vector2(400, 58), shade)
-    mods.add_theme_stylebox_override("normal", _menu_button_style(Color("#202d3b"), Color("#61778c")))
+    var mods := _add_button("▣   МОДЫ", Vector2(122, 520), Vector2(370, 58), shade)
+    mods.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
+    mods.add_theme_color_override("font_color", Color("#e8f6ff"))
     mods.pressed.connect(_open_mods)
+
+    var footer := Label.new()
+    footer.text = "KIWI LABS   •   BUILD. FIGHT. REPEAT."
+    footer.position = Vector2(92, 630)
+    footer.size = Vector2(430, 22)
+    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    footer.add_theme_font_size_override("font_size", 12)
+    footer.add_theme_color_override("font_color", Color("#5e8c9d"))
+    shade.add_child(footer)
+
+    _create_menu_bot_preview(shade)
+
+func _create_menu_bot_preview(parent: Control) -> void:
+    # A live miniature duel: every menu entry rolls a different arena and random bot builds.
+    var stage := Node2D.new()
+    stage.name = "MenuBotPreview"
+    parent.add_child(stage)
+
+    var map_data: Dictionary = all_maps.pick_random() if not all_maps.is_empty() else DEFAULT_MAPS[0]
+    var map_label := Label.new()
+    map_label.text = "LIVE SIM  //  " + str(map_data.get("name", "RANDOM ARENA"))
+    map_label.position = Vector2(720, 260)
+    map_label.size = Vector2(470, 26)
+    map_label.add_theme_font_size_override("font_size", 16)
+    map_label.add_theme_color_override("font_color", Color("#b8a0ff"))
+    parent.add_child(map_label)
+
+    var ground := StaticBody2D.new()
+    ground.position = Vector2(1000, 655)
+    ground.collision_layer = 2
+    var ground_shape := CollisionShape2D.new()
+    var ground_rect := RectangleShape2D.new()
+    ground_rect.size = Vector2(570, 34)
+    ground_shape.shape = ground_rect
+    ground.add_child(ground_shape)
+    stage.add_child(ground)
+    _add_menu_preview_platform(stage, Vector2(1000, 638), Vector2(570, 18), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")))
+
+    var wall_left := StaticBody2D.new()
+    wall_left.position = Vector2(720, 450)
+    wall_left.collision_layer = 2
+    var wall_left_shape := CollisionShape2D.new()
+    var wall_rect := RectangleShape2D.new()
+    wall_rect.size = Vector2(24, 470)
+    wall_left_shape.shape = wall_rect
+    wall_left.add_child(wall_left_shape)
+    stage.add_child(wall_left)
+    var wall_right := StaticBody2D.new()
+    wall_right.position = Vector2(1280, 450)
+    wall_right.collision_layer = 2
+    var wall_right_shape := CollisionShape2D.new()
+    var wall_right_rect := RectangleShape2D.new()
+    wall_right_rect.size = Vector2(24, 470)
+    wall_right_shape.shape = wall_right_rect
+    wall_right.add_child(wall_right_shape)
+    stage.add_child(wall_right)
+
+    var platform_data: Array = map_data.get("platforms", [])
+    var added := 0
+    for item in platform_data:
+        if typeof(item) != TYPE_DICTIONARY:
+            continue
+        var px := float(item.get("x", 900))
+        if px < 650.0:
+            continue
+        var py := clampf(float(item.get("y", 500)), 360.0, 590.0)
+        var pw := clampf(float(item.get("w", 160)), 90.0, 260.0)
+        _add_menu_preview_platform(stage, Vector2(px, py), Vector2(pw, 16), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")))
+        added += 1
+        if added >= 4:
+            break
+    if added == 0:
+        _add_menu_preview_platform(stage, Vector2(900, 520), Vector2(150, 16), Color("#36e6df"))
+        _add_menu_preview_platform(stage, Vector2(1110, 455), Vector2(150, 16), Color("#b58cff"))
+
+    var bot_a: ArenaPlayer = PLAYER_SCRIPT.new()
+    bot_a.is_bot = true
+    bot_a.body_color = Color("#36e6df")
+    bot_a.position = Vector2(850, 510)
+    bot_a.bot_accuracy = 0.42
+    bot_a.move_speed = 390.0
+    bot_a.pulse_force = 520.0
+    bot_a.set_physics_process(true)
+    stage.add_child(bot_a)
+
+    var bot_b: ArenaPlayer = PLAYER_SCRIPT.new()
+    bot_b.is_bot = true
+    bot_b.body_color = Color("#ff6fae")
+    bot_b.position = Vector2(1140, 510)
+    bot_b.bot_accuracy = 0.42
+    bot_b.move_speed = 390.0
+    bot_b.pulse_force = 520.0
+    bot_b.set_physics_process(true)
+    stage.add_child(bot_b)
+    bot_a.target = bot_b
+    bot_b.target = bot_a
+    bot_a.pulse_requested.connect(_spawn_menu_preview_pulse.bind(stage))
+    bot_b.pulse_requested.connect(_spawn_menu_preview_pulse.bind(stage))
+
+    var upgrades_a := all_upgrades.duplicate()
+    var upgrades_b := all_upgrades.duplicate()
+    upgrades_a.shuffle()
+    upgrades_b.shuffle()
+    for i in range(mini(2, upgrades_a.size())):
+        bot_a.apply_upgrade(str(upgrades_a[i].get("effect", upgrades_a[i].get("id", ""))))
+    for i in range(mini(2, upgrades_b.size())):
+        bot_b.apply_upgrade(str(upgrades_b[i].get("effect", upgrades_b[i].get("id", ""))))
+
+func _add_menu_preview_platform(stage: Node2D, at: Vector2, dimensions: Vector2, accent: Color) -> void:
+    var body := StaticBody2D.new()
+    body.position = at
+    body.collision_layer = 2
+    var shape := CollisionShape2D.new()
+    var rect := RectangleShape2D.new()
+    rect.size = dimensions
+    shape.shape = rect
+    body.add_child(shape)
+    var visual := Polygon2D.new()
+    visual.polygon = PackedVector2Array([
+        Vector2(-dimensions.x / 2, -dimensions.y / 2),
+        Vector2(dimensions.x / 2, -dimensions.y / 2),
+        Vector2(dimensions.x / 2, dimensions.y / 2),
+        Vector2(-dimensions.x / 2, dimensions.y / 2)
+    ])
+    visual.color = Color("#17263b")
+    body.add_child(visual)
+    var glow := Line2D.new()
+    glow.points = PackedVector2Array([Vector2(-dimensions.x / 2, -dimensions.y / 2), Vector2(dimensions.x / 2, -dimensions.y / 2)])
+    glow.width = 5.0
+    glow.default_color = accent
+    glow.antialiased = true
+    body.add_child(glow)
+    stage.add_child(body)
+
+func _spawn_menu_preview_pulse(origin: Vector2, direction: Vector2, force: float, tint: Color, shooter: Node2D, stage: Node2D) -> void:
+    var pulse: EnergyPulse = PULSE_SCRIPT.new()
+    pulse.configure(direction, force, tint, shooter)
+    pulse.global_position = origin
+    stage.add_child(pulse)
+
 
 func _add_menu_battle_scene(parent: Control) -> void:
     # Four frozen fighter poses create a layered firefight illustration.
