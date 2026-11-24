@@ -29,6 +29,7 @@ var platform_nodes: Array[StaticBody2D] = []
 var mod_loader: GameModLoader
 var all_maps: Array[Dictionary] = []
 var all_upgrades: Array[Dictionary] = []
+var map_index := 0
 var skin_index := 0
 var score_player := 0
 var score_bot := 0
@@ -154,6 +155,7 @@ func _make_ui() -> void:
     skin_button = _add_button("СКИН", Vector2(1080, 20), Vector2(150, 54))
     skin_button.visible = not mod_loader.skins.is_empty()
     skin_button.pressed.connect(_cycle_skin)
+    _apply_skin()
 
     var movement_joystick: VirtualJoystick = JOYSTICK_SCRIPT.new()
     movement_joystick.position = Vector2(35, 535)
