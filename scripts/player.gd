@@ -408,15 +408,43 @@ func _make_ragdoll_part(world: Node, segment_length: float, at: Vector2, segment
     capsule.height = segment_length + 4.4
     collision.shape = capsule
     part.add_child(collision)
+    var limb_points := PackedVector2Array([Vector2(0.0,-segment_length*0.5),Vector2(0.0,segment_length*0.5)])
+    var shadow := Line2D.new()
+    shadow.name = "LimbGlow"
+    shadow.points = limb_points
+    shadow.width = 10.0
+    shadow.default_color = Color(body_color,0.14)
+    shadow.begin_cap_mode = Line2D.LINE_CAP_ROUND
+    shadow.end_cap_mode = Line2D.LINE_CAP_ROUND
+    shadow.antialiased = true
+    part.add_child(shadow)
+    var outline := Line2D.new()
+    outline.name = "LimbOutline"
+    outline.points = limb_points
+    outline.width = 7.0
+    outline.default_color = Color("#172332")
+    outline.begin_cap_mode = Line2D.LINE_CAP_ROUND
+    outline.end_cap_mode = Line2D.LINE_CAP_ROUND
+    outline.antialiased = true
+    part.add_child(outline)
     var visual := Line2D.new()
     visual.name = "LimbVisual"
-    visual.points = PackedVector2Array([Vector2(0.0, -segment_length * 0.5), Vector2(0.0, segment_length * 0.5)])
-    visual.width = 4.2
+    visual.points = limb_points
+    visual.width = 4.5
     visual.default_color = body_color
     visual.begin_cap_mode = Line2D.LINE_CAP_ROUND
     visual.end_cap_mode = Line2D.LINE_CAP_ROUND
     visual.antialiased = true
     part.add_child(visual)
+    var highlight := Line2D.new()
+    highlight.name = "LimbHighlight"
+    highlight.points = PackedVector2Array([Vector2(-0.9,-segment_length*0.34),Vector2(-0.9,segment_length*0.34)])
+    highlight.width = 1.1
+    highlight.default_color = Color(1.0,1.0,1.0,0.34)
+    highlight.begin_cap_mode = Line2D.LINE_CAP_ROUND
+    highlight.end_cap_mode = Line2D.LINE_CAP_ROUND
+    highlight.antialiased = true
+    part.add_child(highlight)
     world.add_child(part)
     ragdoll_parts.append(part)
     add_collision_exceptions(part)
