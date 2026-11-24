@@ -64,11 +64,6 @@ var weapon_level := 0
 var ground_accel_scale := 1.0
 var wall_jump_scale := 1.0
 
-var ragdoll_anchor_body: StaticBody2D
-var ragdoll_parts: Array[RigidBody2D] = []
-var ragdoll_joints: Array[PinJoint2D] = []
-var ragdoll_root_joints: Array[PinJoint2D] = []
-var ragdoll_anchor_offsets: Array[Vector2] = []
 
 func _ready() -> void:
     collision_layer = 1
@@ -80,7 +75,6 @@ func _ready() -> void:
     core.radius = 21.0
     shape.shape = core
     add_child(shape)
-    call_deferred("_create_physics_ragdoll")
 
 func set_move(value: Vector2) -> void:
     move_stick = value
@@ -174,7 +168,6 @@ func _physics_process(delta: float) -> void:
         else:
             start_reload()
     move_and_slide()
-    _sync_ragdoll_anchor_joints()
     if is_on_wall() and not is_on_floor() and velocity.y > 160.0:
         velocity.y = minf(velocity.y, 270.0)
     queue_redraw()
@@ -335,205 +328,75 @@ func reset_round(spawn: Vector2) -> void:
     hitstun_timer = 0.0
     bot_jump_hold_timer = 0.0
     air_jumps_left = 1 + extra_air_jumps
-    _rebuild_physics_ragdoll()
-
-func _rebuild_physics_ragdoll() -> void:
-    for joint in ragdoll_joints:
-        if is_instance_valid(joint):
-            joint.queue_free()
-    for part in ragdoll_parts:
-        if is_instance_valid(part):
-            part.queue_free()
-    ragdoll_parts.clear()
-    ragdoll_joints.clear()
-    if is_instance_valid(ragdoll_anchor_body):
-        ragdoll_anchor_body.queue_free()
-    ragdoll_anchor_body = null
-    ragdoll_root_joints.clear()
-    ragdoll_anchor_offsets.clear()
-    call_deferred("_create_physics_ragdoll")
-
-func _create_physics_ragdoll() -> void:
-    if not is_inside_tree():
-        return
-    var world := get_tree().current_scene
-    if world == null:
-        return
-    ragdoll_anchor_body = StaticBody2D.new()
-    ragdoll_anchor_body.name = "RagdollTorsoAnchor"
-    ragdoll_anchor_body.collision_layer = 0
-    ragdoll_anchor_body.collision_mask = 0
-    ragdoll_anchor_body.global_position = global_position
-    world.add_child(ragdoll_anchor_body)
-    _create_limb_chain(world, Vector2(-17.0, -5.0), -0.95, -0.72, 16.0, 15.0)
-    _create_limb_chain(world, Vector2(17.0, -5.0), 0.95, 0.72, 16.0, 15.0)
-    _create_limb_chain(world, Vector2(-7.5, 10.0), -0.12, -0.08, 15.0, 13.0)
-    _create_limb_chain(world, Vector2(7.5, 10.0), 0.12, 0.08, 15.0, 13.0)
-    _sync_ragdoll_anchor_joints()
-
-func _create_limb_chain(world: Node, anchor_local: Vector2, upper_angle: float, lower_relative_angle: float, upper_length: float, lower_length: float) -> void:
-    var anchor := global_position + Vector2(anchor_local.x * facing, anchor_local.y)
-    var upper_direction := _limb_vector(upper_angle, 1.0).normalized()
-    var upper_center := anchor + upper_direction * (upper_length * 0.5)
-    var upper := _make_ragdoll_part(world, upper_length, upper_center, upper_angle)
-    var elbow := anchor + upper_direction * upper_length
-    var lower_angle := upper_angle + lower_relative_angle
-    var lower_direction := _limb_vector(lower_angle, 1.0).normalized()
-    var lower_center := elbow + lower_direction * (lower_length * 0.5)
-    var lower := _make_ragdoll_part(world, lower_length, lower_center, lower_angle)
-    _connect_ragdoll_parts(world, ragdoll_anchor_body, upper, anchor, true, anchor_local)
-    _connect_ragdoll_parts(world, upper, lower, elbow, false, Vector2.ZERO)
-
-func _make_ragdoll_part(world: Node, segment_length: float, at: Vector2, segment_angle: float) -> RigidBody2D:
-    var part := RigidBody2D.new()
-    part.name = "RagdollLimb"
-    part.global_position = at
-    var direction := _limb_vector(segment_angle, 1.0).normalized()
-    part.rotation = Vector2.DOWN.angle_to(direction)
-    part.mass = 0.075
-    var material := PhysicsMaterial.new()
-    material.friction = 0.55
-    material.bounce = 0.08
-    part.physics_material_override = material
-    part.gravity_scale = 1.0
-    part.linear_damp = 0.65
-    part.angular_damp = 2.0
-    part.collision_layer = 4
-    part.collision_mask = 7
-    part.can_sleep = false
-    part.continuous_cd = RigidBody2D.CCD_MODE_CAST_RAY
-    var collision := CollisionShape2D.new()
-    var capsule := CapsuleShape2D.new()
-    capsule.radius = 2.2
-    capsule.height = segment_length + 4.4
-    collision.shape = capsule
-    part.add_child(collision)
-    var limb_points := PackedVector2Array([Vector2(0.0,-segment_length*0.5),Vector2(0.0,segment_length*0.5)])
-    var shadow := Line2D.new()
-    shadow.name = "LimbGlow"
-    shadow.points = limb_points
-    shadow.width = 10.0
-    shadow.default_color = Color(body_color,0.14)
-    shadow.begin_cap_mode = Line2D.LINE_CAP_ROUND
-    shadow.end_cap_mode = Line2D.LINE_CAP_ROUND
-    shadow.antialiased = true
-    part.add_child(shadow)
-    var outline := Line2D.new()
-    outline.name = "LimbOutline"
-    outline.points = limb_points
-    outline.width = 7.0
-    outline.default_color = Color("#172332")
-    outline.begin_cap_mode = Line2D.LINE_CAP_ROUND
-    outline.end_cap_mode = Line2D.LINE_CAP_ROUND
-    outline.antialiased = true
-    part.add_child(outline)
-    var visual := Line2D.new()
-    visual.name = "LimbVisual"
-    visual.points = limb_points
-    visual.width = 4.5
-    visual.default_color = body_color
-    visual.begin_cap_mode = Line2D.LINE_CAP_ROUND
-    visual.end_cap_mode = Line2D.LINE_CAP_ROUND
-    visual.antialiased = true
-    part.add_child(visual)
-    var highlight := Line2D.new()
-    highlight.name = "LimbHighlight"
-    highlight.points = PackedVector2Array([Vector2(-0.9,-segment_length*0.34),Vector2(-0.9,segment_length*0.34)])
-    highlight.width = 1.1
-    highlight.default_color = Color(1.0,1.0,1.0,0.34)
-    highlight.begin_cap_mode = Line2D.LINE_CAP_ROUND
-    highlight.end_cap_mode = Line2D.LINE_CAP_ROUND
-    highlight.antialiased = true
-    part.add_child(highlight)
-    world.add_child(part)
-    ragdoll_parts.append(part)
-    add_collision_exceptions(part)
-    return part
-
-func add_collision_exceptions(part: RigidBody2D) -> void:
-    part.add_collision_exception_with(self)
-
-func apply_ragdoll_impulse(direction: Vector2, strength: float) -> void:
-    var impulse := direction.normalized() * strength
-    for i in range(ragdoll_parts.size()):
-        var part := ragdoll_parts[i]
-        if is_instance_valid(part):
-            var weight := 0.75 + float(i % 2) * 0.25
-            part.apply_central_impulse(impulse * weight / 8.0)
-            part.apply_torque_impulse(randf_range(-strength, strength) * 0.018)
-
-func _connect_ragdoll_parts(world: Node, body_a: PhysicsBody2D, body_b: PhysicsBody2D, at: Vector2, root_joint: bool, anchor_local: Vector2) -> void:
-    var joint := PinJoint2D.new()
-    joint.name = "RagdollPin"
-    joint.global_position = at
-    joint.softness = 0.035
-    joint.angular_limit_enabled = true
-    joint.angular_limit_lower = -1.35 if not root_joint else -1.05
-    joint.angular_limit_upper = 1.35 if not root_joint else 1.05
-    world.add_child(joint)
-    joint.node_a = joint.get_path_to(body_a)
-    joint.node_b = joint.get_path_to(body_b)
-    ragdoll_joints.append(joint)
-    if root_joint:
-        ragdoll_root_joints.append(joint)
-        ragdoll_anchor_offsets.append(anchor_local)
-
-func _sync_ragdoll_anchor_joints() -> void:
-    if is_instance_valid(ragdoll_anchor_body):
-        ragdoll_anchor_body.global_position = global_position
-    for i in range(mini(ragdoll_root_joints.size(), ragdoll_anchor_offsets.size())):
-        var joint := ragdoll_root_joints[i]
-        if is_instance_valid(joint):
-            var offset: Vector2 = ragdoll_anchor_offsets[i]
-            joint.global_position = global_position + Vector2(offset.x * facing, offset.y)
-
-func _limb_vector(angle: float, length: float) -> Vector2:
-    return Vector2(sin(angle), cos(angle)) * length
 
 func _draw() -> void:
-    var bob := sin(animation_time) * (1.4 if is_on_floor() and absf(velocity.x) > 35.0 else 0.7)
-    var center := Vector2(0.0, -7.0 + bob)
+    var moving := is_on_floor() and absf(velocity.x) > 35.0
+    var stride := sin(animation_time) if moving else 0.0
+    var bob := absf(stride) * 2.0 if moving else sin(animation_time * 2.0) * 0.7
+    var center := Vector2(0.0, -8.0 + bob)
+    var outline := Color("#142333")
     var face := Color("#102536")
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
-    # Character: layered enamel body, rim light and expressive face.
-    draw_circle(center, 29.0, Color(body_color, 0.045))
-    draw_circle(center, 24.0, Color(body_color, 0.10))
-    draw_circle(center, 21.0, body_color)
-    draw_circle(center + Vector2(-5.0,-7.0), 9.0, Color(1.0,1.0,1.0,0.10))
-    draw_arc(center, 20.8, 0.0, TAU, 48, body_color.lightened(0.48), 1.8, true)
-    draw_arc(center + Vector2(-3.0,-4.0), 12.0, PI*1.05, PI*1.78, 20, Color(1,1,1,0.18), 2.0, true)
-    draw_circle(center + Vector2(-6.0,-2.0), 1.9, face)
-    draw_circle(center + Vector2(6.0,-2.0), 1.9, face)
+
+    # A single coherent fighter silhouette: limbs are decorative drawing only,
+    # never separate physics bodies, so they cannot scatter across the arena.
+    var back_leg := Vector2(-8.0, 12.0)
+    var front_leg := Vector2(8.0, 12.0)
+    var back_foot := back_leg + Vector2(stride * 5.0, 12.0 + absf(stride) * 1.5)
+    var front_foot := front_leg + Vector2(-stride * 5.0, 12.0 + absf(stride) * 1.5)
+    draw_line(back_leg, back_foot, outline, 10.0, true)
+    draw_line(back_leg, back_foot, body_color.darkened(0.12), 6.5, true)
+    draw_line(front_leg, front_foot, outline, 10.0, true)
+    draw_line(front_leg, front_foot, body_color, 6.5, true)
+    draw_line(back_foot + Vector2(-3,0), back_foot + Vector2(6,0), outline, 5.0, true)
+    draw_line(front_foot + Vector2(-3,0), front_foot + Vector2(6,0), outline, 5.0, true)
+
+    var arm_swing := stride * 4.0
+    draw_line(Vector2(-15,-8), Vector2(-19-arm_swing,-1), outline, 9.0, true)
+    draw_line(Vector2(-15,-8), Vector2(-19-arm_swing,-1), body_color.darkened(0.12), 5.5, true)
+    draw_line(Vector2(14,-8), Vector2(19+arm_swing,-3), outline, 9.0, true)
+    draw_line(Vector2(14,-8), Vector2(19+arm_swing,-3), body_color.lightened(0.08), 5.5, true)
+
+    # Rounded armored body with a readable face and bright rim.
+    draw_circle(center, 28.0, Color(body_color, 0.07))
+    draw_circle(center, 23.0, outline)
+    draw_circle(center, 20.0, body_color)
+    draw_arc(center, 19.6, 0.0, TAU, 48, body_color.lightened(0.52), 1.8, true)
+    draw_circle(center + Vector2(-5.0,-7.0), 7.0, Color(1.0,1.0,1.0,0.12))
+    draw_circle(center + Vector2(-6.0,-2.0), 2.0, face)
+    draw_circle(center + Vector2(6.0,-2.0), 2.0, face)
     draw_line(center + Vector2(-3.0,6.0), center + Vector2(3.0,6.0), face, 1.8, true)
+    draw_arc(center + Vector2(0,2), 23.0, PI*0.12, PI*0.88, 28, Color(1,1,1,0.24), 1.3, true)
+
     if hit_flash > 0.0:
-        draw_circle(center,25.0,Color(1.0,0.45,0.34,hit_flash*0.24))
-        draw_arc(center,25.0,0.0,TAU,48,Color(1.0,0.82,0.72,hit_flash*0.8),2.2,true)
+        draw_circle(center, 26.0, Color(1.0,0.45,0.34,hit_flash*0.24))
+        draw_arc(center, 26.0, 0.0, TAU, 48, Color(1.0,0.82,0.72,hit_flash*0.8), 2.2, true)
     if reload_visual > 0.0:
-        draw_arc(center,27.0,-PI/2.0,-PI/2.0+TAU*(1.0-reload_visual),28,Color.WHITE,2.0,true)
-    # Weapon is drawn independently from the fighter so upgrades visibly change its silhouette.
+        draw_arc(center, 30.0, -PI/2.0, -PI/2.0+TAU*(1.0-reload_visual), 32, Color.WHITE, 2.4, true)
+
     var gun_aim := aim_input.normalized()
     if gun_aim == Vector2.ZERO:
         gun_aim = Vector2(facing,0.0)
     var gun_origin := Vector2(9.0 * facing, -8.0 + bob)
     draw_set_transform(gun_origin, gun_aim.angle(), Vector2.ONE)
-    var metal := Color("#263342")
-    var trim := body_color.lightened(0.35)
-    var barrel_len := 24.0 + float(weapon_level) * 2.5
-    draw_circle(Vector2(0,0), 15.0, Color(trim,0.10))
-    draw_rect(Rect2(-5,-7,barrel_len+8,14), metal)
-    draw_rect(Rect2(-2,-5,barrel_len+7,3), trim)
-    draw_rect(Rect2(barrel_len-1,-6,6,12), Color("#111923"))
-    draw_rect(Rect2(-8,5,10,12), Color("#17212e"))
-    draw_rect(Rect2(-4,8,5,7), trim.darkened(0.12))
-    draw_rect(Rect2(4,-10,8,3), Color("#7d8da1"))
+    var metal := Color("#202c3b")
+    var trim := body_color.lightened(0.42)
+    var barrel_len := 25.0 + float(weapon_level) * 3.0
+    draw_circle(Vector2(0,0), 14.0, Color(trim,0.12))
+    draw_rect(Rect2(-7,-8,barrel_len+12,17), outline)
+    draw_rect(Rect2(-5,-6,barrel_len+9,13), metal)
+    draw_rect(Rect2(-2,-5,barrel_len+6,3), trim)
+    draw_rect(Rect2(-7,5,11,13), outline)
+    draw_rect(Rect2(-4,7,6,8), trim.darkened(0.16))
+    draw_rect(Rect2(4,-10,9,3), Color("#91a5bb"))
     if weapon_level >= 1:
-        draw_rect(Rect2(5,-12,barrel_len-1,3), trim)
-        draw_circle(Vector2(barrel_len-3,0),5.0,Color(trim,0.35))
+        draw_rect(Rect2(7,-12,barrel_len-2,3), trim)
+        draw_circle(Vector2(barrel_len-2,0), 5.0, Color(trim,0.45))
     if weapon_level >= 2:
-        draw_rect(Rect2(9,7,barrel_len-8,3), Color("#d6e1ec"))
-        draw_circle(Vector2(2,-13),3.0,Color("#f4d36e"))
+        draw_rect(Rect2(8,8,barrel_len-8,3), Color("#d8e6f0"))
+        draw_circle(Vector2(2,-14), 3.5, Color("#ffe08a"))
     if weapon_level >= 3:
-        draw_arc(Vector2(10,0),18.0,-PI*0.75,PI*0.75,24,trim,2.4,true)
+        draw_arc(Vector2(10,0), 19.0, -PI*0.75, PI*0.75, 24, trim, 2.8, true)
     if muzzle_flash > 0.0:
         var flash_size := 8.0 + muzzle_flash * 90.0
         draw_colored_polygon(PackedVector2Array([Vector2(barrel_len+2,0),Vector2(barrel_len+flash_size,-flash_size*0.42),Vector2(barrel_len+flash_size*0.55,0),Vector2(barrel_len+flash_size,flash_size*0.42)]),Color("#fff0a8",0.9))
