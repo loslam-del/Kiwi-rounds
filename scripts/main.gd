@@ -953,6 +953,7 @@ func _open_skins() -> void:
         card.add_child(column)
         var preview_area := Control.new()
         preview_area.custom_minimum_size = Vector2(235,175)
+        preview_area.clip_contents = true
         var preview_back := Panel.new()
         preview_back.position = Vector2(5,5)
         preview_back.size = Vector2(225,165)
@@ -972,8 +973,8 @@ func _open_skins() -> void:
         var fighter: ArenaPlayer = PLAYER_SCRIPT.new()
         fighter.body_color = color
         fighter.skin_style = str(skin.get("style","default"))
-        fighter.scale = Vector2(1.45,1.45)
-        fighter.position = Vector2(117,105)
+        fighter.scale = Vector2(1.05,1.05)
+        fighter.position = Vector2(117,88)
         fighter.set_physics_process(false)
         fighter.set_process(false)
         preview_area.add_child(fighter)
