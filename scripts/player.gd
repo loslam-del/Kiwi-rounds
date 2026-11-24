@@ -467,13 +467,18 @@ func _draw() -> void:
     # Far-side limbs are drawn first so they emerge naturally from behind the torso.
     var hip_back := Vector2(-6.5, 8.0)
     var hip_front := Vector2(6.5, 8.0)
-    var leg_len := 23.0
+    # Shorten the visible leg reach while grounded so shoes sit on top of
+    # the capsule's floor contact instead of dipping through thin platforms.
+    var leg_len := 19.5 if is_on_floor() else 23.0
     var knee_back := hip_back + Vector2(sin(leg_back_angle) * leg_len, cos(leg_back_angle) * leg_len)
     var knee_front := hip_front + Vector2(sin(leg_front_angle) * leg_len, cos(leg_front_angle) * leg_len)
     var foot_back_angle := leg_back_angle + knee_back_angle
     var foot_front_angle := leg_front_angle + knee_front_angle
     var foot_back := knee_back + Vector2(sin(foot_back_angle) * leg_len, cos(foot_back_angle) * leg_len)
     var foot_front := knee_front + Vector2(sin(foot_front_angle) * leg_len, cos(foot_front_angle) * leg_len)
+    if is_on_floor():
+        foot_back.y = minf(foot_back.y, 43.5)
+        foot_front.y = minf(foot_front.y, 43.5)
     draw_line(hip_back, knee_back, outline, 10.0, true)
     draw_line(hip_back, knee_back, dark, 6.0, true)
     draw_line(knee_back, foot_back, outline, 9.0, true)
