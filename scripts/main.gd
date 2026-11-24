@@ -363,7 +363,8 @@ func _apply_skin_and_return() -> void:
 func _open_mods() -> void:
     var description := "Найдено модов: %d\nСкинов: %d  •  карт: %d  •  карточек: %d\nПапка: user://mods/\nКаждый мод должен содержать mod.json." % [mod_loader.loaded_mod_names.size(),mod_loader.skins.size(),mod_loader.maps.size(),mod_loader.upgrades.size()]
     if not mod_loader.loaded_mod_names.is_empty():
-        description += "\n\n" + "\n".join(mod_loader.loaded_mod_names)
+        for mod_name in mod_loader.loaded_mod_names:
+            description += "\n" + mod_name
     _show_panel("МОДЫ",[
         ["ПЕРЕЗАГРУЗИТЬ МОДЫ",Callable(self,"_reload_mods")],
         ["НАЗАД",Callable(self,"_show_main_menu")]
