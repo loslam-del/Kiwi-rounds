@@ -68,6 +68,27 @@ func _run_physics_checks() -> void:
         _fail("projectile hit did not apply hitstun")
         return
 
+    player.set("ricochet_count", 2)
+    var bounce := pulse_script.new() as Area2D
+    game.add_child(bounce)
+    bounce.call("configure", Vector2.UP, 610.0, Color.WHITE, player)
+    var platform := StaticBody2D.new()
+    platform.name = "ArenaPlatform"
+    game.add_child(platform)
+    bounce.call("_on_body_entered", platform)
+    if (bounce.get("direction") as Vector2).y <= 0.0 or int(bounce.get("ricochets_left")) != 1:
+        _fail("projectile did not ricochet from a platform")
+        return
+
+    player.set("homing_strength", 4.2)
+    var guided := pulse_script.new() as Area2D
+    game.add_child(guided)
+    guided.call("configure", Vector2.UP, 610.0, Color.WHITE, player)
+    guided.call("_physics_process", 0.1)
+    if (guided.get("direction") as Vector2).x <= 0.0:
+        _fail("homing projectile did not turn toward its target")
+        return
+
     await create_timer(0.35).timeout
     print("PHYSICS TEST PASSED: movement, jump, firing, bot reload, projectile hit")
     quit(0)
