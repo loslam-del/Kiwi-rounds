@@ -5,7 +5,9 @@ Original 2D round-based arena prototype for Android.
 ## Main menu
 - **Play** opens three choices: online, vs bots, and training.
 - **Vs bots** offers easy, normal, and hard bot difficulty.
-- **Training** lets you open the card menu during a match and toggle cards on/off freely.
+- **Training** starts directly in the arena. Open the separate **CARDS** menu whenever you want to build or change a loadout; selected cards are applied immediately.
+- **Cards** show an illustrated emblem, their main effect, buffs and debuffs. Built-in weapon cards include homing shots, ricochets, heavy shots, rapid fire, a larger magazine and a rail-speed projectile.
+- **Weapon progression** changes the fighter's drawn blaster as weapon cards are equipped; higher weapon levels add visible rails, trims and muzzle effects.
 - **Settings** currently contains sound and vibration preference switches; actual audio and haptics are not connected yet.
 - **Skins** lets you cycle through built-in colors and loaded mod skins.
 - **Mods** displays loaded mod counts/names and can rescan the mods folder.
@@ -52,7 +54,7 @@ Example:
 
 Supported skin fields: `id`, `name`, `color` (hex color).
 Supported map fields: `id`, `name`, `platforms` (array of x/y/w/h platform objects).
-Supported upgrade fields: `id`, `name`, `desc`, `effect`. Effects currently supported: `swift`, `spring`, `wave`, `rapid`, `sturdy`.
+Supported upgrade fields: `id`, `name`, `desc`, `effect`, `primary`, `buff`, `debuff`, and `art`. Effects currently supported: `swift`, `spring`, `wave`, `rapid`, `sturdy`.
 
 ## Open and build
 Import this folder in Godot 4.3+ and run `scenes/main.tscn`. Android export requires matching Godot export templates and Android build tools. No APK has been built or device-tested yet.
