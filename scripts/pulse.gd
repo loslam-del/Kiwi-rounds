@@ -1,15 +1,17 @@
 extends Area2D
 class_name EnergyPulse
 
-var direction := 1.0
+var direction := Vector2.RIGHT
 var push_force := 610.0
 var tint := Color("#39d6c5")
 var life := 1.4
 var speed := 760.0
 var hit_ids: Array[int] = []
 
-func configure(dir: float, force: float, color: Color) -> void:
-    direction = dir
+func configure(dir: Vector2, force: float, color: Color) -> void:
+    direction = dir.normalized()
+    if direction == Vector2.ZERO:
+        direction = Vector2.RIGHT
     push_force = force
     tint = color
 
@@ -23,19 +25,19 @@ func _ready() -> void:
     shape.shape = circle
     add_child(shape)
     body_entered.connect(_on_body_entered)
-    queue_redraw()
 
 func _physics_process(delta: float) -> void:
-    global_position.x += direction * speed * delta
+    global_position += direction * speed * delta
+    rotation = direction.angle()
     life -= delta
-    if life <= 0.0 or global_position.x < -100.0 or global_position.x > 1380.0:
+    if life <= 0.0 or global_position.x < -100.0 or global_position.x > 1380.0 or global_position.y < -100.0 or global_position.y > 820.0:
         queue_free()
 
 func _on_body_entered(body: Node2D) -> void:
     if body is ArenaPlayer and not hit_ids.has(body.get_instance_id()):
         hit_ids.append(body.get_instance_id())
-        body.velocity.x += direction * push_force
-        body.velocity.y -= 230.0
+        body.velocity += direction * push_force
+        body.velocity.y -= 110.0
         queue_free()
 
 func _draw() -> void:
