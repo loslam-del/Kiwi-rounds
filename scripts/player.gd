@@ -109,9 +109,7 @@ func _set_facing(value: float) -> void:
     var next_facing := signf(value)
     if next_facing == 0.0 or next_facing == facing:
         return
-    # Keep the weapon on its previous world-side for a beat, then pass it
-    # across the torso into the new lead hand instead of mirroring instantly.
-    weapon_hand_blend = -1.0
+    weapon_hand_blend = 1.0
     facing = next_facing
 
 func set_aim(value: Vector2) -> void:
@@ -140,7 +138,6 @@ func _physics_process(delta: float) -> void:
     animation_time += delta * (8.5 if absf(velocity.x) > 35.0 and is_on_floor() else 2.2)
     pulse_cooldown = maxf(0.0, pulse_cooldown - delta)
     recoil_kick = move_toward(recoil_kick, 0.0, delta * 38.0)
-    weapon_hand_blend = move_toward(weapon_hand_blend, 1.0, delta * 8.5)
     muzzle_flash = maxf(0.0, muzzle_flash - delta)
     hit_flash = maxf(0.0, hit_flash - delta)
     hitstun_timer = maxf(0.0,hitstun_timer-delta)
@@ -258,10 +255,10 @@ func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
 
 
 func _weapon_hand_local() -> Vector2:
-    var shoulder := Vector2(lerpf(-13.0, 13.0, (weapon_hand_blend + 1.0) * 0.5), -7.0)
-    var elbow := shoulder + Vector2(sin(arm_front_angle) * 15.0, cos(arm_front_angle) * 15.0)
-    var forearm_angle := arm_front_angle + elbow_front_angle
-    return elbow + Vector2(sin(forearm_angle) * 14.0, cos(forearm_angle) * 14.0)
+    var local_aim := Vector2(aim_input.x * facing, aim_input.y).normalized()
+    if local_aim.length_squared() < 0.01:
+        local_aim = Vector2.RIGHT
+    return Vector2(0.0, -8.0) + local_aim * 8.0
 
 
 func apply_hit_impulse(direction: Vector2, force: float) -> void:
@@ -351,8 +348,9 @@ func _fire_pulse() -> void:
         _set_facing(direction.x)
 
     # Spawn from the hand-held blaster muzzle, not from the fighter's chest.
-    var hand_world_offset := Vector2(_weapon_hand_local().x * facing, _weapon_hand_local().y)
-    var muzzle := hand_world_offset + direction * 23.0
+    var gun_anchor := _weapon_hand_local()
+    var hand_world_offset := Vector2(gun_anchor.x * facing, gun_anchor.y)
+    var muzzle := hand_world_offset + direction * 25.0
     pulse_requested.emit(global_position + muzzle, direction, pulse_force, body_color, self)
 
 func start_reload() -> void:
@@ -444,6 +442,7 @@ func reset_round(spawn: Vector2) -> void:
 func _draw() -> void:
     if skin_style == "kiwi":
         _draw_kiwi_ball()
+        _draw_two_hand_blaster(Vector2(0.0, -7.0))
         return
     var moving := is_on_floor() and absf(velocity.x) > 35.0
     var stride := sin(animation_time) if moving else 0.0
@@ -652,52 +651,9 @@ func _draw() -> void:
         draw_circle(reload_pip, 2.0, Color("#f2d66d", 0.9))
         draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
 
-    # The blaster is anchored to the front hand instead of floating at the torso.
-    var local_aim := Vector2(aim_input.x * facing, aim_input.y).normalized()
-    if local_aim.length_squared() < 0.01:
-        local_aim = Vector2.RIGHT
-    var gun_origin := hand_front + local_aim * 1.5
-    draw_set_transform(gun_origin, local_aim.angle(), Vector2.ONE)
-    var metal := Color("#202c3b")
-    var metal_light := Color("#53677d")
-    var trim := body_color.lightened(0.42)
-    var barrel_len := 23.0 + float(weapon_level) * 3.0
-    # A compact sidearm silhouette: slide, muzzle, trigger guard and angled grip.
-    var pistol := PackedVector2Array([
-        Vector2(-7,-5), Vector2(barrel_len-4,-5), Vector2(barrel_len+1,-2),
-        Vector2(barrel_len+1,2), Vector2(2,3), Vector2(0,9),
-        Vector2(-6,9), Vector2(-5,3), Vector2(-9,1), Vector2(-9,-3)
-    ])
-    draw_colored_polygon(pistol,outline)
-    draw_colored_polygon(PackedVector2Array([
-        Vector2(-5,-3),Vector2(barrel_len-4,-3),Vector2(barrel_len-2,0),
-        Vector2(1,1),Vector2(-2,2),Vector2(-6,1)
-    ]),metal)
-    draw_line(Vector2(-3,-2),Vector2(barrel_len-5,-2),trim,1.8,true)
-    draw_rect(Rect2(barrel_len-1,-1.8,3.0,3.6),Color("#101820"))
-    draw_line(Vector2(-4,4),Vector2(-5,8),metal_light,1.4,true)
-    draw_line(Vector2(-7,5),Vector2(-3,5),metal_light,1.2,true)
-    # Trigger guard and trigger are separate so the grip reads as a pistol.
-    draw_arc(Vector2(-1,4),4.0,0.0,PI*0.92,16,outline,2.0,true)
-    draw_line(Vector2(-1,3),Vector2(1,6),metal_light,1.2,true)
-    draw_rect(Rect2(-3,-7,6,2),metal_light)
-    draw_circle(Vector2(1,-6),1.1,trim)
-    if weapon_level >= 1:
-        draw_rect(Rect2(5,-8,barrel_len-7,2),trim)
-        draw_circle(Vector2(barrel_len-1,0),3.0,Color(trim,0.5))
-    if weapon_level >= 2:
-        draw_line(Vector2(4,7),Vector2(barrel_len-5,7),Color("#d8e6f0"),1.6,true)
-    if weapon_level >= 3:
-        draw_arc(Vector2(8,0),12.0,-PI*0.72,PI*0.72,24,trim,2.0,true)
-    if muzzle_flash > 0.0:
-        var flash_size := 7.0 + muzzle_flash * 80.0
-        draw_circle(Vector2(barrel_len+4,0),flash_size*0.62,Color("#ffd978",muzzle_flash*1.8))
-        draw_colored_polygon(PackedVector2Array([Vector2(barrel_len+1,0),Vector2(barrel_len+flash_size,-flash_size*0.4),Vector2(barrel_len+flash_size*0.55,0),Vector2(barrel_len+flash_size,flash_size*0.4)]),Color("#fff0a8",0.95))
-        for spark_index in range(3):
-            var spark_angle := -0.42 + float(spark_index)*0.42
-            var spark_end := Vector2(barrel_len+flash_size*1.15,0) + Vector2(cos(spark_angle),sin(spark_angle))*flash_size*0.45
-            draw_line(Vector2(barrel_len+3,0),spark_end,Color("#fff5c8",0.82),1.6,true)
-    draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
+    _draw_two_hand_blaster(center)
+
+
 
 
 func _draw_kiwi_ball() -> void:
@@ -773,3 +729,58 @@ func _draw_kiwi_ball() -> void:
     if hit_flash > 0.0:
         draw_arc(center, 29.0, 0.0, TAU, 48, Color(1.0, 0.86, 0.72, hit_flash * 0.8), 2.0, true)
     draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func _draw_two_hand_blaster(center: Vector2) -> void:
+    draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
+    var local_aim := Vector2(aim_input.x * facing, aim_input.y).normalized()
+    if local_aim.length_squared() < 0.01:
+        local_aim = Vector2.RIGHT
+    var side := local_aim.rotated(PI * 0.5)
+    var gun_origin := center + local_aim * 8.0
+    var grip_hand := gun_origin - local_aim * 3.0 + side * 5.0
+    var support_hand := gun_origin + local_aim * 14.0 + side * 5.0
+    var shoulder_a := Vector2(-12.0, -7.0)
+    var shoulder_b := Vector2(12.0, -7.0)
+    var elbow_a := shoulder_a.lerp(grip_hand, 0.52) + side * 7.0
+    var elbow_b := shoulder_b.lerp(support_hand, 0.52) - side * 7.0
+    var arm_outline := Color("#142333")
+    var arm_color := body_color.lightened(0.12)
+    for arm_points in [[shoulder_a, elbow_a, grip_hand], [shoulder_b, elbow_b, support_hand]]:
+        draw_line(arm_points[0], arm_points[1], arm_outline, 10.0, true)
+        draw_line(arm_points[0], arm_points[1], arm_color, 6.0, true)
+        draw_line(arm_points[1], arm_points[2], arm_outline, 9.0, true)
+        draw_line(arm_points[1], arm_points[2], arm_color, 5.6, true)
+        draw_circle(arm_points[1], 3.6, arm_color)
+        draw_circle(arm_points[2], 4.0, Color("#e9c9aa"))
+    draw_circle(shoulder_a, 3.8, arm_color)
+    draw_circle(shoulder_b, 3.8, arm_color)
+    var screen_origin := Vector2(gun_origin.x * facing, gun_origin.y)
+    draw_set_transform(screen_origin, aim_input.angle(), Vector2.ONE)
+    var outline := Color("#142333")
+    var metal := Color("#202c3b")
+    var metal_light := Color("#53677d")
+    var trim := body_color.lightened(0.42)
+    var barrel_len := 23.0 + float(weapon_level) * 3.0
+    var pistol := PackedVector2Array([Vector2(-7,-5), Vector2(barrel_len-4,-5), Vector2(barrel_len+1,-2), Vector2(barrel_len+1,2), Vector2(2,3), Vector2(0,9), Vector2(-6,9), Vector2(-5,3), Vector2(-9,1), Vector2(-9,-3)])
+    draw_colored_polygon(pistol, outline)
+    draw_colored_polygon(PackedVector2Array([Vector2(-5,-3),Vector2(barrel_len-4,-3),Vector2(barrel_len-2,0),Vector2(1,1),Vector2(-2,2),Vector2(-6,1)]), metal)
+    draw_line(Vector2(-3,-2),Vector2(barrel_len-5,-2),trim,1.8,true)
+    draw_rect(Rect2(barrel_len-1,-1.8,3.0,3.6),Color("#101820"))
+    draw_line(Vector2(-4,4),Vector2(-5,8),metal_light,1.4,true)
+    draw_line(Vector2(-7,5),Vector2(-3,5),metal_light,1.2,true)
+    draw_arc(Vector2(-1,4),4.0,0.0,PI*0.92,16,outline,2.0,true)
+    draw_line(Vector2(-1,3),Vector2(1,6),metal_light,1.2,true)
+    draw_rect(Rect2(-3,-7,6,2),metal_light)
+    draw_circle(Vector2(1,-6),1.1,trim)
+    if weapon_level >= 1:
+        draw_rect(Rect2(5,-8,barrel_len-7,2),trim)
+        draw_circle(Vector2(barrel_len-1,0),3.0,Color(trim,0.5))
+    if weapon_level >= 2:
+        draw_line(Vector2(4,7),Vector2(barrel_len-5,7),Color("#d8e6f0"),1.6,true)
+    if weapon_level >= 3:
+        draw_arc(Vector2(8,0),12.0,-PI*0.72,PI*0.72,24,trim,2.0,true)
+    if muzzle_flash > 0.0:
+        var flash_size := 7.0 + muzzle_flash * 80.0
+        draw_circle(Vector2(barrel_len+4,0),flash_size*0.62,Color("#ffd978",muzzle_flash*1.8))
+        draw_colored_polygon(PackedVector2Array([Vector2(barrel_len+1,0),Vector2(barrel_len+flash_size,-flash_size*0.4),Vector2(barrel_len+flash_size*0.55,0),Vector2(barrel_len+flash_size,flash_size*0.4)]),Color("#fff0a8",0.95))
+    draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
