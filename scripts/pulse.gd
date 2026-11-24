@@ -80,8 +80,8 @@ func _physics_process(delta: float) -> void:
 
     global_position = to
     rotation = direction.angle()
-    # Projectiles persist until they hit something or leave the arena.
-    if global_position.x < -100.0 or global_position.x > 1380.0 or global_position.y < -100.0 or global_position.y > 820.0:
+    life -= delta
+    if life <= 0.0 or global_position.x < -100.0 or global_position.x > 1380.0 or global_position.y < -100.0 or global_position.y > 820.0:
         queue_free()
 
 func _spawn_impact_particles() -> void:
