@@ -21,7 +21,7 @@ const DEFAULT_UPGRADES := [
     {"id":"piercing","name":"РАЗГОННЫЙ СТВОЛ","icon":"➤","art":"piercing","primary":"РАЗОГНАННЫЙ СНАРЯД","buff":"СКОРОСТЬ СНАРЯДА +22%","debuff":"ПЕРЕЗАРЯДКА ДОЛЬШЕ +16%","effect":"piercing"}
 ]
 const DEFAULT_MAPS := [
-    {"name":"КОРОТКИЙ МОСТ","platforms":[{"x":330,"y":555,"w":230,"h":20},{"x":950,"y":555,"w":230,"h":20},{"x":640,"y":420,"w":170,"h":20}]},
+    {"name":"КОРОТКИЙ МОСТ","platforms":[{"x":330,"y":555,"w":230,"h":20},{"x":950,"y":555,"w":230,"h":20},{"x":640,"y":420,"w":170,"h":20},{"x":190,"y":430,"w":150,"h":18},{"x":1090,"y":430,"w":150,"h":18}]},
     {"name":"ДВЕ БАШНИ","platforms":[{"x":180,"y":590,"w":190,"h":20},{"x":180,"y":440,"w":150,"h":20},{"x":1100,"y":590,"w":190,"h":20},{"x":1100,"y":440,"w":150,"h":20},{"x":640,"y":520,"w":150,"h":20}]},
     {"name":"ЛЕСТНИЦА","platforms":[{"x":220,"y":600,"w":180,"h":20},{"x":420,"y":520,"w":170,"h":20},{"x":620,"y":440,"w":170,"h":20},{"x":820,"y":360,"w":170,"h":20},{"x":1050,"y":520,"w":180,"h":20}]},
     {"name":"ЦЕНТРАЛЬНЫЙ ОСТРОВ","platforms":[{"x":300,"y":560,"w":170,"h":20},{"x":980,"y":560,"w":170,"h":20},{"x":640,"y":500,"w":260,"h":22},{"x":640,"y":340,"w":150,"h":20}]},
@@ -356,10 +356,10 @@ func _make_ui() -> void:
     ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     layer.add_child(ui)
     hud = Label.new()
-    hud.position = Vector2(0,14)
-    hud.size = Vector2(1280,50)
+    hud.position = Vector2(0,12)
+    hud.size = Vector2(1280,42)
     hud.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    hud.add_theme_font_size_override("font_size",28)
+    hud.add_theme_font_size_override("font_size",22)
     hud.add_theme_color_override("font_color",Color("#f4f7ff"))
     ui.add_child(hud)
     game_controls = Control.new()
@@ -368,39 +368,39 @@ func _make_ui() -> void:
     skin_button = _add_button("СКИН",Vector2(1080,18),Vector2(150,50),game_controls)
     skin_button.pressed.connect(_open_skins)
     movement_joystick = JOYSTICK_SCRIPT.new()
-    movement_joystick.position = Vector2(35,535)
-    movement_joystick.size = Vector2(150,150)
+    movement_joystick.position = Vector2(28,575)
+    movement_joystick.size = Vector2(116,116)
     movement_joystick.value_changed.connect(player.set_move)
     game_controls.add_child(movement_joystick)
     fire_button = ACTION_BUTTON_SCRIPT.new()
     fire_button.caption = "ВЫСТРЕЛ"
-    fire_button.position = Vector2(35,445)
-    fire_button.size = Vector2(150,68)
+    fire_button.position = Vector2(32,490)
+    fire_button.size = Vector2(116,52)
     fire_button.button_down.connect(player.set_fire.bind(true))
     fire_button.button_up.connect(player.set_fire.bind(false))
     game_controls.add_child(fire_button)
     reload_button = ACTION_BUTTON_SCRIPT.new()
     reload_button.caption = "ПЕРЕЗАРЯДКА"
-    reload_button.position = Vector2(205,585)
-    reload_button.size = Vector2(175,76)
+    reload_button.position = Vector2(164,625)
+    reload_button.size = Vector2(132,48)
     reload_button.pressed.connect(player.start_reload)
     game_controls.add_child(reload_button)
     ammo_label = Label.new()
-    ammo_label.position = Vector2(190,545)
-    ammo_label.size = Vector2(360,32)
+    ammo_label.position = Vector2(158,590)
+    ammo_label.size = Vector2(150,28)
     ammo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    ammo_label.add_theme_font_size_override("font_size",18)
+    ammo_label.add_theme_font_size_override("font_size",14)
     ammo_label.add_theme_color_override("font_color",Color("#f4f7ff"))
     game_controls.add_child(ammo_label)
     aim_joystick = JOYSTICK_SCRIPT.new()
-    aim_joystick.position = Vector2(1080,535)
-    aim_joystick.size = Vector2(150,150)
+    aim_joystick.position = Vector2(1136,575)
+    aim_joystick.size = Vector2(116,116)
     aim_joystick.value_changed.connect(player.set_aim)
     game_controls.add_child(aim_joystick)
     jump_button = ACTION_BUTTON_SCRIPT.new()
     jump_button.caption = "ПРЫЖОК"
-    jump_button.position = Vector2(1090,405)
-    jump_button.size = Vector2(130,82)
+    jump_button.position = Vector2(1136,490)
+    jump_button.size = Vector2(112,52)
     jump_button.button_down.connect(player.set_jump.bind(true))
     jump_button.button_up.connect(player.set_jump.bind(false))
     game_controls.add_child(jump_button)
@@ -416,17 +416,24 @@ func _apply_control_layout() -> void:
     if not is_instance_valid(movement_joystick) or not is_instance_valid(aim_joystick):
         return
     if controls_mirrored:
-        movement_joystick.position = Vector2(1080,535)
-        aim_joystick.position = Vector2(35,535)
-        fire_button.position = Vector2(1095,445)
-        reload_button.position = Vector2(920,585)
-        jump_button.position = Vector2(35,405)
+        movement_joystick.position = Vector2(1136,575)
+        aim_joystick.position = Vector2(28,575)
+        fire_button.position = Vector2(1132,490)
+        reload_button.position = Vector2(984,625)
+        jump_button.position = Vector2(32,490)
     else:
-        movement_joystick.position = Vector2(35,535)
-        aim_joystick.position = Vector2(1080,535)
-        fire_button.position = Vector2(35,445)
-        reload_button.position = Vector2(205,585)
-        jump_button.position = Vector2(1090,405)
+        movement_joystick.position = Vector2(28,575)
+        aim_joystick.position = Vector2(1136,575)
+        fire_button.position = Vector2(32,490)
+        reload_button.position = Vector2(164,625)
+        jump_button.position = Vector2(1136,490)
+    movement_joystick.size = Vector2(116,116)
+    aim_joystick.size = Vector2(116,116)
+    fire_button.size = Vector2(116,52)
+    reload_button.size = Vector2(132,48)
+    jump_button.size = Vector2(112,52)
+    ammo_label.position = Vector2(158 if not controls_mirrored else 972,590)
+    ammo_label.size = Vector2(150,28)
     menu_button.position = Vector2(18,18)
     cards_button.position = Vector2(150,18)
 
