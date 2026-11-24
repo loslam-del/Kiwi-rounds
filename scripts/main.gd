@@ -6,16 +6,21 @@ const JOYSTICK_SCRIPT = preload("res://scripts/virtual_joystick.gd")
 const MOD_LOADER_SCRIPT = preload("res://scripts/mod_loader.gd")
 
 const DEFAULT_UPGRADES := [
-    {"id":"swift","name":"ТУРБО-БОТИНКИ","icon":"SPD","buff":"БАФФ  Скорость +16%","debuff":"МИНУС  Сила выстрела −10%","effect":"swift"},
-    {"id":"spring","name":"ПРУЖИННЫЙ МОДУЛЬ","icon":"JMP","buff":"БАФФ  Высота прыжка +12%","debuff":"МИНУС  Скорость −8%","effect":"spring"},
-    {"id":"wave","name":"ТЯЖЁЛЫЙ КАЛИБР","icon":"PWR","buff":"БАФФ  Отбрасывание +22%","debuff":"МИНУС  Перезарядка дольше на 12%","effect":"wave"},
-    {"id":"rapid","name":"БЫСТРЫЙ ЗАТВОР","icon":"RLD","buff":"БАФФ  Перезарядка быстрее на 18%","debuff":"МИНУС  Сила выстрела −10%","effect":"rapid"},
-    {"id":"sturdy","name":"БОЕВОЙ РАЗГОН","icon":"MIX","buff":"БАФФ  Скорость +6%, прыжок +8%","debuff":"МИНУС  Нет","effect":"sturdy"}
+    {"id":"swift","name":"ТУРБО-ШАГ","icon":"↗","buff":"СКОРОСТЬ +18%","debuff":"ВЫСОТА ПРЫЖКА −6%","effect":"swift"},
+    {"id":"spring","name":"ПРУЖИНА","icon":"↟","buff":"ПРЫЖОК +18%","debuff":"СКОРОСТЬ −7%","effect":"spring"},
+    {"id":"feather","name":"ЛЁГКОСТЬ","icon":"✦","buff":"ГРАВИТАЦИЯ −18%","debuff":"ПАДЕНИЕ ЧУТЬ МЕДЛЕННЕЕ","effect":"feather"},
+    {"id":"wall","name":"СТЕНКА-РАКЕТКА","icon":"↶","buff":"ОТТАЛКИВАНИЕ ОТ СТЕН +22%","debuff":"НЕТ","effect":"wall"},
+    {"id":"air","name":"ВОЗДУШНЫЙ ШАГ","icon":"＋","buff":"ЕЩЁ ОДИН ПРЫЖОК В ВОЗДУХЕ","debuff":"СКОРОСТЬ −5%","effect":"air"},
+    {"id":"grounded","name":"ТЯЖЁЛЫЕ БОТИНКИ","icon":"⬇","buff":"УСКОРЕНИЕ НА ЗЕМЛЕ +22%","debuff":"ГРАВИТАЦИЯ −8%","effect":"grounded"}
 ]
 const DEFAULT_MAPS := [
-    {"name":"Сумеречная арена","platforms":[{"x":330,"y":545,"w":250,"h":24},{"x":950,"y":545,"w":250,"h":24},{"x":640,"y":420,"w":190,"h":22},{"x":130,"y":635,"w":170,"h":20},{"x":1150,"y":635,"w":170,"h":20}]},
-    {"name":"Парящие острова","platforms":[{"x":250,"y":560,"w":210,"h":22},{"x":500,"y":455,"w":180,"h":22},{"x":780,"y":455,"w":180,"h":22},{"x":1030,"y":560,"w":210,"h":22},{"x":640,"y":330,"w":210,"h":22}]},
-    {"name":"Ломаный мост","platforms":[{"x":200,"y":600,"w":180,"h":22},{"x":420,"y":495,"w":190,"h":22},{"x":640,"y":590,"w":190,"h":22},{"x":860,"y":495,"w":190,"h":22},{"x":1080,"y":600,"w":180,"h":22},{"x":640,"y":390,"w":150,"h":22}]}
+    {"name":"КОРОТКИЙ МОСТ","platforms":[{"x":330,"y":555,"w":230,"h":20},{"x":950,"y":555,"w":230,"h":20},{"x":640,"y":420,"w":170,"h":20}]},
+    {"name":"ДВЕ БАШНИ","platforms":[{"x":180,"y":590,"w":190,"h":20},{"x":180,"y":440,"w":150,"h":20},{"x":1100,"y":590,"w":190,"h":20},{"x":1100,"y":440,"w":150,"h":20},{"x":640,"y":520,"w":150,"h":20}]},
+    {"name":"ЛЕСТНИЦА","platforms":[{"x":220,"y":600,"w":180,"h":20},{"x":420,"y":520,"w":170,"h":20},{"x":620,"y":440,"w":170,"h":20},{"x":820,"y":360,"w":170,"h":20},{"x":1050,"y":520,"w":180,"h":20}]},
+    {"name":"ЦЕНТРАЛЬНЫЙ ОСТРОВ","platforms":[{"x":300,"y":560,"w":170,"h":20},{"x":980,"y":560,"w":170,"h":20},{"x":640,"y":500,"w":260,"h":22},{"x":640,"y":340,"w":150,"h":20}]},
+    {"name":"РАЗЛОМ","platforms":[{"x":190,"y":560,"w":250,"h":20},{"x":1090,"y":560,"w":250,"h":20},{"x":450,"y":410,"w":150,"h":20},{"x":830,"y":410,"w":150,"h":20}]},
+    {"name":"КРЕСТ","platforms":[{"x":640,"y":570,"w":340,"h":20},{"x":640,"y":390,"w":340,"h":20},{"x":390,"y":480,"w":150,"h":20},{"x":890,"y":480,"w":150,"h":20}]},
+    {"name":"ПАРЯЩИЕ СТУПЕНИ","platforms":[{"x":250,"y":610,"w":170,"h":20},{"x":470,"y":510,"w":170,"h":20},{"x":690,"y":410,"w":170,"h":20},{"x":910,"y":510,"w":170,"h":20},{"x":1130,"y":610,"w":170,"h":20}]}
 ]
 
 var player: ArenaPlayer
@@ -500,7 +505,13 @@ func _start_game(mode: String) -> void:
 
 func _reset_player_stats(who: ArenaPlayer) -> void:
     who.move_speed = 430.0
-    who.jump_speed = -735.0
+    who.jump_speed = -715.0
+    who.gravity_scale = 1.0
+    who.air_control_scale = 1.0
+    who.ground_accel_scale = 1.0
+    who.wall_jump_scale = 1.0
+    who.extra_air_jumps = 0
+    who.air_jumps_left = 1
     who.pulse_force = 610.0
     who.pulse_interval = 0.78
     who.magazine_size = 6
@@ -1259,10 +1270,16 @@ func _finish_round(player_won: bool) -> void:
     else:
         score_bot += 1
     _update_hud()
-    if score_player >= 3 or score_bot >= 3:
+    if score_player >= 5 or score_bot >= 5:
         _show_match_end()
     elif game_mode == "training":
         _show_training_round_end()
+    elif player_won:
+        # Only the losing side receives an upgrade.
+        if not all_upgrades.is_empty():
+            var bot_choice: Dictionary = all_upgrades.pick_random()
+            rival.apply_upgrade(str(bot_choice.get("effect",bot_choice.get("id",""))))
+        _next_round()
     else:
         _show_upgrade_panel()
 
@@ -1280,17 +1297,109 @@ func _show_training_round_end() -> void:
 func _show_upgrade_panel() -> void:
     var choices: Array = all_upgrades.duplicate(true)
     choices.shuffle()
-    var buttons: Array = []
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#10141c")
+    ui.add_child(shade)
+    overlay = shade
+
+    var title := Label.new()
+    title.text = "ТЫ ПРОИГРАЛ РАУНД"
+    title.position = Vector2(0,54)
+    title.size = Vector2(1280,58)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",38)
+    title.add_theme_color_override("font_color",Color("#f2f0e8"))
+    shade.add_child(title)
+
+    var subtitle := Label.new()
+    subtitle.text = "Выбери усиление — теперь твой ход"
+    subtitle.position = Vector2(0,118)
+    subtitle.size = Vector2(1280,34)
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size",18)
+    subtitle.add_theme_color_override("font_color",Color("#aeb7c7"))
+    shade.add_child(subtitle)
+
     for i in range(mini(3,choices.size())):
         var item: Dictionary = choices[i]
-        buttons.append([str(item.get("name",item.get("id","Улучшение"))) + "\n" + str(item.get("desc","")),Callable(self,"_choose_upgrade").bind(str(item.get("effect",item.get("id",""))))])
-    _show_panel("ВЫБЕРИ УЛУЧШЕНИЕ",buttons,"После выбора начнётся следующий раунд")
+        var card := PanelContainer.new()
+        card.position = Vector2(105.0 + float(i)*365.0,205.0)
+        card.size = Vector2(330,390)
+        var style := StyleBoxFlat.new()
+        style.bg_color = Color("#202a35")
+        style.border_color = Color("#8ba66a")
+        style.set_border_width_all(2)
+        style.set_corner_radius_all(16)
+        card.add_theme_stylebox_override("panel",style)
+        shade.add_child(card)
+
+        var column := VBoxContainer.new()
+        column.alignment = BoxContainer.ALIGNMENT_CENTER
+        column.add_theme_constant_override("separation",12)
+        card.add_child(column)
+
+        var symbol := Label.new()
+        symbol.text = str(item.get("icon","✦"))
+        symbol.custom_minimum_size = Vector2(290,92)
+        symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        symbol.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        symbol.add_theme_font_size_override("font_size",58)
+        symbol.add_theme_color_override("font_color",Color("#d9ef70"))
+        column.add_child(symbol)
+
+        var name_label := Label.new()
+        name_label.text = str(item.get("name","УЛУЧШЕНИЕ"))
+        name_label.custom_minimum_size = Vector2(290,54)
+        name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        name_label.add_theme_font_size_override("font_size",20)
+        name_label.add_theme_color_override("font_color",Color("#f4f1e8"))
+        column.add_child(name_label)
+
+        var buff := Label.new()
+        buff.text = "▲  " + str(item.get("buff",""))
+        buff.custom_minimum_size = Vector2(290,54)
+        buff.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        buff.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        buff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        buff.add_theme_font_size_override("font_size",15)
+        buff.add_theme_color_override("font_color",Color("#b9e36c"))
+        column.add_child(buff)
+
+        var debuff := Label.new()
+        debuff.text = "▼  " + str(item.get("debuff",""))
+        debuff.custom_minimum_size = Vector2(290,48)
+        debuff.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        debuff.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        debuff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        debuff.add_theme_font_size_override("font_size",14)
+        debuff.add_theme_color_override("font_color",Color("#ff9a91"))
+        column.add_child(debuff)
+
+        var choose := Button.new()
+        choose.text = "ВЫБРАТЬ"
+        choose.custom_minimum_size = Vector2(286,52)
+        choose.add_theme_font_size_override("font_size",18)
+        choose.add_theme_stylebox_override("normal",_menu_button_style(Color("#d9ef70"),Color("#eff9bf")))
+        choose.add_theme_color_override("font_color",Color("#172015"))
+        choose.pressed.connect(_choose_upgrade.bind(str(item.get("effect",item.get("id","")))))
+        column.add_child(choose)
+
+    var footer := Label.new()
+    footer.text = "KIWI ROUNDS  •  BUILD YOUR MOVEMENT"
+    footer.position = Vector2(0,675)
+    footer.size = Vector2(1280,24)
+    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    footer.add_theme_font_size_override("font_size",12)
+    footer.add_theme_color_override("font_color",Color("#626875"))
+    shade.add_child(footer)
 
 func _choose_upgrade(upgrade_id: String) -> void:
     player.apply_upgrade(upgrade_id)
-    if not all_upgrades.is_empty():
-        var bot_choice: Dictionary = all_upgrades.pick_random()
-        rival.apply_upgrade(str(bot_choice.get("effect",bot_choice.get("id",""))))
     _next_round()
 
 func _next_round() -> void:
@@ -1307,11 +1416,11 @@ func _next_round() -> void:
     _update_hud()
 
 func _show_match_end() -> void:
-    var result := "ПОБЕДА!" if score_player >= 3 else "ПОБЕДИЛ CPU"
+    var result := "ПОБЕДА!" if score_player >= 5 else "ПОБЕДИЛ CPU"
     _show_panel(result,[
         ["СЫГРАТЬ ЕЩЁ",Callable(self,"_restart_match")],
         ["ГЛАВНОЕ МЕНЮ",Callable(self,"_show_main_menu")]
-    ],"Счёт: %d : %d" % [score_player,score_bot])
+    ],"Первый до 5 побед. Счёт: %d : %d" % [score_player,score_bot])
 
 func _restart_match() -> void:
     _start_game(game_mode)
