@@ -918,22 +918,30 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_a.menu_preview_mode = true
     bot_a.body_color = Color("#36e6df")
     bot_a.position = Vector2(850, 510)
-    bot_a.bot_accuracy = 0.42
+    bot_a.bot_accuracy = 1.0
     bot_a.move_speed = 390.0
     bot_a.pulse_force = 520.0
-    bot_a.set_physics_process(true)
+    bot_a.pulse_interval = 0.42
+    bot_a.magazine_size = 999
+    bot_a.ammo = 999
+    bot_a.bot_think = 0.05
     stage.add_child(bot_a)
+    bot_a.set_physics_process(true)
 
     var bot_b: ArenaPlayer = PLAYER_SCRIPT.new()
     bot_b.is_bot = true
     bot_b.menu_preview_mode = true
     bot_b.body_color = Color("#ff6fae")
     bot_b.position = Vector2(1140, 510)
-    bot_b.bot_accuracy = 0.42
+    bot_b.bot_accuracy = 1.0
     bot_b.move_speed = 390.0
     bot_b.pulse_force = 520.0
-    bot_b.set_physics_process(true)
+    bot_b.pulse_interval = 0.42
+    bot_b.magazine_size = 999
+    bot_b.ammo = 999
+    bot_b.bot_think = 0.05
     stage.add_child(bot_b)
+    bot_b.set_physics_process(true)
     bot_a.target = bot_b
     bot_b.target = bot_a
     bot_a.pulse_requested.connect(_spawn_menu_preview_pulse.bind(stage))
