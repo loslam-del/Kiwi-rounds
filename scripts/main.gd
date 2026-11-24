@@ -1459,7 +1459,7 @@ func _add_card_illustration(parent: Control, card_id: String, active: bool) -> v
 
 func _build_upgrade_cards(shade: Control) -> void:
     var info := Label.new()
-    info.text = "СОБЕРИ СВОЙ БИЛД  •  УСИЛЕНИЯ И ОСЛАБЛЕНИЯ"
+    info.text = "СОБЕРИ СВОЙ БИЛД  •  КАЖДУЮ КАРТУ МОЖНО УСИЛИТЬ ДО 3 СТАКОВ"
     info.position = Vector2(0,145)
     info.size = Vector2(1280,28)
     info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1518,7 +1518,7 @@ func _build_upgrade_cards(shade: Control) -> void:
         icon_label.add_theme_color_override("font_color",Color("#f3f1e8"))
         art_area.add_child(icon_label)
         var stack_label := Label.new()
-        stack_label.text = "СТАК ×%d" % stack_count if stack_count > 0 else "СТАКИРУЕТСЯ"
+        stack_label.text = "АКТИВНО  ×%d / 3" % stack_count if stack_count > 0 else "МОЖНО УСИЛИТЬ ДО 3 РАЗ"
         stack_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
         stack_label.add_theme_font_size_override("font_size",12)
         stack_label.add_theme_color_override("font_color",Color("#b9e36c") if stack_count > 0 else Color("#7f8a9b"))
@@ -1550,7 +1550,7 @@ func _build_upgrade_cards(shade: Control) -> void:
         debuff.add_theme_color_override("font_color",Color("#ff897d"))
         column.add_child(debuff)
         var choose := Button.new()
-        choose.text = "ВЫБРАНО  ✓" if active else "ВЫБРАТЬ КАРТУ"
+        choose.text = "СБРОСИТЬ СТАКИ" if stack_count >= 3 else ("ДОБАВИТЬ СТАК  ×%d" % (stack_count + 1))
         choose.custom_minimum_size = Vector2(290,44)
         choose.add_theme_stylebox_override("normal",_menu_button_style(Color("#596b32") if active else Color("#343b4b"),Color("#d9ef70") if active else Color("#667087")))
         choose.pressed.connect(_toggle_training_card.bind(id))
@@ -1688,8 +1688,10 @@ func _select_training_map(index: int) -> void:
     _open_training_cards()
 
 func _toggle_training_card(card_id: String) -> void:
-    if active_training_cards.has(card_id):
-        active_training_cards.erase(card_id)
+    var stack_count := active_training_cards.count(card_id)
+    if stack_count >= 3:
+        while active_training_cards.has(card_id):
+            active_training_cards.erase(card_id)
     else:
         active_training_cards.append(card_id)
     _reset_player_stats(player)
