@@ -556,14 +556,15 @@ func _draw() -> void:
     var barrel_len := 23.0 + float(weapon_level) * 3.0
     # A compact sidearm silhouette: slide, muzzle, trigger guard and angled grip.
     var pistol := PackedVector2Array([
-        Vector2(-7,-5), Vector2(barrel_len-4,-5), Vector2(barrel_len+1,-2),
-        Vector2(barrel_len+1,2), Vector2(2,3), Vector2(0,9),
-        Vector2(-6,9), Vector2(-5,3), Vector2(-9,1), Vector2(-9,-3)
+        Vector2(-8,-5), Vector2(barrel_len-4,-5), Vector2(barrel_len+2,-3),
+        Vector2(barrel_len+2,2), Vector2(5,2), Vector2(2,5),
+        Vector2(0,12), Vector2(-7,10), Vector2(-4,3),
+        Vector2(-9,1), Vector2(-9,-3)
     ])
     draw_colored_polygon(pistol,outline)
     draw_colored_polygon(PackedVector2Array([
-        Vector2(-5,-3),Vector2(barrel_len-4,-3),Vector2(barrel_len-2,0),
-        Vector2(1,1),Vector2(-2,2),Vector2(-6,1)
+        Vector2(-6,-3),Vector2(barrel_len-4,-3),Vector2(barrel_len-1,0),
+        Vector2(3,0),Vector2(1,2),Vector2(-6,1)
     ]),metal)
     draw_line(Vector2(-3,-2),Vector2(barrel_len-5,-2),trim,1.8,true)
     draw_rect(Rect2(barrel_len-1,-1.8,3.0,3.6),Color("#101820"))
