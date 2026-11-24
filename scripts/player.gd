@@ -256,49 +256,68 @@ func reset_round(spawn: Vector2) -> void:
     muzzle_flash = 0.0
 
 func _draw() -> void:
-    var moving := absf(velocity.x) > 35.0 and is_on_floor()
-    var stride := sin(animation_time) * 8.0 if moving else 0.0
-    var bob := absf(sin(animation_time * 2.0)) * 1.8 if moving else 0.0
+    var grounded := is_on_floor()
+    var moving := absf(velocity.x) > 35.0 and grounded
+    var stride := sin(animation_time) * 9.0 if moving else 0.0
+    var bob := absf(sin(animation_time * 2.0)) * 2.0 if moving else 0.0
     var skin := Color("#efbd94")
-    var dark := Color("#202633")
-    draw_circle(Vector2(0,46),19,Color(0,0,0,0.24))
-    var foot_l := Vector2(-10+stride,42)
-    var foot_r := Vector2(10-stride,42)
-    draw_line(Vector2(-7,13+bob),foot_l,dark,11,true)
-    draw_line(Vector2(7,13+bob),foot_r,dark,11,true)
-    draw_line(foot_l+Vector2(-5,2),foot_l+Vector2(7,2),Color("#e8eaf0"),8,true)
-    draw_line(foot_r+Vector2(-5,2),foot_r+Vector2(7,2),Color("#e8eaf0"),8,true)
-    var rear := Vector2(-facing*21,2+sin(animation_time+PI)*3)
-    draw_line(Vector2(-facing*10,-8),rear,Color("#27313f"),12,true)
-    draw_line(rear,rear+Vector2(-facing*3,9),skin,8,true)
-    draw_colored_polygon(PackedVector2Array([Vector2(-16,-15),Vector2(16,-15),Vector2(18,13),Vector2(11,23),Vector2(-11,23),Vector2(-18,13)]),body_color)
-    draw_polyline(PackedVector2Array([Vector2(-16,-15),Vector2(-18,13),Vector2(-11,23),Vector2(11,23),Vector2(18,13),Vector2(16,-15)]),dark,2.5,true)
-    draw_line(Vector2(0,-11),Vector2(0,18),Color("#e6e9ef"),2,true)
-    draw_rect(Rect2(-12,16,24,4),dark)
-    draw_rect(Rect2(-5,-22,10,10),skin)
-    draw_circle(Vector2(0,-34-bob),14,skin)
-    draw_arc(Vector2(0,-34-bob),14,PI,TAU,24,dark,3,true)
-    draw_colored_polygon(PackedVector2Array([Vector2(-14,-37-bob),Vector2(-10,-48-bob),Vector2(0,-52-bob),Vector2(12,-47-bob),Vector2(15,-35-bob),Vector2(7,-40-bob),Vector2(-2,-42-bob),Vector2(-10,-37-bob)]),Color("#293044"))
-    draw_circle(Vector2(facing*5,-34-bob),2.3,dark)
-    draw_circle(Vector2(facing*8,-34-bob),1.0,Color.WHITE)
-    draw_line(Vector2(facing,-26-bob),Vector2(facing*5,-25-bob),Color("#9b5e55"),1.5,true)
-    var gun_dir := aim_input.normalized()
-    if gun_dir == Vector2.ZERO:
-        gun_dir = Vector2(facing,0)
-    var side := Vector2(-gun_dir.y,gun_dir.x)
-    var shoulder := Vector2(facing*11,-9)
-    var grip := shoulder + gun_dir*22 + side*2
-    draw_line(shoulder,grip,Color("#293342"),11,true)
-    draw_circle(grip,5,skin)
-    var support := Vector2(-facing*7,-4)
-    draw_line(support,support+gun_dir*14,Color("#293342"),9,true)
-    draw_circle(support+gun_dir*14,4.5,skin)
-    var slide := PackedVector2Array([grip-side*5-gun_dir*8,grip+side*5-gun_dir*8,grip+side*5+gun_dir*20,grip-side*5+gun_dir*20])
-    draw_colored_polygon(slide,Color("#394354"))
-    draw_polyline(PackedVector2Array([slide[0],slide[1],slide[2],slide[3],slide[0]]),Color("#111722"),1.8,true)
-    draw_line(grip+gun_dir*15,grip+gun_dir*31,Color("#aeb8c8"),5,true)
-    draw_line(grip+side*3+gun_dir,grip+side*3-gun_dir*8,Color("#222936"),4,true)
-    draw_line(grip+side*4+gun_dir,grip+side*10-gun_dir*3,Color("#303b4c"),6,true)
-    draw_line(grip+gun_dir*31+side*2,grip+gun_dir*31-side*2,Color("#e4e9f1"),2,true)
-    if pulse_cooldown > pulse_interval-0.09:
-        draw_circle(grip+gun_dir*34,5,Color("#f6e78d"))
+    var outline := Color("#18212d")
+    var suit := body_color
+    draw_circle(Vector2(0,48),19.0,Color(0.0,0.0,0.0,0.22))
+    var left_foot := Vector2(-11.0 + stride,43.0)
+    var right_foot := Vector2(11.0 - stride,43.0)
+    draw_line(Vector2(-7,13+bob),left_foot,outline,12.0,true)
+    draw_line(Vector2(7,13+bob),right_foot,outline,12.0,true)
+    draw_line(left_foot+Vector2(-5,2),left_foot+Vector2(8,2),Color("#e8edf5"),8.0,true)
+    draw_line(right_foot+Vector2(-5,2),right_foot+Vector2(8,2),Color("#e8edf5"),8.0,true)
+    draw_colored_polygon(PackedVector2Array([Vector2(-15,-12),Vector2(-23,-8),Vector2(-23,12),Vector2(-14,18)]),Color("#273344"))
+    draw_colored_polygon(PackedVector2Array([Vector2(-16,-17),Vector2(13,-17),Vector2(19,-7),Vector2(16,14),Vector2(10,23),Vector2(-11,23),Vector2(-18,12),Vector2(-19,-5)]),suit)
+    draw_polyline(PackedVector2Array([Vector2(-16,-17),Vector2(-19,-5),Vector2(-18,12),Vector2(-11,23),Vector2(10,23),Vector2(16,14),Vector2(19,-7),Vector2(13,-17)]),outline,3.0,true)
+    draw_colored_polygon(PackedVector2Array([Vector2(-8,-14),Vector2(7,-14),Vector2(5,12),Vector2(-4,15)]),suit.lightened(0.23))
+    draw_line(Vector2(0,-10),Vector2(0,16),Color("#e8edf5",0.7),2.0,true)
+    draw_rect(Rect2(-13,15,26,5),outline)
+    draw_rect(Rect2(-8,17,16,2),Color("#d9ef70"))
+    draw_rect(Rect2(-5,-25,10,12),skin)
+    draw_circle(Vector2(0,-36-bob),15.0,skin)
+    draw_arc(Vector2(0,-36-bob),15.0,PI,TAU,28,outline,3.0,true)
+    draw_colored_polygon(PackedVector2Array([Vector2(-15,-39-bob),Vector2(-12,-50-bob),Vector2(-2,-54-bob),Vector2(10,-51-bob),Vector2(16,-41-bob),Vector2(9,-43-bob),Vector2(1,-46-bob),Vector2(-8,-42-bob)]),Color("#283247"))
+    draw_circle(Vector2(facing*6,-36-bob),2.4,outline)
+    draw_circle(Vector2(facing*7,-37-bob),0.9,Color.WHITE)
+    draw_line(Vector2(facing,-27-bob),Vector2(facing*6,-27-bob),Color("#9b5e55"),1.7,true)
+    var aim := aim_input.normalized()
+    if aim == Vector2.ZERO:
+        aim = Vector2(facing,0.0)
+    var side := Vector2(-aim.y,aim.x)
+    var shoulder := Vector2(facing*12,-10)
+    var back_shoulder := Vector2(-facing*12,-8)
+    draw_line(back_shoulder,back_shoulder+Vector2(-facing*8,14),Color("#263448"),10.0,true)
+    draw_circle(back_shoulder+Vector2(-facing*8,14),5.0,skin)
+    var hand := shoulder + aim*(25.0-recoil_kick*0.3)
+    draw_line(shoulder,hand,Color("#263448"),13.0,true)
+    draw_line(shoulder+Vector2(0,-2),hand+Vector2(0,-2),suit.lightened(0.2),4.0,true)
+    draw_circle(hand,6.0,skin)
+    var gun_origin := hand + aim*5.0
+    var gun_back := gun_origin - aim*13.0
+    var barrel_end := gun_origin + aim*37.0
+    var casing := PackedVector2Array([gun_back+side*7.0,gun_origin+side*8.0,barrel_end-side*5.0,barrel_end+side*5.0,gun_origin-side*8.0,gun_back-side*7.0])
+    draw_colored_polygon(casing,Color("#293647"))
+    draw_polyline(PackedVector2Array([casing[0],casing[1],casing[2],casing[3],casing[4],casing[5],casing[0]]),outline,2.2,true)
+    draw_colored_polygon(PackedVector2Array([gun_origin+side*5.0+aim*2.0,gun_origin+side*5.0+aim*23.0,gun_origin-side*5.0+aim*23.0,gun_origin-side*5.0+aim*2.0]),Color("#53657b"))
+    draw_line(gun_origin+aim*25.0+side*3.0,barrel_end+side*3.0,Color("#aebed0"),3.0,true)
+    draw_line(gun_origin+aim*25.0-side*3.0,barrel_end-side*3.0,Color("#aebed0"),3.0,true)
+    draw_colored_polygon(PackedVector2Array([gun_origin+aim*5.0+side*4.0,gun_origin+aim*13.0+side*4.0,gun_origin+aim*13.0-side*4.0,gun_origin+aim*5.0-side*4.0]),Color("#d9ef70"))
+    draw_line(gun_origin+aim*4.0+side*7.0,gun_origin+aim*4.0-side*7.0,Color("#dce8f5"),2.0,true)
+    var grip_start := gun_origin-aim*3.0-side*5.0
+    var grip_end := grip_start-aim*4.0-side*14.0
+    draw_colored_polygon(PackedVector2Array([grip_start,grip_start+side*7.0,grip_end+side*5.0,grip_end]),Color("#202a38"))
+    draw_line(grip_start,grip_end,Color("#65778d"),2.0,true)
+    draw_circle(gun_origin+aim*13.0,3.0,Color("#eaf6ad"))
+    if muzzle_flash > 0.0:
+        var flash_center := barrel_end+aim*7.0
+        draw_colored_polygon(PackedVector2Array([flash_center+aim*14.0,flash_center+side*5.0,flash_center-aim*3.0,flash_center-side*5.0]),Color("#f7ed9c",clampf(muzzle_flash/0.075,0.0,1.0)))
+        draw_circle(flash_center,5.0,Color("#ffffff",clampf(muzzle_flash/0.075,0.0,1.0)))
+    for i in range(magazine_size):
+        var pip_color := Color("#d9ef70") if i < ammo else Color("#505b6c")
+        draw_circle(Vector2(-14.0+float(i)*5.5,29.0),1.9,pip_color)
+    if reload_visual > 0.0:
+        draw_arc(Vector2(0,-36-bob),21.0,-PI/2.0,-PI/2.0+TAU*(1.0-reload_visual),32,Color("#d9ef70"),3.0,true)
