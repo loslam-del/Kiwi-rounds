@@ -58,12 +58,13 @@ func _on_body_entered(body: Node2D) -> void:
         return
     if body is ArenaPlayer:
         body.velocity += direction * push_force
+        body.apply_ragdoll_impulse(direction, push_force)
         body.velocity.y -= 150.0
         body.velocity.x = clampf(body.velocity.x,-1150.0,1150.0)
         body.velocity.y = clampf(body.velocity.y,-1250.0,1250.0)
         body.hitstun_timer = 0.14
         body.hit_flash = 0.18
-        body.got_hit.emit(direction)
+        body.got_hit.emit(direction, body)
         queue_free()
     else:
         _spawn_impact_particles()
