@@ -54,6 +54,11 @@ var hit_flash := 0.0
 var hitstun_timer := 0.0
 var bot_jump_hold_timer := 0.0
 var air_jumps_left := 1
+var extra_air_jumps := 0
+var gravity_scale := 1.0
+var air_control_scale := 1.0
+var ground_accel_scale := 1.0
+var wall_jump_scale := 1.0
 
 func _ready() -> void:
     collision_layer = 1
@@ -103,7 +108,7 @@ func _physics_process(delta: float) -> void:
         facing = signf(move_input)
     if is_on_floor():
         coyote_timer = COYOTE_TIME
-        air_jumps_left = 1
+        air_jumps_left = 1 + extra_air_jumps
     else:
         coyote_timer = maxf(0.0, coyote_timer - delta)
     var jump_released := jump_was_held and not jump_held
@@ -113,7 +118,7 @@ func _physics_process(delta: float) -> void:
         jump_buffer_timer = maxf(0.0, jump_buffer_timer - delta)
     jump_was_held = jump_held
     wall_jump_lock = maxf(0.0, wall_jump_lock - delta)
-    var accel := GROUND_ACCEL if is_on_floor() else AIR_ACCEL
+    var accel: float = GROUND_ACCEL * ground_accel_scale if is_on_floor() else AIR_ACCEL * air_control_scale
     if wall_jump_lock > 0.0:
         accel *= 0.18
     if hitstun_timer > 0.0:
@@ -124,7 +129,7 @@ func _physics_process(delta: float) -> void:
         velocity.x = move_toward(velocity.x, 0.0, GROUND_FRICTION * delta)
     else:
         velocity.x = move_toward(velocity.x, 0.0, AIR_DRAG * delta)
-    velocity.y = minf(velocity.y + GRAVITY * delta, MAX_FALL_SPEED)
+    velocity.y = minf(velocity.y + GRAVITY * gravity_scale * delta, MAX_FALL_SPEED * gravity_scale)
     if jump_buffer_timer > 0.0 and coyote_timer > 0.0:
         velocity.y = jump_speed
         coyote_timer = 0.0
@@ -132,8 +137,8 @@ func _physics_process(delta: float) -> void:
         jump_hold_timer = 0.16
     elif jump_buffer_timer > 0.0 and is_on_wall() and not is_on_floor():
         var wall_normal := get_wall_normal()
-        velocity.x = wall_normal.x * WALL_JUMP_X
-        velocity.y = WALL_JUMP_Y
+        velocity.x = wall_normal.x * WALL_JUMP_X * wall_jump_scale
+        velocity.y = WALL_JUMP_Y * wall_jump_scale
         facing = signf(wall_normal.x)
         jump_buffer_timer = 0.0
         coyote_timer = 0.0
@@ -250,21 +255,24 @@ func ammo_text() -> String:
 func apply_upgrade(upgrade_id: String) -> void:
     match upgrade_id:
         "swift":
-            move_speed *= 1.16
-            pulse_force *= 0.90
+            move_speed *= 1.18
+            jump_speed *= 0.94
         "spring":
-            jump_speed *= 1.12
-            move_speed *= 0.92
-        "wave":
-            pulse_force *= 1.22
-            reload_duration *= 1.12
-        "rapid":
-            reload_duration *= 0.82
-            pulse_force *= 0.90
-        "sturdy":
-            pulse_force *= 1.10
-            move_speed *= 1.06
-            jump_speed *= 1.08
+            jump_speed *= 1.18
+            move_speed *= 0.93
+        "feather":
+            gravity_scale *= 0.82
+            air_control_scale *= 1.08
+        "wall":
+            wall_jump_scale *= 1.22
+            air_control_scale *= 1.10
+        "air":
+            extra_air_jumps += 1
+            air_jumps_left += 1
+            move_speed *= 0.95
+        "grounded":
+            ground_accel_scale *= 1.22
+            gravity_scale *= 0.92
 
 func reset_round(spawn: Vector2) -> void:
     global_position = spawn
@@ -289,7 +297,7 @@ func reset_round(spawn: Vector2) -> void:
     hit_flash = 0.0
     hitstun_timer = 0.0
     bot_jump_hold_timer = 0.0
-    air_jumps_left = 1
+    air_jumps_left = 1 + extra_air_jumps
 
 func _draw() -> void:
     var grounded := is_on_floor()
