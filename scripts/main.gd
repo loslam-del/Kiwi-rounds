@@ -1481,8 +1481,6 @@ func _finish_round(player_won: bool) -> void:
         _show_training_round_end()
     elif score_player >= 5 or score_bot >= 5:
         _show_match_end()
-    elif game_mode == "training":
-        _show_training_round_end()
     elif player_won:
         # Only the losing side receives an upgrade.
         if not all_upgrades.is_empty():
