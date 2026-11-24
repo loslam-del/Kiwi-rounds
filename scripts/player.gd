@@ -2,7 +2,7 @@ extends CharacterBody2D
 class_name ArenaPlayer
 
 signal pulse_requested(origin: Vector2, direction: Vector2, force: float, tint: Color, shooter: Node2D)
-signal got_hit(direction: Vector2)
+signal got_hit(direction: Vector2, hit_target: Node2D)
 
 @export var is_bot := false
 @export var body_color := Color("#39d6c5")
