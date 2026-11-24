@@ -36,6 +36,25 @@ func _physics_process(delta: float) -> void:
         queue_free()
 
 func _spawn_impact_particles() -> void:
+    # Expanding ring gives impacts a clear readable contact point.
+    var burst := Node2D.new()
+    burst.global_position = global_position
+    get_tree().current_scene.add_child(burst)
+    var ring := Line2D.new()
+    var ring_points := PackedVector2Array()
+    for i in range(33):
+        var angle := TAU * float(i) / 32.0
+        ring_points.append(Vector2(cos(angle),sin(angle)) * 13.0)
+    ring.points = ring_points
+    ring.width = 2.6
+    ring.default_color = tint.lightened(0.35)
+    ring.antialiased = true
+    burst.add_child(ring)
+    var ring_tween := burst.create_tween()
+    ring_tween.set_parallel(true)
+    ring_tween.tween_property(burst,"scale",Vector2(3.0,3.0),0.22)
+    ring_tween.tween_property(burst,"modulate:a",0.0,0.22)
+    ring_tween.chain().tween_callback(burst.queue_free)
     var particles := CPUParticles2D.new()
     particles.one_shot = true
     particles.amount = 14
@@ -65,19 +84,21 @@ func _on_body_entered(body: Node2D) -> void:
         body.hitstun_timer = 0.14
         body.hit_flash = 0.18
         body.got_hit.emit(direction, body)
+        _spawn_impact_particles()
         queue_free()
     else:
         _spawn_impact_particles()
         queue_free()
 
 func _draw() -> void:
-    # Glowing kinetic bolt with layered core and motion streak.
-    var tail := Vector2(-27.0,0.0)
-    draw_line(tail,Vector2(2.0,0.0),Color(tint,0.16),15.0,true)
-    draw_line(tail,Vector2(2.0,0.0),Color(tint,0.38),8.0,true)
-    var halo := PackedVector2Array([Vector2(-12,-8),Vector2(5,-8),Vector2(17,0),Vector2(5,8),Vector2(-12,8)])
-    draw_colored_polygon(halo,Color(tint,0.42))
-    var core := PackedVector2Array([Vector2(-9,-4.5),Vector2(6,-4.5),Vector2(13,0),Vector2(6,4.5),Vector2(-9,4.5)])
-    draw_colored_polygon(core,tint)
-    draw_line(Vector2(-6,0),Vector2(8,0),Color.WHITE,2.0,true)
-    draw_circle(Vector2(7,0),2.5,Color.WHITE)
+    # Layered neon streak, readable bright core and a tiny leading spark.
+    var tail := Vector2(-34.0,0.0)
+    draw_line(tail,Vector2(4.0,0.0),Color(tint,0.075),22.0,true)
+    draw_line(tail,Vector2(4.0,0.0),Color(tint,0.18),14.0,true)
+    draw_line(tail,Vector2(0.0,0.0),Color(tint,0.48),7.0,true)
+    var halo := PackedVector2Array([Vector2(-14,-10),Vector2(6,-8),Vector2(20,0),Vector2(6,8),Vector2(-14,10)])
+    draw_colored_polygon(halo,Color(tint,0.28))
+    var core := PackedVector2Array([Vector2(-10,-4.5),Vector2(7,-4.5),Vector2(15,0),Vector2(7,4.5),Vector2(-10,4.5)])
+    draw_colored_polygon(core,tint.lightened(0.08))
+    draw_line(Vector2(-7,0),Vector2(10,0),Color(1.0,1.0,1.0,0.9),2.4,true)
+    draw_circle(Vector2(10,0),3.2,Color.WHITE)
