@@ -312,9 +312,11 @@ func _think_bot(delta: float) -> void:
     else:
         move_input = 0.0
     var direct_vector := target.global_position - global_position
-    var travel_time := direct_vector.length() / maxf(projectile_speed, 1.0)
-    var predicted_target: Vector2 = target.global_position + target.velocity * minf(travel_time,0.32)
-    var aim_vector: Vector2 = (predicted_target - global_position).normalized()
+    var travel_time := absf(direct_vector.x) / maxf(projectile_speed, 1.0)
+    var predicted_target: Vector2 = target.global_position + target.velocity * minf(travel_time, 0.32)
+    # Preview shots have a gentle downward arc; aim slightly above the predicted position.
+    var gravity_compensation := Vector2(0.0, 525.0 * travel_time * travel_time)
+    var aim_vector: Vector2 = (predicted_target - global_position - gravity_compensation).normalized()
     set_aim(aim_vector)
     if menu_preview_mode:
         # Menu sparring is deliberately grounded: no repeated jump loops or floating bots.
@@ -693,6 +695,17 @@ func _draw_kiwi_ball() -> void:
     draw_circle(center, 23.0, green)
     draw_arc(center, 22.4, PI * 1.08, PI * 1.92, 36, green_light, 2.0, true)
     draw_circle(center + Vector2(-8.0, -9.0), 6.0, Color(1.0, 1.0, 1.0, 0.10))
+
+    # Small friendly face on the green sphere.
+    draw_circle(center + Vector2(-8.0, -1.0), 4.2, Color("#f7fff0"))
+    draw_circle(center + Vector2(8.0, -1.0), 4.2, Color("#f7fff0"))
+    draw_circle(center + Vector2(-7.0, -0.5), 2.0, Color("#203b32"))
+    draw_circle(center + Vector2(9.0, -0.5), 2.0, Color("#203b32"))
+    draw_circle(center + Vector2(-7.7, -1.5), 0.8, Color.WHITE)
+    draw_circle(center + Vector2(8.3, -1.5), 0.8, Color.WHITE)
+    draw_arc(center + Vector2(0.0, 5.0), 5.0, 0.18, PI - 0.18, 16, Color("#203b32"), 1.7, true)
+    draw_circle(center + Vector2(-14.0, 5.0), 2.2, Color("#f0a3a0", 0.45))
+    draw_circle(center + Vector2(14.0, 5.0), 2.2, Color("#f0a3a0", 0.45))
 
     # Light hair buns and side locks frame the ball, not a human head.
     draw_circle(center + Vector2(-21.0, -22.0), 9.0, hair_dark)
