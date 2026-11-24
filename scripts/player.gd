@@ -483,11 +483,11 @@ func _draw() -> void:
     if reload_visual > 0.0:
         draw_arc(center,27.0,-PI/2.0,-PI/2.0+TAU*(1.0-reload_visual),28,Color.WHITE,2.0,true)
     # Weapon is drawn independently from the fighter so upgrades visibly change its silhouette.
-    var aim_local := Vector2(aim_input.x * facing, aim_input.y).normalized()
-    if aim_local == Vector2.ZERO:
-        aim_local = Vector2.RIGHT
-    var gun_origin := Vector2(9.0, -8.0 + bob)
-    draw_set_transform(gun_origin, aim_local.angle(), Vector2.ONE)
+    var gun_aim := aim_input.normalized()
+    if gun_aim == Vector2.ZERO:
+        gun_aim = Vector2(facing,0.0)
+    var gun_origin := Vector2(9.0 * facing, -8.0 + bob)
+    draw_set_transform(gun_origin, gun_aim.angle(), Vector2.ONE)
     var metal := Color("#263342")
     var trim := body_color.lightened(0.35)
     var barrel_len := 24.0 + float(weapon_level) * 2.5
