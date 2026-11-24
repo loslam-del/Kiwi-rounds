@@ -576,6 +576,7 @@ func _setup_music() -> void:
     music_player.volume_db = -8.0
     add_child(music_player)
     music_player.finished.connect(_play_next_music)
+    _apply_audio_settings()
     _play_next_music()
 
 func _play_next_music() -> void:
