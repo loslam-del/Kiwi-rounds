@@ -13,6 +13,10 @@ const BASE_SPEED := 430.0
 var move_input := 0.0
 var jump_held := false
 var fire_held := false
+var touch_left := false
+var touch_right := false
+var touch_jump := false
+var touch_fire := false
 var target: Node2D
 var move_speed := BASE_SPEED
 var jump_speed := JUMP_SPEED
@@ -33,22 +37,16 @@ func _ready() -> void:
     queue_redraw()
 
 func set_left(value: bool) -> void:
-    if value:
-        move_input = -1.0
-    elif move_input < 0.0:
-        move_input = 0.0
+    touch_left = value
 
 func set_right(value: bool) -> void:
-    if value:
-        move_input = 1.0
-    elif move_input > 0.0:
-        move_input = 0.0
+    touch_right = value
 
 func set_jump(value: bool) -> void:
-    jump_held = value
+    touch_jump = value
 
 func set_fire(value: bool) -> void:
-    fire_held = value
+    touch_fire = value
 
 func _physics_process(delta: float) -> void:
     pulse_cooldown = maxf(0.0, pulse_cooldown - delta)
@@ -77,9 +75,9 @@ func _read_keyboard() -> void:
         horizontal -= 1.0
     if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
         horizontal += 1.0
-    move_input = horizontal
-    jump_held = Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP)
-    fire_held = Input.is_key_pressed(KEY_SPACE)
+    move_input = clampf(horizontal + float(touch_right) - float(touch_left), -1.0, 1.0)
+    jump_held = Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP) or touch_jump
+    fire_held = Input.is_key_pressed(KEY_SPACE) or touch_fire
 
 func _think_bot(delta: float) -> void:
     if not is_instance_valid(target):
@@ -123,6 +121,10 @@ func reset_round(spawn: Vector2) -> void:
     move_input = 0.0
     jump_held = false
     fire_held = false
+    touch_left = false
+    touch_right = false
+    touch_jump = false
+    touch_fire = false
     pulse_cooldown = 0.4
 
 func _draw() -> void:
