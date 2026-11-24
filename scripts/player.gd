@@ -372,7 +372,7 @@ func _make_ragdoll_part(world: Node, segment_length: float, at: Vector2, segment
     part.linear_damp = 0.65
     part.angular_damp = 2.0
     part.collision_layer = 4
-    part.collision_mask = 2
+    part.collision_mask = 7
     part.can_sleep = false
     part.continuous_cd = true
     var collision := CollisionShape2D.new()
@@ -392,13 +392,33 @@ func _make_ragdoll_part(world: Node, segment_length: float, at: Vector2, segment
     part.add_child(visual)
     world.add_child(part)
     ragdoll_parts.append(part)
+    add_collision_exceptions(part)
     return part
+
+func add_collision_exceptions(part: RigidBody2D) -> void:
+    part.add_collision_exception_with(self)
+    for other in ragdoll_parts:
+        if is_instance_valid(other):
+            part.add_collision_exception_with(other)
+            other.add_collision_exception_with(part)
+
+func apply_ragdoll_impulse(direction: Vector2, strength: float) -> void:
+    var impulse := direction.normalized() * strength
+    for i in range(ragdoll_parts.size()):
+        var part := ragdoll_parts[i]
+        if is_instance_valid(part):
+            var weight := 0.75 + float(i % 2) * 0.25
+            part.apply_central_impulse(impulse * weight / 8.0)
+            part.apply_torque_impulse(randf_range(-strength, strength) * 0.018)
 
 func _connect_ragdoll_parts(world: Node, body_a: PhysicsBody2D, body_b: PhysicsBody2D, at: Vector2, root_joint: bool, anchor_local: Vector2) -> void:
     var joint := PinJoint2D.new()
     joint.name = "RagdollPin"
     joint.global_position = at
-    joint.softness = 0.08
+    joint.softness = 0.035
+    joint.angular_limit_enabled = true
+    joint.angular_limit_lower = -1.35 if not root_joint else -1.05
+    joint.angular_limit_upper = 1.35 if not root_joint else 1.05
     world.add_child(joint)
     joint.node_a = joint.get_path_to(body_a)
     joint.node_b = joint.get_path_to(body_b)
