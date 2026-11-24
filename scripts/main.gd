@@ -431,8 +431,6 @@ func _clear_control_inputs() -> void:
         fire_button.cancel_input()
     if is_instance_valid(jump_button):
         jump_button.cancel_input()
-    if is_instance_valid(reload_button):
-        reload_button.cancel_input()
 
 func _clear_pulses() -> void:
     for node in get_children():
@@ -476,12 +474,6 @@ func _make_ui() -> void:
     fire_button.button_down.connect(player.set_fire.bind(true))
     fire_button.button_up.connect(player.set_fire.bind(false))
     game_controls.add_child(fire_button)
-    reload_button = ACTION_BUTTON_SCRIPT.new()
-    reload_button.caption = "ПЕРЕЗАРЯДКА"
-    reload_button.position = Vector2(164,625)
-    reload_button.size = Vector2(132,48)
-    reload_button.pressed.connect(player.start_reload)
-    game_controls.add_child(reload_button)
     ammo_label = Label.new()
     ammo_label.position = Vector2(158,590)
     ammo_label.size = Vector2(150,28)
@@ -516,21 +508,18 @@ func _apply_control_layout() -> void:
         movement_joystick.position = Vector2(1136,575)
         aim_joystick.position = Vector2(28,575)
         fire_button.position = Vector2(1132,490)
-        reload_button.position = Vector2(984,625)
         jump_button.position = Vector2(32,490)
     else:
         movement_joystick.position = Vector2(28,575)
         aim_joystick.position = Vector2(1136,575)
         fire_button.position = Vector2(32,490)
-        reload_button.position = Vector2(164,625)
         jump_button.position = Vector2(1136,490)
     movement_joystick.size = Vector2(116,116)
     aim_joystick.size = Vector2(116,116)
     fire_button.size = Vector2(116,52)
-    reload_button.size = Vector2(132,48)
     jump_button.size = Vector2(112,52)
-    ammo_label.position = Vector2(158 if not controls_mirrored else 972,590)
-    ammo_label.size = Vector2(150,28)
+    ammo_label.position = Vector2(32 if not controls_mirrored else 1090,620)
+    ammo_label.size = Vector2(116,26)
     menu_button.position = Vector2(18,18)
     cards_button.position = Vector2(150,18)
 
@@ -750,28 +739,40 @@ func _show_main_menu() -> void:
         shade.add_child(grid_line)
 
     var title_glow := Label.new()
-    title_glow.text = "KIWI ROUNDS"
-    title_glow.position = Vector2(80, 48)
-    title_glow.size = Vector2(850, 104)
-    title_glow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title_glow.text = "KIWI"
+    title_glow.position = Vector2(82, 43)
+    title_glow.size = Vector2(520, 92)
+    title_glow.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
     title_glow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    title_glow.add_theme_font_size_override("font_size", 88)
+    title_glow.add_theme_font_size_override("font_size", 94)
     title_glow.add_theme_color_override("font_color", Color("#173b50"))
     title_glow.add_theme_constant_override("outline_size", 7)
     title_glow.add_theme_color_override("font_outline_color", Color("#2ce8dc"))
     shade.add_child(title_glow)
 
     var title := Label.new()
-    title.text = "KIWI ROUNDS"
-    title.position = Vector2(80, 44)
-    title.size = Vector2(850, 104)
-    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.text = "KIWI"
+    title.position = Vector2(86, 42)
+    title.size = Vector2(520, 92)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
     title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size", 78)
-    title.add_theme_color_override("font_color", Color("#e9fbff"))
-    title.add_theme_constant_override("outline_size", 2)
-    title.add_theme_color_override("font_outline_color", Color("#557d9b"))
+    title.add_theme_font_size_override("font_size", 84)
+    title.add_theme_color_override("font_color", Color("#f4fff0"))
+    title.add_theme_constant_override("outline_size", 3)
+    title.add_theme_color_override("font_outline_color", Color("#285a45"))
     shade.add_child(title)
+
+    var rounds_title := Label.new()
+    rounds_title.text = "ROUNDS"
+    rounds_title.position = Vector2(91, 126)
+    rounds_title.size = Vector2(450, 44)
+    rounds_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    rounds_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    rounds_title.add_theme_font_size_override("font_size", 38)
+    rounds_title.add_theme_color_override("font_color", Color("#55e6d5"))
+    rounds_title.add_theme_constant_override("outline_size", 2)
+    rounds_title.add_theme_color_override("font_outline_color", Color("#173b50"))
+    shade.add_child(rounds_title)
 
     # Original Kiwi is the round green mascot with her twin hair buns and exact cap.
     # Kept to the right of the title so the lettering stays fully readable.
@@ -779,15 +780,15 @@ func _show_main_menu() -> void:
     menu_kiwi.skin_style = "kiwi"
     menu_kiwi.menu_mascot = true
     menu_kiwi.body_color = Color("#477b4c")
-    menu_kiwi.position = Vector2(1050, 151)
-    menu_kiwi.scale = Vector2(1.18, 1.18)
+    menu_kiwi.position = Vector2(690, 145)
+    menu_kiwi.scale = Vector2(1.38, 1.38)
     menu_kiwi.set_physics_process(false)
     menu_kiwi.set_process(false)
     shade.add_child(menu_kiwi)
 
     var subtitle := Label.new()
     subtitle.text = "NEON BOT ARENA  /  RANDOM MAPS  /  RANDOM BUILDS"
-    subtitle.position = Vector2(0, 180)
+    subtitle.position = Vector2(0, 190)
     subtitle.size = Vector2(1280, 28)
     subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     subtitle.add_theme_font_size_override("font_size", 14)
