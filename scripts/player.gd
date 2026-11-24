@@ -463,8 +463,9 @@ func _draw() -> void:
     draw_line(hip_back, knee_back, dark, 4.8, true)
     draw_line(knee_back, foot_back, outline, 7.5, true)
     draw_line(knee_back, foot_back, dark, 4.6, true)
-    draw_line(foot_back + Vector2(-5,0), foot_back + Vector2(7,0), outline, 7.0, true)
-    draw_line(foot_back + Vector2(-4,0), foot_back + Vector2(6,0), dark, 4.0, true)
+    var foot_back_axis := Vector2(cos(foot_back_angle), -sin(foot_back_angle))
+    draw_line(foot_back - foot_back_axis * 5.0, foot_back + foot_back_axis * 7.0, outline, 7.0, true)
+    draw_line(foot_back - foot_back_axis * 4.0, foot_back + foot_back_axis * 6.0, dark, 4.0, true)
 
     var shoulder_back := Vector2(-12.0, -8.0)
     var shoulder_front := Vector2(12.0, -8.0)
@@ -498,8 +499,9 @@ func _draw() -> void:
     draw_circle(knee_front, 3.8, body_color.lightened(0.05))
     draw_line(knee_front, foot_front, outline, 7.5, true)
     draw_line(knee_front, foot_front, body_color, 4.6, true)
-    draw_line(foot_front + Vector2(-5,0), foot_front + Vector2(8,0), outline, 7.0, true)
-    draw_line(foot_front + Vector2(-4,0), foot_front + Vector2(7,0), light, 4.0, true)
+    var foot_front_axis := Vector2(cos(foot_front_angle), -sin(foot_front_angle))
+    draw_line(foot_front - foot_front_axis * 5.0, foot_front + foot_front_axis * 8.0, outline, 7.0, true)
+    draw_line(foot_front - foot_front_axis * 4.0, foot_front + foot_front_axis * 7.0, light, 4.0, true)
     draw_circle(hip_front, 4.0, light)
 
     # Near-side arm stays visibly separated from the body and bends at the elbow.
