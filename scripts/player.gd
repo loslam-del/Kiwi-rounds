@@ -42,6 +42,7 @@ var reload_timer := 0.0
 var bot_think := 0.0
 var bot_accuracy := 0.64
 var facing := 1.0
+var weapon_hand_blend := 1.0
 var animation_time := 0.0
 var coyote_timer := 0.0
 var jump_buffer_timer := 0.0
@@ -100,11 +101,20 @@ func _ready() -> void:
 func set_move(value: Vector2) -> void:
     move_stick = value
 
+func _set_facing(value: float) -> void:
+    var next_facing := signf(value)
+    if next_facing == 0.0 or next_facing == facing:
+        return
+    # Keep the weapon on its previous world-side for a beat, then pass it
+    # across the torso into the new lead hand instead of mirroring instantly.
+    weapon_hand_blend = -1.0
+    facing = next_facing
+
 func set_aim(value: Vector2) -> void:
     if value.length() > 0.16:
         aim_input = value.normalized()
         if absf(aim_input.x) > 0.12:
-            facing = signf(aim_input.x)
+            _set_facing(aim_input.x)
 
 func set_jump(value: bool) -> void:
     touch_jump = value
@@ -126,6 +136,7 @@ func _physics_process(delta: float) -> void:
     animation_time += delta * (8.5 if absf(velocity.x) > 35.0 and is_on_floor() else 2.2)
     pulse_cooldown = maxf(0.0, pulse_cooldown - delta)
     recoil_kick = move_toward(recoil_kick, 0.0, delta * 38.0)
+    weapon_hand_blend = move_toward(weapon_hand_blend, 1.0, delta * 8.5)
     muzzle_flash = maxf(0.0, muzzle_flash - delta)
     hit_flash = maxf(0.0, hit_flash - delta)
     hitstun_timer = maxf(0.0,hitstun_timer-delta)
@@ -140,7 +151,7 @@ func _physics_process(delta: float) -> void:
     else:
         _read_keyboard()
     if absf(move_input) > 0.01 and wall_jump_lock <= 0.0:
-        facing = signf(move_input)
+        _set_facing(move_input)
     if is_on_floor():
         coyote_timer = COYOTE_TIME
         air_jumps_left = 1 + extra_air_jumps
@@ -174,7 +185,7 @@ func _physics_process(delta: float) -> void:
         var wall_normal := get_wall_normal()
         velocity.x = wall_normal.x * WALL_JUMP_X * wall_jump_scale
         velocity.y = WALL_JUMP_Y * wall_jump_scale
-        facing = signf(wall_normal.x)
+        _set_facing(wall_normal.x)
         jump_buffer_timer = 0.0
         coyote_timer = 0.0
         wall_jump_lock = 0.16
@@ -243,7 +254,7 @@ func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
 
 
 func _weapon_hand_local() -> Vector2:
-    var shoulder := Vector2(13.0, -7.0)
+    var shoulder := Vector2(lerpf(-13.0, 13.0, (weapon_hand_blend + 1.0) * 0.5), -7.0)
     var elbow := shoulder + Vector2(sin(arm_front_angle) * 15.0, cos(arm_front_angle) * 15.0)
     var forearm_angle := arm_front_angle + elbow_front_angle
     return elbow + Vector2(sin(forearm_angle) * 14.0, cos(forearm_angle) * 14.0)
@@ -333,7 +344,7 @@ func _fire_pulse() -> void:
     if direction == Vector2.ZERO:
         direction = Vector2(facing, 0.0)
     if absf(direction.x) > 0.12:
-        facing = signf(direction.x)
+        _set_facing(direction.x)
 
     # Spawn from the hand-held blaster muzzle, not from the fighter's chest.
     var hand_world_offset := Vector2(_weapon_hand_local().x * facing, _weapon_hand_local().y)
@@ -453,7 +464,7 @@ func _draw() -> void:
     draw_line(foot_back + Vector2(-4,0), foot_back + Vector2(6,0), dark, 4.0, true)
 
     var shoulder_back := Vector2(-13.0, -7.0)
-    var shoulder_front := Vector2(13.0, -7.0)
+    var shoulder_front := Vector2(lerpf(-13.0, 13.0, (weapon_hand_blend + 1.0) * 0.5), -7.0)
     var upper_arm_len := 15.0
     var forearm_len := 14.0
     var elbow_back := shoulder_back + Vector2(sin(arm_back_angle) * upper_arm_len, cos(arm_back_angle) * upper_arm_len)
@@ -537,7 +548,13 @@ func _draw() -> void:
         draw_circle(center, 23.0, Color(1.0,0.45,0.34,hit_flash*0.24))
         draw_arc(center, 23.0, 0.0, TAU, 48, Color(1.0,0.82,0.72,hit_flash*0.8), 2.0, true)
     if reload_visual > 0.0:
-        draw_arc(center, 26.0, -PI/2.0, -PI/2.0+TAU*(1.0-reload_visual), 32, Color.WHITE, 2.2, true)
+        # ROUNDS-style reload pip floats above and to the right of the fighter.
+        var reload_pip := center + Vector2(29.0, -39.0)
+        draw_circle(reload_pip, 8.5, Color("#101a27", 0.92))
+        draw_arc(reload_pip, 7.2, 0.0, TAU, 32, Color("#526174", 0.95), 2.2, true)
+        var reload_progress := 1.0 - reload_visual
+        draw_arc(reload_pip, 7.2, -PI/2.0, -PI/2.0 + TAU * reload_progress, 32, Color("#f2d66d"), 2.8, true)
+        draw_circle(reload_pip, 2.0, Color("#f2d66d", 0.9))
 
     # The blaster is anchored to the front hand instead of floating at the torso.
     var local_aim := Vector2(aim_input.x * facing, aim_input.y).normalized()
