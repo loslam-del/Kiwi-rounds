@@ -2,6 +2,7 @@ extends Control
 class_name VirtualJoystick
 
 signal value_changed(value: Vector2)
+signal released
 
 @export var deadzone := 0.12
 @export var knob_limit := 52.0
@@ -26,6 +27,7 @@ func _gui_input(event: InputEvent) -> void:
         elif not event.pressed and event.index == active_index:
             active_index = -1
             _reset_value()
+            released.emit()
             accept_event()
     elif event is InputEventScreenDrag and event.index == active_index:
         _set_from_position(event.position)
@@ -36,6 +38,7 @@ func _gui_input(event: InputEvent) -> void:
             _set_from_position(event.position)
         else:
             _reset_value()
+            released.emit()
         accept_event()
     elif event is InputEventMouseMotion and mouse_active:
         _set_from_position(event.position)
