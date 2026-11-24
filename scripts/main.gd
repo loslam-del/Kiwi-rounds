@@ -794,7 +794,6 @@ func _add_menu_battle_scene(parent: Control) -> void:
     hide_a.body_color = Color("#f2e5ce")
     hide_a.skin_style = "kiwi"
     hide_a.position = Vector2(790,455)
-    hide_a.scale = Vector2(1.45,1.45)
     hide_a.facing = 1.0
     hide_a.aim_input = Vector2(1,-0.35)
     hide_a.scale = Vector2(1.35,1.35)
@@ -1560,7 +1559,7 @@ func _build_upgrade_cards(shade: Control) -> void:
 
 func _build_training_maps(shade: Control) -> void:
     var info := Label.new()
-    info.text = "10 АРЕН  •  У КАЖДОЙ СВОЯ АТМОСФЕРА И РАСКЛАДКА"
+    info.text = "АРЕНЫ: %d  •  У КАЖДОЙ СВОЯ АТМОСФЕРА И РАСКЛАДКА" % all_maps.size()
     info.position = Vector2(0,155)
     info.size = Vector2(1280,32)
     info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1851,8 +1850,15 @@ func _finish_round(player_won: bool) -> void:
         _show_upgrade_panel()
 
 func _update_hud() -> void:
-    if is_instance_valid(hud):
-        hud.text = "ТРЕНИРОВКА" if game_mode == "training" else "РАУНД %d     ТЫ  %d : %d  CPU" % [round_index,score_player,score_bot]
+    if not is_instance_valid(hud):
+        return
+    var arena_name := "АРЕНА"
+    if not all_maps.is_empty():
+        arena_name = str(all_maps[clampi(map_index, 0, all_maps.size() - 1)].get("name", "АРЕНА"))
+    if game_mode == "training":
+        hud.text = "ТРЕНИРОВКА  •  " + arena_name
+    else:
+        hud.text = "%s     РАУНД %d     ТЫ  %d : %d  CPU" % [arena_name,round_index,score_player,score_bot]
 
 func _show_training_round_end() -> void:
     _show_panel("РАУНД ЗАВЕРШЁН",[
