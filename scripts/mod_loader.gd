@@ -12,7 +12,7 @@ func load_all() -> void:
     upgrades.clear()
     loaded_mod_names.clear()
     var root := "user://mods"
-    DirAccess.make_dir_recursive_absolute(root)
+    DirAccess.make_dir_recursive(root)
     var folders := DirAccess.get_directories_at(root)
     for folder in folders:
         var manifest_path := root.path_join(folder).path_join("mod.json")
