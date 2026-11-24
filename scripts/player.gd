@@ -68,6 +68,13 @@ var wall_jump_scale := 1.0
 var kiwi_aura := false
 var menu_preview_mode := false
 var menu_mascot := false
+var remote_controlled := false
+var remote_move := 0.0
+var remote_aim := Vector2.RIGHT
+var remote_jump := false
+var remote_fire := false
+var remote_reload := false
+
 
 # Lightweight ragdoll-style limb physics. Angles and angular velocity are
 # simulated independently, while shoulder/hip anchors follow the torso.
@@ -149,7 +156,15 @@ func _physics_process(delta: float) -> void:
         if reload_timer == 0.0:
             ammo = magazine_size
             reload_visual = 0.0
-    if is_bot:
+    if remote_controlled:
+        move_input = remote_move
+        aim_input = remote_aim
+        jump_held = remote_jump
+        fire_held = remote_fire
+        if remote_reload:
+            start_reload()
+            remote_reload = false
+    elif is_bot:
         _think_bot(delta)
     else:
         _read_keyboard()
