@@ -3,6 +3,7 @@ extends Node2D
 const PLAYER_SCRIPT = preload("res://scripts/player.gd")
 const PULSE_SCRIPT = preload("res://scripts/pulse.gd")
 const JOYSTICK_SCRIPT = preload("res://scripts/virtual_joystick.gd")
+const ACTION_BUTTON_SCRIPT = preload("res://scripts/virtual_action_button.gd")
 const MOD_LOADER_SCRIPT = preload("res://scripts/mod_loader.gd")
 
 const DEFAULT_UPGRADES := [
@@ -31,7 +32,7 @@ var overlay: Control
 var game_controls: Control
 var skin_button: Button
 var ammo_label: Label
-var fire_button: Button
+var fire_button: VirtualActionButton
 var training_tab := "cards"
 var skin_return_to_game := false
 var platform_nodes: Array[StaticBody2D] = []
@@ -66,7 +67,7 @@ var sound_level := 0.72
 var movement_joystick: VirtualJoystick
 var aim_joystick: VirtualJoystick
 var reload_button: Button
-var jump_button: Button
+var jump_button: VirtualActionButton
 var menu_button: Button
 var cards_button: Button
 var mod_json_input: TextEdit
@@ -326,10 +327,14 @@ func _make_ui() -> void:
     movement_joystick.size = Vector2(150,150)
     movement_joystick.value_changed.connect(player.set_move)
     game_controls.add_child(movement_joystick)
-    fire_button = _add_button("ВЫСТРЕЛ",Vector2(205,585),Vector2(145,76),game_controls)
+    fire_button = ACTION_BUTTON_SCRIPT.new()
+    fire_button.caption = "ВЫСТРЕЛ"
+    fire_button.position = Vector2(35,445)
+    fire_button.size = Vector2(150,68)
     fire_button.button_down.connect(player.set_fire.bind(true))
     fire_button.button_up.connect(player.set_fire.bind(false))
-    reload_button = _add_button("ПЕРЕЗАРЯДКА",Vector2(365,585),Vector2(175,76),game_controls)
+    game_controls.add_child(fire_button)
+    reload_button = _add_button("ПЕРЕЗАРЯДКА",Vector2(205,585),Vector2(175,76),game_controls)
     reload_button.add_theme_font_size_override("font_size",15)
     reload_button.pressed.connect(player.start_reload)
     ammo_label = Label.new()
@@ -344,9 +349,13 @@ func _make_ui() -> void:
     aim_joystick.size = Vector2(150,150)
     aim_joystick.value_changed.connect(player.set_aim)
     game_controls.add_child(aim_joystick)
-    jump_button = _add_button("ПРЫЖОК",Vector2(1090,405),Vector2(130,82),game_controls)
+    jump_button = ACTION_BUTTON_SCRIPT.new()
+    jump_button.caption = "ПРЫЖОК"
+    jump_button.position = Vector2(1090,405)
+    jump_button.size = Vector2(130,82)
     jump_button.button_down.connect(player.set_jump.bind(true))
     jump_button.button_up.connect(player.set_jump.bind(false))
+    game_controls.add_child(jump_button)
     menu_button = _add_button("МЕНЮ",Vector2(18,18),Vector2(120,50),game_controls)
     menu_button.pressed.connect(_show_pause_menu)
     cards_button = _add_button("КАРТОЧКИ",Vector2(150,18),Vector2(160,50),game_controls)
@@ -361,14 +370,14 @@ func _apply_control_layout() -> void:
     if controls_mirrored:
         movement_joystick.position = Vector2(1080,535)
         aim_joystick.position = Vector2(35,535)
-        fire_button.position = Vector2(205,585)
-        reload_button.position = Vector2(365,585)
+        fire_button.position = Vector2(1095,445)
+        reload_button.position = Vector2(920,585)
         jump_button.position = Vector2(35,405)
     else:
         movement_joystick.position = Vector2(35,535)
         aim_joystick.position = Vector2(1080,535)
-        fire_button.position = Vector2(820,585)
-        reload_button.position = Vector2(820,495)
+        fire_button.position = Vector2(35,445)
+        reload_button.position = Vector2(205,585)
         jump_button.position = Vector2(1090,405)
     menu_button.position = Vector2(18,18)
     cards_button.position = Vector2(150,18)
