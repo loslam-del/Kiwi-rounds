@@ -74,6 +74,8 @@ var remote_aim := Vector2.RIGHT
 var remote_jump := false
 var remote_fire := false
 var remote_reload := false
+var max_health := 100
+var health := 100
 
 
 # Lightweight ragdoll-style limb physics. Angles and angular velocity are
@@ -132,6 +134,13 @@ func set_jump(value: bool) -> void:
 
 func set_fire(value: bool) -> void:
     touch_fire = value
+
+func shoot_once() -> void:
+    if not is_bot and not remote_controlled and is_physics_processing():
+        _fire_pulse()
+
+func take_damage(amount: int) -> void:
+    health = maxi(0, health - maxi(amount, 0))
 
 func clear_touch_controls() -> void:
     move_stick = Vector2.ZERO
@@ -463,6 +472,7 @@ func reset_round(spawn: Vector2) -> void:
     hitstun_timer = 0.0
     bot_jump_hold_timer = 0.0
     air_jumps_left = 1 + extra_air_jumps
+    health = max_health
 
 func _draw() -> void:
     var moving := is_on_floor() and absf(velocity.x) > 35.0
@@ -575,22 +585,46 @@ func _draw() -> void:
             center+Vector2(18,-37),center+Vector2(11,-35),
             center+Vector2(5,-39)
         ]),hair_light)
-        draw_line(center+Vector2(-20,-27),center+Vector2(-18,1),hair_shadow,7.0,true)
-        draw_line(center+Vector2(-19,-27),center+Vector2(-17,0),hair,4.2,true)
-        draw_line(center+Vector2(20,-27),center+Vector2(18,1),hair_shadow,7.0,true)
-        draw_line(center+Vector2(19,-27),center+Vector2(17,0),hair,4.2,true)
+        # Long side locks fall past the shoulders and sway with the running animation.
+        var hair_sway := sin(animation_time * 0.8) * (2.0 if moving else 0.7)
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(-21,-29), center+Vector2(-25,-13),
+            center+Vector2(-23,12), center+Vector2(-18,28),
+            center+Vector2(-12,23), center+Vector2(-15,4),
+            center+Vector2(-14,-18)
+        ]),hair_shadow)
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(-19,-28), center+Vector2(-22,-12),
+            center+Vector2(-20,10), center+Vector2(-17,24),
+            center+Vector2(-14,18), center+Vector2(-17,2),
+            center+Vector2(-16,-18)
+        ]),hair)
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(20,-29), center+Vector2(24,-12),
+            center+Vector2(22,12), center+Vector2(17,28),
+            center+Vector2(11,22), center+Vector2(14,4),
+            center+Vector2(13,-18)
+        ]),hair_shadow)
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(18,-28), center+Vector2(21,-12),
+            center+Vector2(19,10), center+Vector2(16,24),
+            center+Vector2(13,18), center+Vector2(16,2),
+            center+Vector2(15,-18)
+        ]),hair)
+        draw_line(center+Vector2(-18,-23),center+Vector2(-16,20),hair_light,1.8,true)
+        draw_line(center+Vector2(17,-23),center+Vector2(15,20),hair_light,1.8,true)
         # Kiwi's recognizable green cap, clearly separated from the hair.
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-20,-43),center+Vector2(-15,-55),
-            center+Vector2(-5,-61),center+Vector2(9,-60),
-            center+Vector2(19,-51),center+Vector2(21,-42),
-            center+Vector2(12,-45),center+Vector2(0,-47),center+Vector2(-12,-44)
+            center+Vector2(-24,-43),center+Vector2(-19,-60),
+            center+Vector2(-6,-69),center+Vector2(10,-68),
+            center+Vector2(23,-57),center+Vector2(26,-42),
+            center+Vector2(14,-47),center+Vector2(0,-50),center+Vector2(-14,-46)
         ]),green_dark)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-16,-46),center+Vector2(-11,-54),
-            center+Vector2(-3,-58),center+Vector2(8,-57),
-            center+Vector2(15,-50),center+Vector2(17,-45),
-            center+Vector2(7,-48),center+Vector2(-5,-48)
+            center+Vector2(-19,-47),center+Vector2(-14,-58),
+            center+Vector2(-4,-65),center+Vector2(9,-64),
+            center+Vector2(19,-54),center+Vector2(21,-45),
+            center+Vector2(8,-51),center+Vector2(-7,-50)
         ]),green)
         draw_line(center+Vector2(-17,-44),center+Vector2(18,-43),green_light,3.0,true)
         draw_circle(center+Vector2(17,-47),3.0,green_light)
