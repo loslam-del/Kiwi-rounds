@@ -167,7 +167,15 @@ func _get_skins() -> Array[Dictionary]:
     return skins
 
 func _apply_skin() -> void:
-    var skins := _get_skins()
+    var skins: Array[Dictionary] = [
+        {"name":"Бирюзовый","color":"#39d6c5"},
+        {"name":"Лазурный","color":"#4b9cff"},
+        {"name":"Фиолетовый","color":"#b47cff"},
+        {"name":"Золотой","color":"#ffc857"},
+        {"name":"Розовый","color":"#ff78b7"}
+    ]
+    if mods_loaded and mod_loader != null:
+        skins.append_array(mod_loader.skins)
     if skins.is_empty():
         return
     skin_index = posmod(skin_index, skins.size())
@@ -723,13 +731,33 @@ func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> v
     game_controls.visible = false
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color("#111111")
+    shade.color = Color("#101722")
     ui.add_child(shade)
     overlay = shade
+    var top_glow := ColorRect.new()
+    top_glow.position = Vector2(0,0)
+    top_glow.size = Vector2(1280,8)
+    top_glow.color = Color("#64d6bd")
+    shade.add_child(top_glow)
+    var bottom_glow := ColorRect.new()
+    bottom_glow.position = Vector2(0,712)
+    bottom_glow.size = Vector2(1280,8)
+    bottom_glow.color = Color("#263b5b")
+    shade.add_child(bottom_glow)
+    var side_panel := Panel.new()
+    side_panel.position = Vector2(280,55)
+    side_panel.size = Vector2(720,610)
+    var panel_style := StyleBoxFlat.new()
+    panel_style.bg_color = Color("#172336")
+    panel_style.border_color = Color("#354b68")
+    panel_style.set_border_width_all(2)
+    panel_style.set_corner_radius_all(24)
+    side_panel.add_theme_stylebox_override("panel",panel_style)
+    shade.add_child(side_panel)
 
     var title := Label.new()
     title.text = title_text
-    title.position = Vector2(0,95)
+    title.position = Vector2(0,82)
     title.size = Vector2(1280,100)
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -743,7 +771,7 @@ func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> v
     var accent := ColorRect.new()
     accent.position = Vector2(500,195)
     accent.size = Vector2(280,5)
-    accent.color = Color("#e5e5e5")
+    accent.color = Color("#64d6bd")
     shade.add_child(accent)
 
     if subtitle != "":
@@ -759,23 +787,23 @@ func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> v
         shade.add_child(info)
 
     var list := VBoxContainer.new()
-    list.position = Vector2(390,305)
-    list.size = Vector2(500,340)
+    list.position = Vector2(390,295)
+    list.size = Vector2(500,350)
     list.add_theme_constant_override("separation",9)
     shade.add_child(list)
     for index in range(buttons.size()):
         var entry: Array = buttons[index]
         var button := Button.new()
         button.text = str(entry[0])
-        button.custom_minimum_size = Vector2(500,58)
+        button.custom_minimum_size = Vector2(500,62)
         button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         button.focus_mode = Control.FOCUS_NONE
         button.add_theme_font_size_override("font_size",23)
         button.add_theme_color_override("font_color",Color("#f0f0f0"))
         button.add_theme_color_override("font_hover_color",Color("#111111"))
-        button.add_theme_stylebox_override("normal",_menu_button_style(Color("#242424"),Color("#555555")))
-        button.add_theme_stylebox_override("hover",_menu_button_style(Color("#eeeeee"),Color("#ffffff")))
-        button.add_theme_stylebox_override("pressed",_menu_button_style(Color("#cfcfcf"),Color("#ffffff")))
+        button.add_theme_stylebox_override("normal",_menu_button_style(Color("#263b5b"),Color("#526b8c")))
+        button.add_theme_stylebox_override("hover",_menu_button_style(Color("#34577a"),Color("#8cb8df")))
+        button.add_theme_stylebox_override("pressed",_menu_button_style(Color("#245b58"),Color("#64d6bd")))
         button.pressed.connect(entry[1])
         list.add_child(button)
 
@@ -796,10 +824,10 @@ func _menu_button_style(fill: Color, outline: Color) -> StyleBoxFlat:
     style.border_width_right = 2
     style.border_width_top = 2
     style.border_width_bottom = 2
-    style.corner_radius_top_left = 2
-    style.corner_radius_top_right = 2
-    style.corner_radius_bottom_left = 2
-    style.corner_radius_bottom_right = 2
+    style.corner_radius_top_left = 12
+    style.corner_radius_top_right = 12
+    style.corner_radius_bottom_left = 12
+    style.corner_radius_bottom_right = 12
     style.content_margin_left = 18
     style.content_margin_right = 18
     return style
