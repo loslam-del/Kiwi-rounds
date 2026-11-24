@@ -54,9 +54,8 @@ func _ready() -> void:
     call_deferred("_boot_game")
 
 func _boot_game() -> void:
-    boot_stage = "Загрузка модов..."
-    # Loading mods is deferred so a bad mod cannot block the main menu.
-    mod_loader = MOD_LOADER_SCRIPT.new()
+    boot_stage = "Подготовка игровых данных..."
+    # Модуль модов не создаётся при запуске. Главное меню не зависит от модов.
     all_maps = DEFAULT_MAPS.duplicate(true)
     all_upgrades = DEFAULT_UPGRADES.duplicate(true)
     boot_stage = "Создание арены..."
@@ -145,6 +144,8 @@ func _make_players() -> void:
     add_child(rival)
 
 func _apply_skin() -> void:
+    if mod_loader == null:
+        mod_loader = MOD_LOADER_SCRIPT.new()
     var skins: Array[Dictionary] = [
         {"name":"Бирюзовый","color":"#39d6c5"},
         {"name":"Лазурный","color":"#4b9cff"},
@@ -395,6 +396,8 @@ func _apply_skin_and_return() -> void:
         _show_main_menu()
 
 func _open_mods() -> void:
+    if mod_loader == null:
+        mod_loader = MOD_LOADER_SCRIPT.new()
     if not mods_loaded:
         mod_loader.load_all()
         all_maps = DEFAULT_MAPS.duplicate(true)
@@ -412,6 +415,8 @@ func _open_mods() -> void:
     ],description)
 
 func _reload_mods() -> void:
+    if mod_loader == null:
+        mod_loader = MOD_LOADER_SCRIPT.new()
     mod_loader.load_all()
     mods_loaded = true
     all_maps = DEFAULT_MAPS.duplicate(true)
