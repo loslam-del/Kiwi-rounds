@@ -110,6 +110,6 @@ func _append_upgrades(source: Variant, folder: String) -> void:
         if not VALID_EFFECTS.has(effect):
             warnings.append(folder + ": неизвестный эффект карточки " + effect)
             continue
-        var clean := item.duplicate(true)
+        var clean: Dictionary = (item as Dictionary).duplicate(true)
         clean["effect"] = effect
         upgrades.append(clean)
