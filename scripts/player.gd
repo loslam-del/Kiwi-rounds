@@ -228,10 +228,11 @@ func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
     var arm_front_target := 0.92 + walk_drive * 0.30 - jump_drive * 0.16
     var elbow_back_target := -0.78 + walk_drive * 0.16
     var elbow_front_target := 0.78 - walk_drive * 0.16
-    var leg_back_target := -walk_drive * 0.58 + jump_drive * 0.22
-    var leg_front_target := walk_drive * 0.58 + jump_drive * 0.22
-    var knee_back_target := (0.62 if moving and sin(animation_time) > 0.0 else -0.12) + absf(jump_drive) * 0.28
-    var knee_front_target := (0.62 if moving and sin(animation_time) <= 0.0 else -0.12) + absf(jump_drive) * 0.28
+    var gait := sin(animation_time)
+    var leg_back_target := -walk_drive * 0.92 + (gait * 0.22 if moving else 0.0) + jump_drive * 0.22
+    var leg_front_target := walk_drive * 0.92 - (gait * 0.22 if moving else 0.0) + jump_drive * 0.22
+    var knee_back_target := (0.78 if moving and gait > 0.0 else -0.08) + absf(jump_drive) * 0.28
+    var knee_front_target := (0.78 if moving and gait <= 0.0 else -0.08) + absf(jump_drive) * 0.28
 
     var spring_k := 58.0
     var damping_rate := 13.5
@@ -440,10 +441,6 @@ func reset_round(spawn: Vector2) -> void:
     air_jumps_left = 1 + extra_air_jumps
 
 func _draw() -> void:
-    if skin_style == "kiwi":
-        _draw_kiwi_ball()
-        _draw_two_hand_blaster(Vector2(0.0, -7.0))
-        return
     var moving := is_on_floor() and absf(velocity.x) > 35.0
     var stride := sin(animation_time) if moving else 0.0
     var bob := absf(stride) * 1.4 if moving else sin(animation_time * 2.0) * 0.45
@@ -470,21 +467,12 @@ func _draw() -> void:
     draw_line(foot_back + Vector2(-5,0), foot_back + Vector2(7,0), outline, 7.0, true)
     draw_line(foot_back + Vector2(-4,0), foot_back + Vector2(6,0), dark, 4.0, true)
 
-    var shoulder_back := Vector2(-13.0, -7.0)
-    var shoulder_front := Vector2(lerpf(-13.0, 13.0, (weapon_hand_blend + 1.0) * 0.5), -7.0)
-    var upper_arm_len := 15.0
-    var forearm_len := 14.0
-    var elbow_back := shoulder_back + Vector2(sin(arm_back_angle) * upper_arm_len, cos(arm_back_angle) * upper_arm_len)
-    var elbow_front := shoulder_front + Vector2(sin(arm_front_angle) * upper_arm_len, cos(arm_front_angle) * upper_arm_len)
-    var wrist_back_angle := arm_back_angle + elbow_back_angle
-    var wrist_front_angle := arm_front_angle + elbow_front_angle
-    var hand_back := elbow_back + Vector2(sin(wrist_back_angle) * forearm_len, cos(wrist_back_angle) * forearm_len)
-    var hand_front := _weapon_hand_local()
-    draw_line(shoulder_back, elbow_back, outline, 10.0, true)
-    draw_line(shoulder_back, elbow_back, dark, 6.2, true)
-    draw_line(elbow_back, hand_back, outline, 9.0, true)
-    draw_line(elbow_back, hand_back, dark, 5.7, true)
-    draw_circle(hand_back, 4.0, dark)
+    var shoulder_back := Vector2(-12.0, -7.0)
+    var shoulder_front := Vector2(12.0, -7.0)
+    var elbow_back := shoulder_back
+    var elbow_front := shoulder_front
+    var hand_back := Vector2.ZERO
+    var hand_front := Vector2.ZERO
 
     # Compact rounded torso leaves the hips and shoulders readable.
     draw_circle(center, 24.0, Color(body_color, 0.08))
@@ -506,15 +494,6 @@ func _draw() -> void:
     draw_line(foot_front + Vector2(-5,0), foot_front + Vector2(8,0), outline, 7.0, true)
     draw_line(foot_front + Vector2(-4,0), foot_front + Vector2(7,0), light, 4.0, true)
     draw_circle(hip_front, 4.0, light)
-
-    # Near-side arm stays visibly separated from the body and bends at the elbow.
-    draw_line(shoulder_front, elbow_front, outline, 10.0, true)
-    draw_line(shoulder_front, elbow_front, light, 6.2, true)
-    draw_circle(elbow_front, 4.2, light)
-    draw_line(elbow_front, hand_front, outline, 9.0, true)
-    draw_line(elbow_front, hand_front, body_color, 5.7, true)
-    draw_circle(hand_front, 4.0, light)
-    draw_circle(shoulder_front, 4.0, light)
 
     if kiwi_aura:
         for leaf_index in range(4):
@@ -547,16 +526,6 @@ func _draw() -> void:
         draw_line(knee_front,foot_front,green_dark,6.6,true)
         draw_line(foot_front+Vector2(-6,0),foot_front+Vector2(8,0),outline,8.0,true)
         draw_line(foot_front+Vector2(-5,-1),foot_front+Vector2(7,-1),Color("#263344"),4.8,true)
-        draw_line(shoulder_back,elbow_back,outline,11.0,true)
-        draw_line(shoulder_back,elbow_back,green_dark,7.0,true)
-        draw_line(elbow_back,hand_back,outline,10.0,true)
-        draw_line(elbow_back,hand_back,green,6.4,true)
-        draw_line(shoulder_front,elbow_front,outline,11.0,true)
-        draw_line(shoulder_front,elbow_front,green_dark,7.0,true)
-        draw_line(elbow_front,hand_front,outline,10.0,true)
-        draw_line(elbow_front,hand_front,green,6.4,true)
-        draw_circle(hand_back,3.8,Color("#e9c9aa"))
-        draw_circle(hand_front,4.0,Color("#e9c9aa"))
         # Tailored jacket, shirt panel and clear lapels instead of a flat torso patch.
         draw_colored_polygon(PackedVector2Array([center+Vector2(-17,-8),center+Vector2(17,-8),center+Vector2(20,22),center+Vector2(-20,22)]),green_dark)
         draw_colored_polygon(PackedVector2Array([center+Vector2(-14,-7),center+Vector2(14,-7),center+Vector2(16,19),center+Vector2(-16,19)]),green)
@@ -636,6 +605,20 @@ func _draw() -> void:
             center+Vector2(17,-49),center+Vector2(23,-55),
             center+Vector2(22,-47),center+Vector2(17,-45)
         ]),green_light)
+        # Kiwi's green cap is layered over her hair, keeping the full humanoid silhouette.
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(-20,-43),center+Vector2(-15,-55),
+            center+Vector2(-5,-61),center+Vector2(9,-60),
+            center+Vector2(19,-51),center+Vector2(21,-42),
+            center+Vector2(12,-45),center+Vector2(0,-47),center+Vector2(-12,-44)
+        ]),green_dark)
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(-16,-46),center+Vector2(-11,-54),
+            center+Vector2(-3,-58),center+Vector2(8,-57),
+            center+Vector2(15,-50),center+Vector2(17,-45),
+            center+Vector2(7,-48),center+Vector2(-5,-48)
+        ]),green)
+        draw_line(center+Vector2(-17,-44),center+Vector2(18,-43),green_light,3.0,true)
 
     if hit_flash > 0.0:
         draw_circle(center, 23.0, Color(1.0,0.45,0.34,hit_flash*0.24))
