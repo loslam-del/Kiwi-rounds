@@ -447,9 +447,12 @@ func _button_style(color: Color) -> StyleBoxFlat:
 
 func _process(delta: float) -> void:
     if is_instance_valid(arena_camera):
-        if shake_enabled and camera_shake_timer > 0.0:
+        if camera_shake_timer > 0.0:
             camera_shake_timer = maxf(0.0,camera_shake_timer-delta)
-            arena_camera.offset = Vector2(randf_range(-camera_shake_strength,camera_shake_strength),randf_range(-camera_shake_strength,camera_shake_strength))
+            if shake_enabled:
+                arena_camera.offset = Vector2(randf_range(-camera_shake_strength,camera_shake_strength),randf_range(-camera_shake_strength,camera_shake_strength))
+            else:
+                arena_camera.offset = Vector2.ZERO
         else:
             arena_camera.offset = Vector2.ZERO
     if boot_loading:
@@ -683,8 +686,10 @@ func _cycle_volume() -> void:
         sound_level = 0.35
     elif sound_level < 0.5:
         sound_level = 0.72
-    else:
+    elif sound_level < 0.9:
         sound_level = 1.0
+    else:
+        sound_level = 0.0
     sound_enabled = sound_level > 0.001
     _apply_audio_settings()
     _save_settings()
