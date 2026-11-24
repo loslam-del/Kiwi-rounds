@@ -111,6 +111,12 @@ var music_tracks: Array[String] = [
     "res://music/влад пиво, ЯРЧЕ СОЛНЦА, besoboy - Пообещай (hitmo.net).mp3"
 ]
 var music_last_index := -1
+var online_player_id := ""
+var online_host_id := ""
+var online_is_host := false
+var online_in_match := false
+var online_sync_timer := 0.0
+var online_start_button: Button
 
 
 
@@ -678,6 +684,7 @@ func _button_style(color: Color) -> StyleBoxFlat:
 
 func _process(delta: float) -> void:
     _poll_online_socket()
+    _online_sync_tick(delta)
     background_time += delta
     queue_redraw()
     impact_flash = maxf(0.0, impact_flash - delta * 2.8)
@@ -1246,6 +1253,9 @@ func _show_online_info() -> void:
     shade.add_child(online_password_input)
     var create := _add_button("СОЗДАТЬ КОМНАТУ", Vector2(205, 435), Vector2(300, 52), shade)
     create.pressed.connect(_online_create_room)
+    online_start_button = _add_button("НАЧАТЬ БОЙ", Vector2(205, 500), Vector2(300, 52), shade)
+    online_start_button.visible = false
+    online_start_button.pressed.connect(_online_start_match)
     var refresh := _add_button("ОБНОВИТЬ", Vector2(775, 175), Vector2(300, 48), shade)
     refresh.pressed.connect(_online_request_rooms)
     var rooms_title := Label.new()
@@ -1340,6 +1350,7 @@ func _online_join_room(room_id: String) -> void:
 func _online_handle_message(data: Dictionary) -> void:
     match str(data.get("type", "")):
         "connected":
+            online_player_id = str(data.get("playerId", ""))
             _online_set_status("Сервер принял подключение", Color("#9be89b"))
         "room_list":
             _online_render_rooms(data.get("rooms", []))
@@ -1347,13 +1358,124 @@ func _online_handle_message(data: Dictionary) -> void:
             _online_set_status("В комнате " + str(data.get("roomId", "")) + ". Ожидаем соперника.", Color("#9be89b"))
         "room_state":
             var room: Dictionary = data.get("room", {})
+            online_host_id = str(room.get("hostId", ""))
+            online_is_host = online_host_id == online_player_id
             var names: Array[String] = []
-            for person in room.get("players", []):
+            var room_players: Array = room.get("players", [])
+            for person in room_players:
                 if typeof(person) == TYPE_DICTIONARY:
                     names.append(str(person.get("name", "Игрок")))
+            if is_instance_valid(online_start_button):
+                online_start_button.visible = online_is_host and room_players.size() == 2
             _online_set_status(str(room.get("name", "Комната")) + " • " + str(names), Color("#9be89b"))
+        "match_started":
+            _start_online_match(str(data.get("hostId", "")))
+        "game_input":
+            if online_in_match and online_is_host:
+                var input_data: Dictionary = data.get("input", {})
+                rival.remote_controlled = true
+                rival.remote_move = float(input_data.get("move", 0.0))
+                rival.remote_aim = Vector2(float(input_data.get("aimX", 1.0)), float(input_data.get("aimY", 0.0))).normalized()
+                rival.remote_jump = bool(input_data.get("jump", false))
+                rival.remote_fire = bool(input_data.get("fire", false))
+                rival.remote_reload = bool(input_data.get("reload", false))
+        "game_state":
+            if online_in_match and not online_is_host:
+                _apply_online_state(data.get("state", {}))
         "error":
             _online_set_status(str(data.get("message", "Ошибка сервера")), Color("#ff8b8b"))
+
+func _online_start_match() -> void:
+    if online_connected and online_is_host:
+        _online_send({"type":"start_match"})
+
+func _start_online_match(host_id: String) -> void:
+    online_is_host = host_id == online_player_id
+    online_in_match = true
+    online_sync_timer = 0.0
+    game_mode = "online"
+    score_player = 0
+    score_bot = 0
+    round_index = 1
+    active_training_cards.clear()
+    _reset_player_stats(player)
+    _reset_player_stats(rival)
+    _make_arena(0)
+    player.reset_round(Vector2(350,390))
+    rival.reset_round(Vector2(930,390))
+    player.target = rival
+    rival.target = player
+    rival.visible = true
+    if online_is_host:
+        player.remote_controlled = false
+        rival.remote_controlled = true
+        player.set_physics_process(true)
+        rival.set_physics_process(true)
+    else:
+        player.set_physics_process(false)
+        rival.set_physics_process(false)
+    phase = "fight"
+    _close_overlay()
+    game_controls.visible = true
+    hud.visible = true
+    _update_hud()
+
+func _online_sync_tick(delta: float) -> void:
+    if not online_in_match or not online_connected:
+        return
+    online_sync_timer += delta
+    if online_is_host:
+        if online_sync_timer >= 0.05:
+            online_sync_timer = 0.0
+            _online_send({
+                "type":"game_state",
+                "state":{
+                    "player_pos":[player.global_position.x, player.global_position.y],
+                    "player_vel":[player.velocity.x, player.velocity.y],
+                    "rival_pos":[rival.global_position.x, rival.global_position.y],
+                    "rival_vel":[rival.velocity.x, rival.velocity.y],
+                    "score_player":score_player,
+                    "score_bot":score_bot,
+                    "round":round_index
+                }
+            })
+    elif online_sync_timer >= 0.05:
+        online_sync_timer = 0.0
+        var move_value := player.move_stick.x
+        if absf(move_value) < 0.01:
+            move_value = player.move_input
+        _online_send({
+            "type":"game_input",
+            "input":{
+                "move":move_value,
+                "aimX":player.aim_input.x,
+                "aimY":player.aim_input.y,
+                "jump":player.touch_jump or player.jump_held,
+                "fire":player.touch_fire or player.fire_held,
+                "reload":false
+            }
+        })
+
+func _apply_online_state(state: Variant) -> void:
+    if typeof(state) != TYPE_DICTIONARY:
+        return
+    var data: Dictionary = state
+    var pp: Array = data.get("player_pos", [])
+    var pv: Array = data.get("player_vel", [])
+    var rp: Array = data.get("rival_pos", [])
+    var rv: Array = data.get("rival_vel", [])
+    if pp.size() >= 2:
+        rival.global_position = Vector2(float(pp[0]), float(pp[1]))
+    if pv.size() >= 2:
+        rival.velocity = Vector2(float(pv[0]), float(pv[1]))
+    if rp.size() >= 2:
+        player.global_position = Vector2(float(rp[0]), float(rp[1]))
+    if rv.size() >= 2:
+        player.velocity = Vector2(float(rv[0]), float(rv[1]))
+    score_player = int(data.get("score_bot", 0))
+    score_bot = int(data.get("score_player", 0))
+    round_index = int(data.get("round", 1))
+    _update_hud()
 
 func _online_render_rooms(rooms: Variant) -> void:
     if not is_instance_valid(online_rooms_list):
