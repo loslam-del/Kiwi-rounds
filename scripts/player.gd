@@ -66,6 +66,8 @@ var weapon_level := 0
 var ground_accel_scale := 1.0
 var wall_jump_scale := 1.0
 var kiwi_aura := false
+var menu_preview_mode := false
+var menu_mascot := false
 
 # Lightweight ragdoll-style limb physics. Angles and angular velocity are
 # simulated independently, while shoulder/hip anchors follow the torso.
@@ -314,10 +316,15 @@ func _think_bot(delta: float) -> void:
     var predicted_target: Vector2 = target.global_position + target.velocity * minf(travel_time,0.32)
     var aim_vector: Vector2 = (predicted_target - global_position).normalized()
     set_aim(aim_vector)
-    bot_jump_hold_timer = maxf(0.0,bot_jump_hold_timer-delta)
-    if is_on_floor() and bot_jump_hold_timer <= 0.0 and (target.global_position.y < global_position.y - 70.0 or (distance_x < 100.0 and randf() < 0.018)):
-        bot_jump_hold_timer = 0.23
-    jump_held = bot_jump_hold_timer > 0.0
+    if menu_preview_mode:
+        # Menu sparring is deliberately grounded: no repeated jump loops or floating bots.
+        bot_jump_hold_timer = 0.0
+        jump_held = false
+    else:
+        bot_jump_hold_timer = maxf(0.0,bot_jump_hold_timer-delta)
+        if is_on_floor() and bot_jump_hold_timer <= 0.0 and (target.global_position.y < global_position.y - 70.0 or (distance_x < 100.0 and randf() < 0.018)):
+            bot_jump_hold_timer = 0.23
+        jump_held = bot_jump_hold_timer > 0.0
 
     bot_think -= delta
     if ammo <= 0 and reload_timer <= 0.0:
@@ -449,6 +456,11 @@ func _draw() -> void:
     var dark := body_color.darkened(0.22)
     var light := body_color.lightened(0.12)
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
+    if skin_style == "kiwi":
+        _draw_kiwi_ball()
+        if not menu_mascot:
+            _draw_two_hand_blaster(Vector2(0.0, -7.0))
+        return
 
     # Far-side limbs are drawn first so they emerge naturally from behind the torso.
     var hip_back := Vector2(-6.5, 8.0)
@@ -719,22 +731,23 @@ func _draw_two_hand_blaster(center: Vector2) -> void:
     if local_aim.length_squared() < 0.01:
         local_aim = Vector2.RIGHT
     var side := local_aim.rotated(PI * 0.5)
-    var gun_origin := center + local_aim * 8.0
-    var grip_hand := gun_origin - local_aim * 3.0 + side * 5.0
-    var support_hand := gun_origin + local_aim * 14.0 + side * 5.0
-    var shoulder_a := Vector2(-12.0, -7.0)
-    var shoulder_b := Vector2(12.0, -7.0)
-    var elbow_a := shoulder_a.lerp(grip_hand, 0.52) + side * 7.0
-    var elbow_b := shoulder_b.lerp(support_hand, 0.52) - side * 7.0
+    # Keep the grip low on the torso so the arms never sweep across the eyes.
+    var gun_origin := center + Vector2(0.0, 9.0) + local_aim * 7.0
+    var grip_hand := gun_origin - local_aim * 2.0 + side * 4.0
+    var support_hand := gun_origin + local_aim * 9.0 + side * 4.0
+    var shoulder_a := Vector2(-12.0, 3.0)
+    var shoulder_b := Vector2(12.0, 3.0)
+    var elbow_a := shoulder_a.lerp(grip_hand, 0.52) + side * 3.5
+    var elbow_b := shoulder_b.lerp(support_hand, 0.52) - side * 3.5
     var arm_outline := Color("#142333")
     var arm_color := body_color.lightened(0.12)
     for arm_points in [[shoulder_a, elbow_a, grip_hand], [shoulder_b, elbow_b, support_hand]]:
-        draw_line(arm_points[0], arm_points[1], arm_outline, 10.0, true)
-        draw_line(arm_points[0], arm_points[1], arm_color, 6.0, true)
-        draw_line(arm_points[1], arm_points[2], arm_outline, 9.0, true)
-        draw_line(arm_points[1], arm_points[2], arm_color, 5.6, true)
-        draw_circle(arm_points[1], 3.6, arm_color)
-        draw_circle(arm_points[2], 4.0, Color("#e9c9aa"))
+        draw_line(arm_points[0], arm_points[1], arm_outline, 8.5, true)
+        draw_line(arm_points[0], arm_points[1], arm_color, 5.2, true)
+        draw_line(arm_points[1], arm_points[2], arm_outline, 7.5, true)
+        draw_line(arm_points[1], arm_points[2], arm_color, 4.8, true)
+        draw_circle(arm_points[1], 3.2, arm_color)
+        draw_circle(arm_points[2], 3.6, Color("#e9c9aa"))
     draw_circle(shoulder_a, 3.8, arm_color)
     draw_circle(shoulder_b, 3.8, arm_color)
     var screen_origin := Vector2(gun_origin.x * facing, gun_origin.y)
