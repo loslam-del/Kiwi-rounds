@@ -3,7 +3,7 @@ class_name GameModLoader
 
 const MAX_MODS := 32
 const MAX_FILE_BYTES := 262144
-const VALID_EFFECTS := ["swift","spring","wave","rapid","sturdy"]
+const VALID_EFFECTS := ["swift","spring","feather","wall","air","grounded","homing","ricochet","heavy","rapid","magazine","piercing"]
 
 var skins: Array[Dictionary] = []
 var maps: Array[Dictionary] = []
