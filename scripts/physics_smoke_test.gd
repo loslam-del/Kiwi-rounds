@@ -116,6 +116,27 @@ func _run_physics_checks() -> void:
         _fail("homing projectile did not turn toward its target")
         return
 
+    game.set("score_player", 4)
+    game.call("_finish_round", true)
+    var training_end_found := false
+    var training_overlay: Control = game.get("overlay")
+    for child in training_overlay.get_children():
+        if child is Label and child.text == "РАУНД ЗАВЕРШЁН":
+            training_end_found = true
+    if not training_end_found:
+        _fail("training stopped at the match score limit")
+        return
+
+    game.set("game_mode", "bot")
+    game.call("_open_training_cards")
+    if player.is_physics_processing() or rival.is_physics_processing():
+        _fail("match continued running behind the card information panel")
+        return
+    game.call("_resume_game")
+    if not player.is_physics_processing() or not rival.is_physics_processing():
+        _fail("resume did not restore both fighters")
+        return
+
     await create_timer(0.35).timeout
     print("PHYSICS TEST PASSED: movement, jump, firing, bot reload, projectile hit")
     quit(0)
