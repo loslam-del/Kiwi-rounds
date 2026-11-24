@@ -8,13 +8,13 @@ Original 2D round-based arena prototype for Android.
 - **Training** starts directly in the arena. Open the separate **CARDS** menu whenever you want to build or change a loadout; selected cards are applied immediately.
 - **Cards** show an illustrated emblem, their main effect, buffs and debuffs. Built-in weapon cards include homing shots, ricochets, heavy shots, rapid fire, a larger magazine and a rail-speed projectile.
 - **Weapon progression** changes the fighter's drawn blaster as weapon cards are equipped; higher weapon levels add visible rails, trims and muzzle effects.
-- **Settings** currently contains sound and vibration preference switches; actual audio and haptics are not connected yet.
+- **Settings** controls sound volume, hit sounds, vibration, camera shake and mirrored touch controls.
 - **Skins** lets you cycle through built-in colors and loaded mod skins.
 - **Mods** displays loaded mod counts/names and can rescan the mods folder.
 
 ## Current controls (landscape)
 - Left virtual joystick: move.
-- WAVE button: fire a harmless energy pulse.
+- FIRE button: launch an energy pulse that knocks back the opponent.
 - Right-bottom virtual joystick: aim.
 - JUMP button: jump.
 - MENU: pause and return to the main menu.
@@ -54,9 +54,9 @@ Example:
 
 Supported skin fields: `id`, `name`, `color` (hex color).
 Supported map fields: `id`, `name`, `platforms` (array of x/y/w/h platform objects).
-Supported upgrade fields: `id`, `name`, `desc`, `effect`, `primary`, `buff`, `debuff`, and `art`. Effects currently supported: `swift`, `spring`, `wave`, `rapid`, `sturdy`.
+Supported upgrade fields: `id`, `name`, `desc`, `effect`, `primary`, `buff`, `debuff`, and `art`. Effects currently supported: `swift`, `spring`, `feather`, `wall`, `air`, `grounded`, `homing`, `ricochet`, `heavy`, `rapid`, `magazine`, `piercing`. Unsupported effects are rejected instead of silently doing nothing.
 
 ## Open and build
-Import this folder in Godot 4.3+ and run `scenes/main.tscn`. Android export requires matching Godot export templates and Android build tools. No APK has been built or device-tested yet.
+Import this folder in Godot 4.3+ and run `scenes/main.tscn`. Android export requires matching Godot export templates and Android build tools. The GitHub Actions workflow validates the project, runs startup and physics/combat smoke tests, and builds a debug Android APK. The APK has not been tested on a physical phone.
 
 The project uses original code and placeholder visuals; it does not contain ROUNDS source code or original game assets.
