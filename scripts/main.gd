@@ -327,8 +327,8 @@ func _apply_control_layout() -> void:
     if controls_mirrored:
         movement_joystick.position = Vector2(1080,535)
         aim_joystick.position = Vector2(35,535)
-        fire_button.position = Vector2(820,585)
-        reload_button.position = Vector2(820,495)
+        fire_button.position = Vector2(205,585)
+        reload_button.position = Vector2(365,585)
         jump_button.position = Vector2(35,405)
     else:
         movement_joystick.position = Vector2(35,535)
@@ -883,6 +883,7 @@ func _reload_mods() -> void:
     all_upgrades.assign(DEFAULT_UPGRADES)
     all_upgrades.append_array(mod_loader.upgrades)
     _apply_skin()
+    mod_status_message = "Загрузка завершена: %d модов, %d скинов, %d арен, %d карточек. Предупреждений: %d." % [mod_loader.loaded_mod_names.size(),mod_loader.skins.size(),mod_loader.maps.size(),mod_loader.upgrades.size(),mod_loader.warnings.size()]
     _open_mods()
 
 func _open_training_cards() -> void:
