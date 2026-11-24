@@ -512,75 +512,201 @@ func _reload_mods() -> void:
     _open_mods()
 
 func _open_training_cards() -> void:
-    if phase == "fight":
-        player.set_physics_process(false)
-        rival.set_physics_process(false)
     if game_mode != "training":
         _show_panel("КАРТОЧКИ",[
             ["ОТКРЫТЬ ТРЕНИРОВКУ",Callable(self,"_start_training")],
             ["НАЗАД",Callable(self,"_resume_game")]
-        ],"Выдавать и удалять карточки можно в режиме тренировки.")
+        ],"Карточки и выбор арены доступны в тренировке.")
         return
-
     phase = "paused"
+    player.set_physics_process(false)
+    rival.set_physics_process(false)
     _close_overlay()
     game_controls.visible = false
-
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     shade.color = Color("#101722")
     ui.add_child(shade)
     overlay = shade
-
     var title := Label.new()
-    title.text = "КАРТОЧКИ УЛУЧШЕНИЙ"
-    title.position = Vector2(0,42)
-    title.size = Vector2(1280,66)
+    title.text = "ТРЕНИРОВКА"
+    title.position = Vector2(0,24)
+    title.size = Vector2(1280,55)
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size",38)
+    title.add_theme_font_size_override("font_size",36)
     title.add_theme_color_override("font_color",Color("#f4f7ff"))
     shade.add_child(title)
+    var tabs := HBoxContainer.new()
+    tabs.position = Vector2(330,90)
+    tabs.size = Vector2(620,55)
+    tabs.add_theme_constant_override("separation",14)
+    shade.add_child(tabs)
+    var upgrades_tab := Button.new()
+    upgrades_tab.text = "КАРТОЧКИ"
+    upgrades_tab.custom_minimum_size = Vector2(300,52)
+    upgrades_tab.pressed.connect(_set_training_tab.bind("cards"))
+    tabs.add_child(upgrades_tab)
+    var maps_tab := Button.new()
+    maps_tab.text = "ВЫБОР АРЕНЫ"
+    maps_tab.custom_minimum_size = Vector2(300,52)
+    maps_tab.pressed.connect(_set_training_tab.bind("maps"))
+    tabs.add_child(maps_tab)
+    if training_tab == "maps":
+        _get_skins()
+        _build_training_maps(shade)
+    else:
+        _build_upgrade_cards(shade)
+    var done := _add_button("ГОТОВО",Vector2(500,635),Vector2(280,58),shade)
+    done.pressed.connect(_resume_game)
 
+func _set_training_tab(tab: String) -> void:
+    training_tab = tab
+    _open_training_cards()
+
+func _build_upgrade_cards(shade: Control) -> void:
     var info := Label.new()
-    info.text = "Нажми на карточку, чтобы включить или убрать эффект. Активно: %d из %d" % [active_training_cards.size(),all_upgrades.size()]
-    info.position = Vector2(100,112)
-    info.size = Vector2(1080,42)
+    info.text = "Выбрано: %d из %d. Каждая карта усиливает один параметр и ослабляет другой." % [active_training_cards.size(),all_upgrades.size()]
+    info.position = Vector2(0,155)
+    info.size = Vector2(1280,32)
     info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    info.add_theme_font_size_override("font_size",18)
+    info.add_theme_font_size_override("font_size",17)
     info.add_theme_color_override("font_color",Color("#aab8cc"))
     shade.add_child(info)
-
+    var scroll := ScrollContainer.new()
+    scroll.position = Vector2(75,195)
+    scroll.size = Vector2(1130,420)
+    shade.add_child(scroll)
     var grid := GridContainer.new()
-    grid.columns = 3
-    grid.position = Vector2(110,178)
-    grid.size = Vector2(1060,350)
+    grid.columns = 2
+    grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     grid.add_theme_constant_override("h_separation",18)
-    grid.add_theme_constant_override("v_separation",16)
-    shade.add_child(grid)
-
+    grid.add_theme_constant_override("v_separation",14)
+    scroll.add_child(grid)
     for card in all_upgrades:
         var id := str(card.get("effect",card.get("id","")))
         var active := active_training_cards.has(id)
-        var card_button := Button.new()
-        var status := "✓  АКТИВНА" if active else "+  ВЫБРАТЬ"
-        card_button.text = status + "\n" + str(card.get("name",id)) + "\n\n" + str(card.get("desc",""))
-        card_button.custom_minimum_size = Vector2(330,150)
-        card_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-        card_button.focus_mode = Control.FOCUS_NONE
-        card_button.add_theme_font_size_override("font_size",18)
-        card_button.add_theme_color_override("font_color",Color("#f5f7fb"))
-        card_button.add_theme_color_override("font_hover_color",Color("#ffffff"))
-        var fill := Color("#245b58") if active else Color("#26364d")
-        var edge := Color("#64d6bd") if active else Color("#526b8c")
-        card_button.add_theme_stylebox_override("normal",_menu_button_style(fill,edge))
-        card_button.add_theme_stylebox_override("hover",_menu_button_style(Color("#385779"),Color("#b8d7ff")))
-        card_button.add_theme_stylebox_override("pressed",_menu_button_style(Color("#17263a"),Color("#ffffff")))
-        card_button.pressed.connect(_toggle_training_card.bind(id))
-        grid.add_child(card_button)
+        var panel := PanelContainer.new()
+        panel.custom_minimum_size = Vector2(520,175)
+        var style := StyleBoxFlat.new()
+        style.bg_color = Color("#1d4543") if active else Color("#202e42")
+        style.border_color = Color("#64d6bd") if active else Color("#526b8c")
+        style.set_border_width_all(2)
+        style.set_corner_radius_all(14)
+        panel.add_theme_stylebox_override("panel",style)
+        var row := HBoxContainer.new()
+        row.add_theme_constant_override("separation",14)
+        panel.add_child(row)
+        var icon_panel := ColorRect.new()
+        icon_panel.color = Color("#245b58") if active else Color("#344967")
+        icon_panel.custom_minimum_size = Vector2(92,125)
+        row.add_child(icon_panel)
+        var icon_label := Label.new()
+        icon_label.text = str(card.get("icon","✦"))
+        icon_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+        icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        icon_label.add_theme_font_size_override("font_size",44)
+        icon_label.add_theme_color_override("font_color",Color("#f5f7fb"))
+        icon_panel.add_child(icon_label)
+        var column := VBoxContainer.new()
+        column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        column.add_theme_constant_override("separation",5)
+        row.add_child(column)
+        var name_label := Label.new()
+        name_label.text = str(card.get("name",id))
+        name_label.add_theme_font_size_override("font_size",18)
+        name_label.add_theme_color_override("font_color",Color("#f4f7ff"))
+        column.add_child(name_label)
+        var buff := Label.new()
+        buff.text = str(card.get("buff",card.get("desc","")))
+        buff.add_theme_font_size_override("font_size",15)
+        buff.add_theme_color_override("font_color",Color("#75e0b5"))
+        buff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        column.add_child(buff)
+        var debuff := Label.new()
+        debuff.text = str(card.get("debuff","МИНУС  Нет"))
+        debuff.add_theme_font_size_override("font_size",15)
+        debuff.add_theme_color_override("font_color",Color("#ff9b91"))
+        debuff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        column.add_child(debuff)
+        var choose := Button.new()
+        choose.text = "УБРАТЬ" if active else "ВЫБРАТЬ"
+        choose.custom_minimum_size = Vector2(210,38)
+        choose.pressed.connect(_toggle_training_card.bind(id))
+        column.add_child(choose)
+        grid.add_child(panel)
 
-    var done := _add_button("ГОТОВО",Vector2(520,590),Vector2(240,66),shade)
-    done.add_theme_font_size_override("font_size",22)
-    done.pressed.connect(_resume_game)
+func _build_training_maps(shade: Control) -> void:
+    var info := Label.new()
+    info.text = "Выбери арену — она сменится сразу, пока бой на паузе."
+    info.position = Vector2(0,155)
+    info.size = Vector2(1280,32)
+    info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    info.add_theme_font_size_override("font_size",17)
+    info.add_theme_color_override("font_color",Color("#aab8cc"))
+    shade.add_child(info)
+    var scroll := ScrollContainer.new()
+    scroll.position = Vector2(90,200)
+    scroll.size = Vector2(1100,410)
+    shade.add_child(scroll)
+    var grid := GridContainer.new()
+    grid.columns = 2
+    grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    grid.add_theme_constant_override("h_separation",20)
+    grid.add_theme_constant_override("v_separation",18)
+    scroll.add_child(grid)
+    for i in range(all_maps.size()):
+        var map_data: Dictionary = all_maps[i]
+        var panel := PanelContainer.new()
+        panel.custom_minimum_size = Vector2(510,180)
+        var style := StyleBoxFlat.new()
+        style.bg_color = Color("#244d4c") if i == map_index else Color("#202e42")
+        style.border_color = Color("#64d6bd") if i == map_index else Color("#526b8c")
+        style.set_border_width_all(2)
+        style.set_corner_radius_all(14)
+        panel.add_theme_stylebox_override("panel",style)
+        var column := VBoxContainer.new()
+        column.add_theme_constant_override("separation",8)
+        panel.add_child(column)
+        var name_label := Label.new()
+        name_label.text = str(map_data.get("name","Арена")) + ("  ✓" if i == map_index else "")
+        name_label.add_theme_font_size_override("font_size",20)
+        name_label.add_theme_color_override("font_color",Color("#f4f7ff"))
+        column.add_child(name_label)
+        var preview := Control.new()
+        preview.custom_minimum_size = Vector2(460,72)
+        column.add_child(preview)
+        var ground := ColorRect.new()
+        ground.position = Vector2(0,60)
+        ground.size = Vector2(460,10)
+        ground.color = Color("#506b89")
+        preview.add_child(ground)
+        var platforms: Array = map_data.get("platforms",[])
+        for platform_value in platforms:
+            var platform: Dictionary = platform_value
+            var bar := ColorRect.new()
+            var px := clampf(float(platform.get("x",640))/1280.0*440.0-20.0,0.0,420.0)
+            var py := clampf(float(platform.get("y",500))/720.0*58.0,5.0,50.0)
+            var pw := clampf(float(platform.get("w",180))/1280.0*440.0,24.0,130.0)
+            bar.position = Vector2(px,py)
+            bar.size = Vector2(pw,6)
+            bar.color = Color("#70d7c3") if i == map_index else Color("#8da9cb")
+            preview.add_child(bar)
+        var select := Button.new()
+        select.text = "ВЫБРАНА" if i == map_index else "ВЫБРАТЬ ЭТУ АРЕНУ"
+        select.custom_minimum_size = Vector2(440,38)
+        select.pressed.connect(_select_training_map.bind(i))
+        column.add_child(select)
+        grid.add_child(panel)
+
+func _select_training_map(index: int) -> void:
+    if all_maps.is_empty():
+        return
+    map_index = posmod(index,all_maps.size())
+    _make_arena(map_index)
+    player.reset_round(Vector2(350,390))
+    rival.reset_round(Vector2(930,390))
+    _open_training_cards()
 
 func _toggle_training_card(card_id: String) -> void:
     if active_training_cards.has(card_id):
