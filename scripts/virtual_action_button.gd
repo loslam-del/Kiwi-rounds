@@ -37,7 +37,8 @@ func _gui_input(event: InputEvent) -> void:
         elif not event.pressed and event.index == active_touch:
             active_touch = -1
             button_up.emit()
-            pressed.emit()
+            if _event_inside(event.position):
+                pressed.emit()
             queue_redraw()
             accept_event()
     elif event is InputEventScreenDrag and event.index == active_touch:
@@ -50,9 +51,13 @@ func _gui_input(event: InputEvent) -> void:
         elif not event.pressed and mouse_active:
             mouse_active = false
             button_up.emit()
-            pressed.emit()
+            if _event_inside(event.position):
+                pressed.emit()
             queue_redraw()
         accept_event()
+
+func _event_inside(viewport_position: Vector2) -> bool:
+    return get_global_rect().has_point(viewport_position)
 
 func _draw() -> void:
     var active := active_touch != -1 or mouse_active
