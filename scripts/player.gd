@@ -57,6 +57,10 @@ var air_jumps_left := 1
 var extra_air_jumps := 0
 var gravity_scale := 1.0
 var air_control_scale := 1.0
+var homing_strength := 0.0
+var ricochet_count := 0
+var projectile_speed := 1050.0
+var weapon_level := 0
 var ground_accel_scale := 1.0
 var wall_jump_scale := 1.0
 
@@ -280,6 +284,32 @@ func apply_upgrade(upgrade_id: String) -> void:
         "grounded":
             ground_accel_scale *= 1.22
             gravity_scale *= 0.92
+        "homing":
+            homing_strength = minf(homing_strength + 4.2, 8.0)
+            projectile_speed *= 0.90
+            weapon_level += 1
+        "ricochet":
+            ricochet_count += 2
+            pulse_force *= 0.88
+            weapon_level += 1
+        "heavy":
+            pulse_force *= 1.24
+            pulse_interval *= 1.15
+            weapon_level += 2
+        "rapid":
+            pulse_interval *= 0.78
+            pulse_force *= 0.91
+            weapon_level += 1
+        "magazine":
+            magazine_size += 3
+            ammo += 3
+            reload_duration *= 1.12
+            weapon_level += 1
+        "piercing":
+            projectile_speed *= 1.22
+            pulse_force *= 1.08
+            reload_duration *= 1.16
+            weapon_level += 2
 
 func reset_round(spawn: Vector2) -> void:
     global_position = spawn
@@ -437,18 +467,46 @@ func _draw() -> void:
     var center := Vector2(0.0, -7.0 + bob)
     var face := Color("#102536")
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
-    # Layered soft aura, crisp silhouette and small highlight: readable at phone scale.
-    draw_circle(center, 28.0, Color(body_color, 0.045))
+    # Character: layered enamel body, rim light and expressive face.
+    draw_circle(center, 29.0, Color(body_color, 0.045))
     draw_circle(center, 24.0, Color(body_color, 0.10))
     draw_circle(center, 21.0, body_color)
-    draw_arc(center, 20.8, 0.0, TAU, 48, body_color.lightened(0.42), 1.6, true)
-    draw_arc(center + Vector2(-3.0, -4.0), 12.0, PI * 1.05, PI * 1.78, 20, Color(1.0, 1.0, 1.0, 0.16), 2.0, true)
-    draw_circle(center + Vector2(-6.0, -2.0), 1.9, face)
-    draw_circle(center + Vector2(6.0, -2.0), 1.9, face)
-    draw_line(center + Vector2(-3.0, 6.0), center + Vector2(3.0, 6.0), face, 1.8, true)
+    draw_circle(center + Vector2(-5.0,-7.0), 9.0, Color(1.0,1.0,1.0,0.10))
+    draw_arc(center, 20.8, 0.0, TAU, 48, body_color.lightened(0.48), 1.8, true)
+    draw_arc(center + Vector2(-3.0,-4.0), 12.0, PI*1.05, PI*1.78, 20, Color(1,1,1,0.18), 2.0, true)
+    draw_circle(center + Vector2(-6.0,-2.0), 1.9, face)
+    draw_circle(center + Vector2(6.0,-2.0), 1.9, face)
+    draw_line(center + Vector2(-3.0,6.0), center + Vector2(3.0,6.0), face, 1.8, true)
     if hit_flash > 0.0:
-        draw_circle(center, 25.0, Color(1.0, 0.45, 0.34, hit_flash * 0.24))
-        draw_arc(center, 25.0, 0.0, TAU, 48, Color(1.0, 0.82, 0.72, hit_flash * 0.8), 2.2, true)
+        draw_circle(center,25.0,Color(1.0,0.45,0.34,hit_flash*0.24))
+        draw_arc(center,25.0,0.0,TAU,48,Color(1.0,0.82,0.72,hit_flash*0.8),2.2,true)
     if reload_visual > 0.0:
-        draw_arc(center, 27.0, -PI / 2.0, -PI / 2.0 + TAU * (1.0 - reload_visual), 28, Color.WHITE, 2.0, true)
-    draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+        draw_arc(center,27.0,-PI/2.0,-PI/2.0+TAU*(1.0-reload_visual),28,Color.WHITE,2.0,true)
+    # Weapon is drawn independently from the fighter so upgrades visibly change its silhouette.
+    var aim_local := Vector2(aim_input.x * facing, aim_input.y).normalized()
+    if aim_local == Vector2.ZERO:
+        aim_local = Vector2.RIGHT
+    var gun_origin := Vector2(9.0, -8.0 + bob)
+    draw_set_transform(gun_origin, aim_local.angle(), Vector2.ONE)
+    var metal := Color("#263342")
+    var trim := body_color.lightened(0.35)
+    var barrel_len := 24.0 + float(weapon_level) * 2.5
+    draw_circle(Vector2(0,0), 15.0, Color(trim,0.10))
+    draw_rect(Rect2(-5,-7,barrel_len+8,14), metal)
+    draw_rect(Rect2(-2,-5,barrel_len+7,3), trim)
+    draw_rect(Rect2(barrel_len-1,-6,6,12), Color("#111923"))
+    draw_rect(Rect2(-8,5,10,12), Color("#17212e"))
+    draw_rect(Rect2(-4,8,5,7), trim.darkened(0.12))
+    draw_rect(Rect2(4,-10,8,3), Color("#7d8da1"))
+    if weapon_level >= 1:
+        draw_rect(Rect2(5,-12,barrel_len-1,3), trim)
+        draw_circle(Vector2(barrel_len-3,0),5.0,Color(trim,0.35))
+    if weapon_level >= 2:
+        draw_rect(Rect2(9,7,barrel_len-8,3), Color("#d6e1ec"))
+        draw_circle(Vector2(2,-13),3.0,Color("#f4d36e"))
+    if weapon_level >= 3:
+        draw_arc(Vector2(10,0),18.0,-PI*0.75,PI*0.75,24,trim,2.4,true)
+    if muzzle_flash > 0.0:
+        var flash_size := 8.0 + muzzle_flash * 90.0
+        draw_colored_polygon(PackedVector2Array([Vector2(barrel_len+2,0),Vector2(barrel_len+flash_size,-flash_size*0.42),Vector2(barrel_len+flash_size*0.55,0),Vector2(barrel_len+flash_size,flash_size*0.42)]),Color("#fff0a8",0.9))
+    draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
