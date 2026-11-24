@@ -715,78 +715,52 @@ func _show_main_menu() -> void:
     game_controls.visible = false
     hud.visible = false
     _close_overlay()
+
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     shade.color = Color("#0b111b")
     ui.add_child(shade)
     overlay = shade
-    _add_menu_ornaments(shade)
 
-    var art_panel := Panel.new()
-    art_panel.position = Vector2(635,72)
-    art_panel.size = Vector2(585,555)
-    var art_style := StyleBoxFlat.new()
-    art_style.bg_color = Color("#172333")
-    art_style.border_color = Color("#526a78")
-    art_style.set_border_width_all(2)
-    art_style.set_corner_radius_all(26)
-    art_style.shadow_color = Color(0,0,0,0.48)
-    art_style.shadow_size = 24
-    art_style.shadow_offset = Vector2(0,10)
-    art_panel.add_theme_stylebox_override("panel",art_style)
-    shade.add_child(art_panel)
-    _add_menu_battle_scene(shade)
-
-    var eyebrow := Label.new()
-    eyebrow.text = "АРЕНА • СЕЗОН 01"
-    eyebrow.position = Vector2(105,125)
-    eyebrow.size = Vector2(450,30)
-    eyebrow.add_theme_font_size_override("font_size",16)
-    eyebrow.add_theme_color_override("font_color",Color("#b9e36c"))
-    shade.add_child(eyebrow)
-
-    var title := Label.new()
-    title.text = "KIWI\nROUNDS"
-    title.position = Vector2(96,160)
-    title.size = Vector2(480,160)
-    title.add_theme_font_size_override("font_size",70)
-    title.add_theme_color_override("font_color",Color("#f4f1e7"))
-    title.add_theme_constant_override("line_spacing",-8)
-    shade.add_child(title)
+    # Large title sits behind the centered menu buttons.
+    var title_shadow := Label.new()
+    title_shadow.text = "KIWI ROUNDS"
+    title_shadow.position = Vector2(0, 204)
+    title_shadow.size = Vector2(1280, 150)
+    title_shadow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title_shadow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    title_shadow.add_theme_font_size_override("font_size", 104)
+    title_shadow.add_theme_color_override("font_color", Color("#26394a"))
+    title_shadow.add_theme_constant_override("outline_size", 2)
+    title_shadow.add_theme_color_override("font_outline_color", Color("#172536"))
+    shade.add_child(title_shadow)
 
     var subtitle := Label.new()
-    subtitle.text = "ОДНА АРЕНА. ДВА БОЙЦА.\nИ НИ ОДНОГО БЕЗОПАСНОГО УГЛА."
-    subtitle.position = Vector2(102,326)
-    subtitle.size = Vector2(460,58)
-    subtitle.add_theme_font_size_override("font_size",17)
-    subtitle.add_theme_color_override("font_color",Color("#a9b6c4"))
-    subtitle.add_theme_constant_override("line_spacing",4)
+    subtitle.text = "BOT ARENA"
+    subtitle.position = Vector2(0, 285)
+    subtitle.size = Vector2(1280, 30)
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size", 15)
+    subtitle.add_theme_color_override("font_color", Color("#8da0b3"))
     shade.add_child(subtitle)
 
-    var play := _add_button("ИГРАТЬ",Vector2(100,415),Vector2(440,76),shade)
-    play.add_theme_font_size_override("font_size",28)
-    play.add_theme_stylebox_override("normal",_menu_button_style(Color("#d9ef70"),Color("#f1f7bb")))
-    play.add_theme_color_override("font_color",Color("#171b13"))
-    play.pressed.connect(_show_mode_menu)
+    var play := _add_button("ИГРАТЬ", Vector2(440, 330), Vector2(400, 68), shade)
+    play.add_theme_font_size_override("font_size", 25)
+    play.add_theme_stylebox_override("normal", _menu_button_style(Color("#d9ef70"), Color("#f1f7bb")))
+    play.add_theme_color_override("font_color", Color("#171b13"))
+    play.pressed.connect(_start_game.bind("bot"))
 
-    var settings := _add_button("НАСТРОЙКИ",Vector2(100,510),Vector2(210,62),shade)
-    settings.add_theme_stylebox_override("normal",_menu_button_style(Color("#252f3d"),Color("#61778c")))
-    settings.pressed.connect(_show_settings)
-    var skins := _add_button("СКИНЫ",Vector2(330,510),Vector2(210,62),shade)
-    skins.add_theme_stylebox_override("normal",_menu_button_style(Color("#252f3d"),Color("#b9e36c")))
+    var skins := _add_button("СКИНЫ", Vector2(440, 414), Vector2(400, 58), shade)
+    skins.add_theme_stylebox_override("normal", _menu_button_style(Color("#202d3b"), Color("#b9e36c")))
     skins.pressed.connect(_open_skins)
-    var mods := _add_button("МОДЫ",Vector2(100,585),Vector2(440,48),shade)
-    mods.add_theme_stylebox_override("normal",_menu_button_style(Color("#252f3d"),Color("#61778c")))
-    mods.pressed.connect(_open_mods)
 
-    var footer := Label.new()
-    footer.text = "KIWI ROUNDS  /  ANDROID BUILD"
-    footer.position = Vector2(0,675)
-    footer.size = Vector2(1280,24)
-    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    footer.add_theme_font_size_override("font_size",12)
-    footer.add_theme_color_override("font_color",Color("#667487"))
-    shade.add_child(footer)
+    var settings := _add_button("НАСТРОЙКИ", Vector2(440, 486), Vector2(400, 58), shade)
+    settings.add_theme_stylebox_override("normal", _menu_button_style(Color("#202d3b"), Color("#61778c")))
+    settings.pressed.connect(_show_settings)
+
+    var mods := _add_button("МОДЫ", Vector2(440, 558), Vector2(400, 58), shade)
+    mods.add_theme_stylebox_override("normal", _menu_button_style(Color("#202d3b"), Color("#61778c")))
+    mods.pressed.connect(_open_mods)
 
 func _add_menu_battle_scene(parent: Control) -> void:
     # Four frozen fighter poses create a layered firefight illustration.
