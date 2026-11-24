@@ -442,6 +442,9 @@ func reset_round(spawn: Vector2) -> void:
     air_jumps_left = 1 + extra_air_jumps
 
 func _draw() -> void:
+    if skin_style == "kiwi":
+        _draw_kiwi_ball()
+        return
     var moving := is_on_floor() and absf(velocity.x) > 35.0
     var stride := sin(animation_time) if moving else 0.0
     var bob := absf(stride) * 1.4 if moving else sin(animation_time * 2.0) * 0.45
@@ -695,3 +698,78 @@ func _draw() -> void:
             var spark_end := Vector2(barrel_len+flash_size*1.15,0) + Vector2(cos(spark_angle),sin(spark_angle))*flash_size*0.45
             draw_line(Vector2(barrel_len+3,0),spark_end,Color("#fff5c8",0.82),1.6,true)
     draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
+
+
+func _draw_kiwi_ball() -> void:
+    # Kiwi is a clean ROUNDS-style sphere, not a miniature humanoid.
+    draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
+    var center := Vector2(0.0, -7.0)
+    var outline := Color("#172333")
+    var green := Color("#477b4c")
+    var green_light := Color("#78a76a")
+    var hair := Color("#c9c0b2")
+    var hair_light := Color("#f0e9dc")
+    var hair_dark := Color("#8f887e")
+    var skin := Color("#f2d7bd")
+    # Round body with a soft highlight and a crisp outer rim.
+    draw_circle(center + Vector2(0.0, 2.0), 28.0, Color("#101a27", 0.30))
+    draw_circle(center, 26.0, outline)
+    draw_circle(center, 23.0, green)
+    draw_arc(center, 22.4, PI * 1.08, PI * 1.92, 36, green_light, 2.0, true)
+    draw_circle(center + Vector2(-8.0, -9.0), 6.0, Color(1.0, 1.0, 1.0, 0.10))
+    # Twin low hair buns, visible on both sides of the ball.
+    draw_circle(center + Vector2(-21.0, -22.0), 9.0, hair_dark)
+    draw_circle(center + Vector2(-21.0, -22.0), 7.2, hair)
+    draw_circle(center + Vector2(21.0, -22.0), 9.0, hair_dark)
+    draw_circle(center + Vector2(21.0, -22.0), 7.2, hair)
+    draw_arc(center + Vector2(-21.0, -22.0), 7.0, PI * 1.1, PI * 1.8, 16, hair_light, 1.3, true)
+    draw_arc(center + Vector2(21.0, -22.0), 7.0, PI * 1.1, PI * 1.8, 16, hair_light, 1.3, true)
+    # Face and two soft side locks.
+    draw_circle(center + Vector2(0.0, -8.0), 16.0, skin)
+    draw_line(center + Vector2(-17.0, -15.0), center + Vector2(-15.0, 7.0), hair_dark, 6.0, true)
+    draw_line(center + Vector2(-17.0, -15.0), center + Vector2(-15.0, 7.0), hair, 3.6, true)
+    draw_line(center + Vector2(17.0, -15.0), center + Vector2(15.0, 7.0), hair_dark, 6.0, true)
+    draw_line(center + Vector2(17.0, -15.0), center + Vector2(15.0, 7.0), hair, 3.6, true)
+    # Rounded bangs.
+    draw_colored_polygon(PackedVector2Array([
+        center + Vector2(-17.0, -14.0), center + Vector2(-15.0, -27.0),
+        center + Vector2(-8.0, -34.0), center + Vector2(1.0, -36.0),
+        center + Vector2(12.0, -31.0), center + Vector2(17.0, -21.0),
+        center + Vector2(12.0, -20.0), center + Vector2(6.0, -24.0),
+        center + Vector2(0.0, -18.0), center + Vector2(-6.0, -23.0)
+    ]), hair_dark)
+    draw_colored_polygon(PackedVector2Array([
+        center + Vector2(-15.0, -15.0), center + Vector2(-13.0, -26.0),
+        center + Vector2(-7.0, -32.0), center + Vector2(1.0, -34.0),
+        center + Vector2(11.0, -29.0), center + Vector2(15.0, -21.0),
+        center + Vector2(11.0, -21.0), center + Vector2(5.0, -25.0),
+        center + Vector2(0.0, -19.0), center + Vector2(-6.0, -24.0)
+    ]), hair)
+    draw_line(center + Vector2(-10.0, -30.0), center + Vector2(-5.0, -33.0), hair_light, 1.8, true)
+    # Simple red-violet eyes and the tiny beauty mark.
+    draw_circle(center + Vector2(-6.0, -8.0), 2.1, Color("#9c4f68"))
+    draw_circle(center + Vector2(6.0, -8.0), 2.1, Color("#9c4f68"))
+    draw_circle(center + Vector2(11.0, -1.0), 1.1, Color("#49333a"))
+    # Small green military cap, with a short brim and gold star.
+    draw_colored_polygon(PackedVector2Array([
+        center + Vector2(-17.0, -28.0), center + Vector2(-13.0, -39.0),
+        center + Vector2(-4.0, -45.0), center + Vector2(8.0, -44.0),
+        center + Vector2(17.0, -36.0), center + Vector2(18.0, -28.0)
+    ]), outline)
+    draw_colored_polygon(PackedVector2Array([
+        center + Vector2(-14.0, -29.0), center + Vector2(-11.0, -37.0),
+        center + Vector2(-3.0, -42.0), center + Vector2(7.0, -41.0),
+        center + Vector2(14.0, -35.0), center + Vector2(15.0, -29.0)
+    ]), green)
+    draw_line(center + Vector2(-16.0, -28.0), center + Vector2(18.0, -28.0), outline, 4.0, true)
+    draw_line(center + Vector2(-12.0, -30.0), center + Vector2(14.0, -30.0), green_light, 1.4, true)
+    draw_colored_polygon(PackedVector2Array([
+        center + Vector2(0.0, -39.0), center + Vector2(2.0, -35.0),
+        center + Vector2(6.0, -35.0), center + Vector2(3.0, -32.0),
+        center + Vector2(4.0, -28.0), center + Vector2(0.0, -30.0),
+        center + Vector2(-4.0, -28.0), center + Vector2(-3.0, -32.0),
+        center + Vector2(-6.0, -35.0), center + Vector2(-2.0, -35.0)
+    ]), Color("#e4c66e"))
+    if hit_flash > 0.0:
+        draw_arc(center, 29.0, 0.0, TAU, 48, Color(1.0, 0.86, 0.72, hit_flash * 0.8), 2.0, true)
+    draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
