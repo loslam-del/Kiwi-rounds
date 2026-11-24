@@ -76,11 +76,27 @@ func _run_physics_checks() -> void:
         _fail("player shot did not consume ammunition")
         return
 
+    # Weapon muzzle must mirror with the fighter, not keep spawning on the right.
+    player.call("set_aim", Vector2.LEFT)
+    var left_muzzle: Vector2 = player.call("_weapon_muzzle_local")
+    if left_muzzle.x >= -15.0:
+        _fail("left-facing pistol muzzle was not mirrored with the fighter")
+        return
+    player.call("set_aim", Vector2.RIGHT)
+    var right_muzzle: Vector2 = player.call("_weapon_muzzle_local")
+    if right_muzzle.x <= 15.0:
+        _fail("right-facing pistol muzzle was not anchored in front of the hand")
+        return
+
     # Reload behavior belongs to bot matches; training intentionally disables the rival.
     game.call("_start_game", "bot")
+    rival.set("is_bot", true)
+    rival.set("target", player)
+    rival.set_physics_process(true)
     rival.set("ammo", 0)
     rival.set("reload_timer", 0.0)
-    await physics_frame
+    # Call the bot decision step directly so this check is independent of frame scheduling.
+    rival.call("_think_bot", 0.016)
     if float(rival.get("reload_timer")) <= 0.0:
         _fail("bot did not automatically start reloading")
         return
@@ -208,6 +224,26 @@ func _run_physics_checks() -> void:
         _fail("touch button accepted a release outside its bounds")
         return
 
+    # Skin picker layout: cards must fit a three-column grid and previews must clip.
+    game.call("_open_skins")
+    await process_frame
+    var skin_overlay := game.get("overlay") as Control
+    if skin_overlay == null:
+        _fail("skin picker overlay did not open")
+        return
+    var skin_grid := skin_overlay.get_node_or_null("SkinScroll/SkinGrid") as GridContainer
+    if skin_grid == null or skin_grid.columns != 3 or skin_grid.get_child_count() < 6:
+        _fail("skin picker grid did not create the expected three-column cards")
+        return
+    for skin_card in skin_grid.get_children():
+        var preview := skin_card.get_node_or_null("SkinColumn/SkinPreviewArea") as Control
+        if preview == null or not preview.clip_contents:
+            _fail("skin card preview was missing or allowed content to overflow")
+            return
+        if preview.custom_minimum_size.x > skin_card.custom_minimum_size.x:
+            _fail("skin preview was wider than its card")
+            return
+
     await create_timer(0.35).timeout
-    print("PHYSICS TEST PASSED: movement, jump, firing, bot reload, projectile hit")
+    print("PHYSICS TEST PASSED: movement, jump, mirrored weapon muzzle, skin layout, firing, bot reload, projectile hit")
     quit(0)

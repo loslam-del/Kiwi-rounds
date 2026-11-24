@@ -924,12 +924,14 @@ func _open_skins() -> void:
     subtitle.add_theme_color_override("font_color",Color("#a7a9b2"))
     shade.add_child(subtitle)
     var scroll := ScrollContainer.new()
+    scroll.name = "SkinScroll"
     scroll.position = Vector2(65,135)
     scroll.size = Vector2(1150,465)
     shade.add_child(scroll)
     var grid := GridContainer.new()
-    grid.columns = 4
-    grid.add_theme_constant_override("h_separation",16)
+    grid.name = "SkinGrid"
+    grid.columns = 3
+    grid.add_theme_constant_override("h_separation",18)
     grid.add_theme_constant_override("v_separation",16)
     grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     scroll.add_child(grid)
@@ -937,7 +939,8 @@ func _open_skins() -> void:
         var skin: Dictionary = skins[i]
         var color := Color.from_string(str(skin.get("color","#39d6c5")),Color("#39d6c5"))
         var card := PanelContainer.new()
-        card.custom_minimum_size = Vector2(265,300)
+        card.name = "SkinCard_%d" % i
+        card.custom_minimum_size = Vector2(340,286)
         var style := StyleBoxFlat.new()
         style.bg_color = Color("#30352b") if i == skin_index else Color("#20242e")
         style.border_color = Color("#d9ef70") if i == skin_index else Color("#454b5b")
@@ -948,15 +951,18 @@ func _open_skins() -> void:
         style.shadow_offset = Vector2(0,4)
         card.add_theme_stylebox_override("panel",style)
         var column := VBoxContainer.new()
+        column.name = "SkinColumn"
         column.alignment = BoxContainer.ALIGNMENT_CENTER
         column.add_theme_constant_override("separation",8)
         card.add_child(column)
         var preview_area := Control.new()
-        preview_area.custom_minimum_size = Vector2(235,175)
+        preview_area.name = "SkinPreviewArea"
+        preview_area.custom_minimum_size = Vector2(310,158)
+        preview_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         preview_area.clip_contents = true
         var preview_back := Panel.new()
-        preview_back.position = Vector2(5,5)
-        preview_back.size = Vector2(225,165)
+        preview_back.position = Vector2(5,4)
+        preview_back.size = Vector2(300,150)
         var preview_style := StyleBoxFlat.new()
         preview_style.bg_color = Color("#171d27")
         preview_style.border_color = color.darkened(0.18)
@@ -965,16 +971,16 @@ func _open_skins() -> void:
         preview_back.add_theme_stylebox_override("panel",preview_style)
         preview_area.add_child(preview_back)
         var color_chip := ColorRect.new()
-        color_chip.position = Vector2(15,15)
-        color_chip.size = Vector2(205,4)
+        color_chip.position = Vector2(15,13)
+        color_chip.size = Vector2(280,4)
         color_chip.color = color
         preview_area.add_child(color_chip)
         column.add_child(preview_area)
         var fighter: ArenaPlayer = PLAYER_SCRIPT.new()
         fighter.body_color = color
         fighter.skin_style = str(skin.get("style","default"))
-        fighter.scale = Vector2(1.05,1.05)
-        fighter.position = Vector2(117,88)
+        fighter.scale = Vector2(0.82,0.82)
+        fighter.position = Vector2(155,88)
         fighter.set_physics_process(false)
         fighter.set_process(false)
         preview_area.add_child(fighter)
@@ -986,7 +992,7 @@ func _open_skins() -> void:
         column.add_child(name_label)
         var choose := Button.new()
         choose.text = "НАДЕТО  ✓" if i == skin_index else "ЭКИПИРОВАТЬ"
-        choose.custom_minimum_size = Vector2(220,45)
+        choose.custom_minimum_size = Vector2(290,42)
         choose.focus_mode = Control.FOCUS_NONE
         choose.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
         choose.add_theme_font_size_override("font_size",16)
