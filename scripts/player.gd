@@ -91,6 +91,16 @@ func set_jump(value: bool) -> void:
 func set_fire(value: bool) -> void:
     touch_fire = value
 
+func clear_touch_controls() -> void:
+    move_stick = Vector2.ZERO
+    move_input = 0.0
+    touch_jump = false
+    touch_fire = false
+    jump_held = false
+    fire_held = false
+    jump_buffer_timer = 0.0
+    jump_hold_timer = 0.0
+
 func _physics_process(delta: float) -> void:
     animation_time += delta * (8.5 if absf(velocity.x) > 35.0 and is_on_floor() else 2.2)
     pulse_cooldown = maxf(0.0, pulse_cooldown - delta)
