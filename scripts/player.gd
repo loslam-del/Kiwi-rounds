@@ -1,7 +1,7 @@
 extends CharacterBody2D
 class_name ArenaPlayer
 
-signal pulse_requested(origin: Vector2, direction: Vector2, force: float, tint: Color)
+signal pulse_requested(origin: Vector2, direction: Vector2, force: float, tint: Color, shooter: Node2D)
 
 @export var is_bot := false
 @export var body_color := Color("#39d6c5")
@@ -126,7 +126,7 @@ func _fire_pulse() -> void:
         facing = signf(direction.x)
 
     var muzzle := Vector2(facing * 13.0, -7.0) + direction * 38.0
-    pulse_requested.emit(global_position + muzzle, direction, pulse_force, body_color)
+    pulse_requested.emit(global_position + muzzle, direction, pulse_force, body_color, self)
 
 func apply_upgrade(upgrade_id: String) -> void:
     match upgrade_id:
