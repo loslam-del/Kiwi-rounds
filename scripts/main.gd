@@ -310,7 +310,8 @@ func _apply_skin() -> void:
         {"name":"Лазурный","color":"#4b9cff"},
         {"name":"Фиолетовый","color":"#b47cff"},
         {"name":"Золотой","color":"#ffc857"},
-        {"name":"Розовый","color":"#ff78b7"}
+        {"name":"Розовый","color":"#ff78b7"},
+        {"id":"kiwi_araga","name":"Киви Арага","color":"#f2e5ce","style":"kiwi"}
     ]
     if mods_loaded and mod_loader != null:
         skins.append_array(mod_loader.skins)
