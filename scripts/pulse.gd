@@ -44,14 +44,13 @@ func _on_body_entered(body: Node2D) -> void:
         queue_free()
 
 func _draw() -> void:
-    # Яркий кинетический снаряд, а не круглая декоративная волна.
-    draw_line(Vector2(-22.0,0.0),Vector2(2.0,0.0),Color(tint,0.35),9.0,true)
-    var bullet := PackedVector2Array([
-        Vector2(-9.0,-5.0),
-        Vector2(5.0,-5.0),
-        Vector2(12.0,0.0),
-        Vector2(5.0,5.0),
-        Vector2(-9.0,5.0)
-    ])
-    draw_colored_polygon(bullet,tint)
-    draw_circle(Vector2(5.0,0.0),2.5,Color.WHITE)
+    # Glowing kinetic bolt with layered core and motion streak.
+    var tail := Vector2(-27.0,0.0)
+    draw_line(tail,Vector2(2.0,0.0),Color(tint,0.16),15.0,true)
+    draw_line(tail,Vector2(2.0,0.0),Color(tint,0.38),8.0,true)
+    var halo := PackedVector2Array([Vector2(-12,-8),Vector2(5,-8),Vector2(17,0),Vector2(5,8),Vector2(-12,8)])
+    draw_colored_polygon(halo,Color(tint,0.42))
+    var core := PackedVector2Array([Vector2(-9,-4.5),Vector2(6,-4.5),Vector2(13,0),Vector2(6,4.5),Vector2(-9,4.5)])
+    draw_colored_polygon(core,tint)
+    draw_line(Vector2(-6,0),Vector2(8,0),Color.WHITE,2.0,true)
+    draw_circle(Vector2(7,0),2.5,Color.WHITE)
