@@ -22,13 +22,16 @@ const DEFAULT_UPGRADES := [
     {"id":"kiwi_charm","name":"ОБЕРЕГ КИВИ","icon":"✿","art":"kiwi","primary":"КОСМЕТИЧЕСКИЙ ЭФФЕКТ","buff":"ЗЕЛЁНЫЕ ЛИСТЬЯ И МЯГКОЕ СИЯНИЕ","debuff":"БЕЗ ИЗМЕНЕНИЯ ХАРАКТЕРИСТИК","effect":"kiwi_charm"}
 ]
 const DEFAULT_MAPS := [
-    {"name":"КОРОТКИЙ МОСТ","platforms":[{"x":330,"y":555,"w":230,"h":20},{"x":950,"y":555,"w":230,"h":20},{"x":640,"y":420,"w":170,"h":20},{"x":190,"y":430,"w":150,"h":18},{"x":1090,"y":430,"w":150,"h":18}]},
-    {"name":"ДВЕ БАШНИ","platforms":[{"x":180,"y":590,"w":190,"h":20},{"x":180,"y":440,"w":150,"h":20},{"x":1100,"y":590,"w":190,"h":20},{"x":1100,"y":440,"w":150,"h":20},{"x":640,"y":520,"w":150,"h":20}]},
-    {"name":"ЛЕСТНИЦА","platforms":[{"x":220,"y":600,"w":180,"h":20},{"x":420,"y":520,"w":170,"h":20},{"x":620,"y":440,"w":170,"h":20},{"x":820,"y":360,"w":170,"h":20},{"x":1050,"y":520,"w":180,"h":20}]},
-    {"name":"ЦЕНТРАЛЬНЫЙ ОСТРОВ","platforms":[{"x":300,"y":560,"w":170,"h":20},{"x":980,"y":560,"w":170,"h":20},{"x":640,"y":500,"w":260,"h":22},{"x":640,"y":340,"w":150,"h":20}]},
-    {"name":"РАЗЛОМ","platforms":[{"x":190,"y":560,"w":250,"h":20},{"x":1090,"y":560,"w":250,"h":20},{"x":450,"y":410,"w":150,"h":20},{"x":830,"y":410,"w":150,"h":20}]},
-    {"name":"КРЕСТ","platforms":[{"x":640,"y":570,"w":340,"h":20},{"x":640,"y":390,"w":340,"h":20},{"x":390,"y":480,"w":150,"h":20},{"x":890,"y":480,"w":150,"h":20}]},
-    {"name":"ПАРЯЩИЕ СТУПЕНИ","platforms":[{"x":250,"y":610,"w":170,"h":20},{"x":470,"y":510,"w":170,"h":20},{"x":690,"y":410,"w":170,"h":20},{"x":910,"y":510,"w":170,"h":20},{"x":1130,"y":610,"w":170,"h":20}]}
+    {"name":"КОРОТКИЙ МОСТ","theme":"city","accent":"#d9ef70","platform":"#283b54","bg_top":"#172234","bg_bottom":"#121a27","platforms":[{"x":330,"y":555,"w":230,"h":20},{"x":950,"y":555,"w":230,"h":20},{"x":640,"y":420,"w":170,"h":20},{"x":190,"y":430,"w":150,"h":18},{"x":1090,"y":430,"w":150,"h":18}]},
+    {"name":"ДВЕ БАШНИ","theme":"factory","accent":"#ff9b72","platform":"#3d3542","bg_top":"#282333","bg_bottom":"#171821","platforms":[{"x":180,"y":590,"w":190,"h":20},{"x":180,"y":440,"w":150,"h":20},{"x":1100,"y":590,"w":190,"h":20},{"x":1100,"y":440,"w":150,"h":20},{"x":640,"y":520,"w":150,"h":20}]},
+    {"name":"ЛЕСТНИЦА","theme":"sky","accent":"#8ed7ff","platform":"#344b67","bg_top":"#142a46","bg_bottom":"#182536","platforms":[{"x":220,"y":600,"w":180,"h":20},{"x":420,"y":520,"w":170,"h":20},{"x":620,"y":440,"w":170,"h":20},{"x":820,"y":360,"w":170,"h":20},{"x":1050,"y":520,"w":180,"h":20}]},
+    {"name":"ЦЕНТРАЛЬНЫЙ ОСТРОВ","theme":"jungle","accent":"#8ee28d","platform":"#315244","bg_top":"#17372f","bg_bottom":"#13251f","platforms":[{"x":300,"y":560,"w":170,"h":20},{"x":980,"y":560,"w":170,"h":20},{"x":640,"y":500,"w":260,"h":22},{"x":640,"y":340,"w":150,"h":20}]},
+    {"name":"РАЗЛОМ","theme":"rift","accent":"#c18cff","platform":"#44375f","bg_top":"#241c3b","bg_bottom":"#171426","platforms":[{"x":190,"y":560,"w":250,"h":20},{"x":1090,"y":560,"w":250,"h":20},{"x":450,"y":410,"w":150,"h":20},{"x":830,"y":410,"w":150,"h":20}]},
+    {"name":"КРЕСТ","theme":"ice","accent":"#9be8ff","platform":"#34516a","bg_top":"#19354c","bg_bottom":"#122334","platforms":[{"x":640,"y":570,"w":340,"h":20},{"x":640,"y":390,"w":340,"h":20},{"x":390,"y":480,"w":150,"h":20},{"x":890,"y":480,"w":150,"h":20}]},
+    {"name":"ПАРЯЩИЕ СТУПЕНИ","theme":"sunset","accent":"#ffc477","platform":"#59415a","bg_top":"#422d4d","bg_bottom":"#211d32","platforms":[{"x":250,"y":610,"w":170,"h":20},{"x":470,"y":510,"w":170,"h":20},{"x":690,"y":410,"w":170,"h":20},{"x":910,"y":510,"w":170,"h":20},{"x":1130,"y":610,"w":170,"h":20}]},
+    {"name":"КРИСТАЛЬНЫЙ ЗАЛ","theme":"crystal","accent":"#7cf0df","platform":"#28565b","bg_top":"#14343d","bg_bottom":"#101e2c","platforms":[{"x":230,"y":590,"w":180,"h":18},{"x":1050,"y":590,"w":180,"h":18},{"x":430,"y":470,"w":150,"h":18},{"x":850,"y":470,"w":150,"h":18},{"x":640,"y":330,"w":210,"h":18}]},
+    {"name":"ПЕПЕЛЬНЫЙ КРАТЕР","theme":"volcano","accent":"#ff795e","platform":"#563b3b","bg_top":"#3a2027","bg_bottom":"#1d171d","platforms":[{"x":250,"y":580,"w":210,"h":22},{"x":1030,"y":580,"w":210,"h":22},{"x":480,"y":450,"w":150,"h":18},{"x":800,"y":450,"w":150,"h":18},{"x":640,"y":540,"w":110,"h":18}]},
+    {"name":"НОЧНОЙ ПОРТ","theme":"harbor","accent":"#6fd5ff","platform":"#29465c","bg_top":"#13283b","bg_bottom":"#101923","platforms":[{"x":210,"y":600,"w":200,"h":18},{"x":1070,"y":600,"w":200,"h":18},{"x":420,"y":500,"w":160,"h":18},{"x":860,"y":500,"w":160,"h":18},{"x":640,"y":400,"w":190,"h":18},{"x":640,"y":260,"w":120,"h":18}]}
 ]
 
 var player: ArenaPlayer
@@ -47,6 +50,11 @@ var mod_loader: GameModLoader
 var all_maps: Array[Dictionary] = []
 var all_upgrades: Array[Dictionary] = []
 var map_index := 0
+var arena_theme := "city"
+var arena_accent := Color("#d9ef70")
+var arena_platform_color := Color("#283b54")
+var arena_bg_top := Color("#172234")
+var arena_bg_bottom := Color("#121a27")
 var skin_index := 0
 var score_player := 0
 var score_bot := 0
@@ -134,9 +142,10 @@ func _boot_game() -> void:
     queue_redraw()
 
 func _draw() -> void:
-    draw_rect(Rect2(0,0,1280,720),Color("#101723"))
-    draw_rect(Rect2(0,0,1280,470),Color("#172234"))
-    draw_rect(Rect2(0,470,1280,250),Color("#121a27"))
+    draw_rect(Rect2(0,0,1280,720),arena_bg_bottom.darkened(0.08))
+    draw_rect(Rect2(0,0,1280,470),arena_bg_top)
+    draw_rect(Rect2(0,470,1280,250),arena_bg_bottom)
+    _draw_arena_backdrop()
     for i in range(7):
         var y := 80.0 + float(i)*74.0
         draw_line(Vector2(0,y),Vector2(1280,y),Color(0.35,0.47,0.62,0.07),1.0)
@@ -162,9 +171,9 @@ func _draw() -> void:
     draw_circle(Vector2(640,450),250.0,Color(0.28,0.62,0.68,0.025))
     draw_arc(Vector2(640,470),430,PI,TAU,80,Color(0.38,0.65,0.82,0.12),2.0,true)
     draw_arc(Vector2(640,470),520,PI,TAU,80,Color(0.38,0.55,0.77,0.06),2.0,true)
-    draw_rect(Rect2(0,0,1280,5),Color("#d9ef70"))
+    draw_rect(Rect2(0,0,1280,5),arena_accent)
     draw_rect(Rect2(0,700,1280,20),Color("#0b111b"))
-    draw_line(Vector2(0,700),Vector2(1280,700),Color("#526a87"),2.0)
+    draw_line(Vector2(0,700),Vector2(1280,700),arena_accent.darkened(0.15),2.0)
     if impact_flash > 0.0:
         draw_rect(Rect2(0,0,1280,720),Color(impact_flash_color, impact_flash * 0.13))
     if boot_loading:
@@ -183,18 +192,87 @@ func _make_arena(index: int) -> void:
         if is_instance_valid(old_platform):
             old_platform.queue_free()
     platform_nodes.clear()
+    if all_maps.is_empty():
+        return
+    map_index = posmod(index, all_maps.size())
+    var map_data: Dictionary = all_maps[map_index]
+    arena_theme = str(map_data.get("theme", "city"))
+    arena_accent = Color.from_string(str(map_data.get("accent", "#d9ef70")), Color("#d9ef70"))
+    arena_platform_color = Color.from_string(str(map_data.get("platform", "#283b54")), Color("#283b54"))
+    arena_bg_top = Color.from_string(str(map_data.get("bg_top", "#172234")), Color("#172234"))
+    arena_bg_bottom = Color.from_string(str(map_data.get("bg_bottom", "#121a27")), Color("#121a27"))
     _add_platform(Vector2(640, 700), Vector2(1400, 50))
     _add_side_wall(-15.0)
     _add_side_wall(1295.0)
-    if all_maps.is_empty():
-        return
-    map_index = index % all_maps.size()
-    var map_data: Dictionary = all_maps[map_index]
     var platforms: Variant = map_data.get("platforms", [])
     if typeof(platforms) == TYPE_ARRAY:
         for item in platforms:
             if typeof(item) == TYPE_DICTIONARY:
-                _add_platform(Vector2(float(item.get("x",640)),float(item.get("y",500))),Vector2(float(item.get("w",180)),float(item.get("h",22))))
+                var platform_x := clampf(float(item.get("x", 640)), 100.0, 1180.0)
+                var platform_y := clampf(float(item.get("y", 500)), 100.0, 660.0)
+                var platform_w := clampf(float(item.get("w", 180)), 70.0, 520.0)
+                var platform_h := clampf(float(item.get("h", 22)), 12.0, 42.0)
+                _add_platform(Vector2(platform_x, platform_y), Vector2(platform_w, platform_h))
+    queue_redraw()
+
+func _draw_arena_backdrop() -> void:
+    var soft_accent := Color(arena_accent, 0.10)
+    match arena_theme:
+        "factory":
+            for i in range(8):
+                var x := 70.0 + float(i) * 165.0
+                var height := 110.0 + float((i * 47) % 170)
+                draw_rect(Rect2(x, 470.0 - height, 54.0, height), Color(arena_accent, 0.035))
+                draw_line(Vector2(x + 8.0, 470.0 - height), Vector2(x + 46.0, 470.0 - height), soft_accent, 3.0)
+        "sky":
+            for i in range(5):
+                var x := 120.0 + float(i) * 255.0 + sin(background_time * 0.22 + float(i)) * 18.0
+                var y := 145.0 + float((i * 61) % 150)
+                draw_circle(Vector2(x, y), 38.0, Color(0.76, 0.88, 1.0, 0.035))
+                draw_circle(Vector2(x + 30.0, y + 8.0), 26.0, Color(0.76, 0.88, 1.0, 0.03))
+        "jungle":
+            for i in range(9):
+                var x := float(i) * 165.0 + 20.0
+                var sway := sin(background_time * 0.5 + float(i)) * 8.0
+                draw_colored_polygon(PackedVector2Array([Vector2(x - 42.0, 490.0), Vector2(x + sway, 180.0 + float(i % 3) * 38.0), Vector2(x + 42.0, 490.0)]), Color(arena_accent, 0.045))
+                draw_line(Vector2(x + sway, 230.0), Vector2(x + sway, 500.0), Color(arena_accent, 0.07), 3.0)
+        "rift":
+            for i in range(7):
+                var radius := 90.0 + float(i) * 48.0
+                var phase_offset := background_time * (0.18 if i % 2 == 0 else -0.14)
+                draw_arc(Vector2(640.0, 390.0), radius, phase_offset, phase_offset + PI * 1.35, 48, Color(arena_accent, 0.075), 2.0, true)
+        "ice":
+            for i in range(8):
+                var x := 60.0 + float(i) * 170.0
+                var height := 100.0 + float((i * 53) % 145)
+                draw_colored_polygon(PackedVector2Array([Vector2(x - 34.0, 470.0), Vector2(x, 470.0 - height), Vector2(x + 34.0, 470.0)]), Color(arena_accent, 0.035))
+                draw_line(Vector2(x, 470.0 - height + 12.0), Vector2(x, 470.0), Color(0.82, 0.95, 1.0, 0.08), 1.5)
+        "sunset":
+            for i in range(5):
+                var radius := 70.0 + float(i) * 25.0
+                draw_arc(Vector2(1000.0, 250.0), radius, PI, TAU, 48, Color(arena_accent, 0.08), 2.0, true)
+        "crystal":
+            for i in range(10):
+                var x := 55.0 + float(i) * 130.0
+                var y := 155.0 + float((i * 37) % 180)
+                draw_colored_polygon(PackedVector2Array([Vector2(x, y - 34.0), Vector2(x + 12.0, y), Vector2(x, y + 34.0), Vector2(x - 12.0, y)]), Color(arena_accent, 0.09))
+        "volcano":
+            for i in range(6):
+                var x := 90.0 + float(i) * 225.0
+                var peak := 320.0 + float((i * 31) % 100)
+                draw_colored_polygon(PackedVector2Array([Vector2(x - 100.0, 500.0), Vector2(x, peak), Vector2(x + 100.0, 500.0)]), Color("#160f18", 0.32))
+                draw_line(Vector2(x - 8.0, peak + 20.0), Vector2(x + 8.0, peak + 20.0), Color(arena_accent, 0.22), 3.0)
+        "harbor":
+            for i in range(7):
+                var x := 70.0 + float(i) * 190.0
+                draw_line(Vector2(x, 170.0), Vector2(x, 480.0), Color(arena_accent, 0.055), 3.0)
+                draw_line(Vector2(x - 28.0, 210.0), Vector2(x + 28.0, 210.0), Color(arena_accent, 0.07), 2.0)
+        _:
+            for i in range(7):
+                var x := 90.0 + float(i) * 185.0
+                var height := 80.0 + float((i * 41) % 130)
+                draw_rect(Rect2(x, 470.0 - height, 42.0, height), Color(arena_accent, 0.025))
+
 
 func _add_side_wall(x: float) -> void:
     var wall := StaticBody2D.new()
@@ -211,12 +289,12 @@ func _add_side_wall(x: float) -> void:
     platform_nodes.append(wall)
     var visual := Polygon2D.new()
     visual.polygon = PackedVector2Array([Vector2(-15,-450),Vector2(15,-450),Vector2(15,450),Vector2(-15,450)])
-    visual.color = Color("#1c293b")
+    visual.color = arena_platform_color.darkened(0.28)
     wall.add_child(visual)
     var edge := Line2D.new()
     edge.points = PackedVector2Array([Vector2(0,-450),Vector2(0,450)])
     edge.width = 3.0
-    edge.default_color = Color("#526a87",0.45)
+    edge.default_color = Color(arena_accent,0.35)
     wall.add_child(edge)
 
 func _add_platform(at: Vector2, dimensions: Vector2) -> void:
@@ -234,28 +312,28 @@ func _add_platform(at: Vector2, dimensions: Vector2) -> void:
     platform_nodes.append(body)
     var visual := Polygon2D.new()
     visual.polygon = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(-dimensions.x/2,dimensions.y/2)])
-    visual.color = Color("#283b54")
+    visual.color = arena_platform_color
     body.add_child(visual)
     var lower_glow := Polygon2D.new()
     lower_glow.polygon = PackedVector2Array([Vector2(-dimensions.x/2,dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2+5),Vector2(-dimensions.x/2,dimensions.y/2+5)])
-    lower_glow.color = Color("#6d8fb8",0.55)
+    lower_glow.color = Color(arena_accent.darkened(0.18),0.55)
     body.add_child(lower_glow)
     var glow := Line2D.new()
     glow.points = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2)])
     glow.width = 12.0
-    glow.default_color = Color("#d9ef70",0.12)
+    glow.default_color = Color(arena_accent,0.15)
     glow.antialiased = true
     body.add_child(glow)
     var stripe := Line2D.new()
     stripe.points = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2)])
     stripe.width = 3.5
-    stripe.default_color = Color("#d9ef70")
+    stripe.default_color = arena_accent
     stripe.antialiased = true
     body.add_child(stripe)
     var edge := Line2D.new()
     edge.points = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(-dimensions.x/2,dimensions.y/2),Vector2(-dimensions.x/2,-dimensions.y/2)])
     edge.width = 1.2
-    edge.default_color = Color("#8fb3d8",0.45)
+    edge.default_color = Color(arena_accent.lightened(0.18),0.45)
     edge.antialiased = true
     body.add_child(edge)
 
@@ -1482,63 +1560,122 @@ func _build_upgrade_cards(shade: Control) -> void:
 
 func _build_training_maps(shade: Control) -> void:
     var info := Label.new()
-    info.text = "Выбери арену — она сменится сразу, пока бой на паузе."
+    info.text = "10 АРЕН  •  У КАЖДОЙ СВОЯ АТМОСФЕРА И РАСКЛАДКА"
     info.position = Vector2(0,155)
     info.size = Vector2(1280,32)
     info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    info.add_theme_font_size_override("font_size",17)
+    info.add_theme_font_size_override("font_size",16)
     info.add_theme_color_override("font_color",Color("#aab8cc"))
     shade.add_child(info)
+
     var scroll := ScrollContainer.new()
-    scroll.position = Vector2(90,200)
-    scroll.size = Vector2(1100,410)
+    scroll.position = Vector2(70,195)
+    scroll.size = Vector2(1140,425)
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+    scroll.clip_contents = true
     shade.add_child(scroll)
+
     var grid := GridContainer.new()
     grid.columns = 2
     grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    grid.add_theme_constant_override("h_separation",20)
-    grid.add_theme_constant_override("v_separation",18)
+    grid.add_theme_constant_override("h_separation",18)
+    grid.add_theme_constant_override("v_separation",16)
     scroll.add_child(grid)
+
     for i in range(all_maps.size()):
         var map_data: Dictionary = all_maps[i]
+        var accent := Color.from_string(str(map_data.get("accent", "#8da9cb")), Color("#8da9cb"))
+        var selected := i == map_index
+        var platforms: Array = map_data.get("platforms", [])
+
         var panel := PanelContainer.new()
-        panel.custom_minimum_size = Vector2(510,180)
+        panel.custom_minimum_size = Vector2(520,188)
         var style := StyleBoxFlat.new()
-        style.bg_color = Color("#244d4c") if i == map_index else Color("#202e42")
-        style.border_color = Color("#64d6bd") if i == map_index else Color("#526b8c")
-        style.set_border_width_all(2)
-        style.set_corner_radius_all(14)
+        style.bg_color = Color("#203b38") if selected else Color("#182333")
+        style.border_color = accent if selected else Color("#40556e")
+        style.set_border_width_all(3 if selected else 1)
+        style.set_corner_radius_all(16)
+        style.content_margin_left = 12
+        style.content_margin_right = 12
+        style.content_margin_top = 9
+        style.content_margin_bottom = 9
+        style.shadow_color = Color(0.0,0.0,0.0,0.3)
+        style.shadow_size = 8
+        style.shadow_offset = Vector2(0,3)
         panel.add_theme_stylebox_override("panel",style)
+
         var column := VBoxContainer.new()
-        column.add_theme_constant_override("separation",8)
+        column.add_theme_constant_override("separation",6)
         panel.add_child(column)
+
+        var header := HBoxContainer.new()
+        header.add_theme_constant_override("separation",8)
+        column.add_child(header)
         var name_label := Label.new()
-        name_label.text = str(map_data.get("name","Арена")) + ("  ✓" if i == map_index else "")
-        name_label.add_theme_font_size_override("font_size",20)
+        name_label.text = str(map_data.get("name","АРЕНА"))
+        name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        name_label.add_theme_font_size_override("font_size",18)
         name_label.add_theme_color_override("font_color",Color("#f4f7ff"))
-        column.add_child(name_label)
+        header.add_child(name_label)
+        var state_label := Label.new()
+        state_label.text = "АКТИВНАЯ" if selected else "%d ПЛАТФОРМ" % platforms.size()
+        state_label.add_theme_font_size_override("font_size",11)
+        state_label.add_theme_color_override("font_color",accent)
+        header.add_child(state_label)
+
         var preview := Control.new()
-        preview.custom_minimum_size = Vector2(460,72)
+        preview.custom_minimum_size = Vector2(490,88)
+        preview.clip_contents = true
         column.add_child(preview)
+        var backdrop := ColorRect.new()
+        backdrop.position = Vector2.ZERO
+        backdrop.size = Vector2(490,88)
+        backdrop.color = Color.from_string(str(map_data.get("bg_top","#172234")),Color("#172234"))
+        preview.add_child(backdrop)
+        for line_index in range(6):
+            var grid_line := ColorRect.new()
+            grid_line.position = Vector2(0,12.0 + float(line_index) * 12.0)
+            grid_line.size = Vector2(490,1)
+            grid_line.color = Color(accent,0.08)
+            preview.add_child(grid_line)
+
         var ground := ColorRect.new()
-        ground.position = Vector2(0,60)
-        ground.size = Vector2(460,10)
-        ground.color = Color("#506b89")
+        ground.position = Vector2(0,81)
+        ground.size = Vector2(490,7)
+        ground.color = Color.from_string(str(map_data.get("platform","#283b54")),Color("#283b54"))
         preview.add_child(ground)
-        var platforms: Array = map_data.get("platforms",[])
+
         for platform_value in platforms:
+            if typeof(platform_value) != TYPE_DICTIONARY:
+                continue
             var platform: Dictionary = platform_value
+            var center_x := 12.0 + clampf(float(platform.get("x",640)) / 1280.0,0.0,1.0) * 466.0
+            var center_y := 5.0 + clampf(float(platform.get("y",500)) / 720.0,0.0,1.0) * 70.0
+            var platform_w := clampf(float(platform.get("w",180)) / 1280.0 * 466.0,18.0,190.0)
+            var platform_h := clampf(float(platform.get("h",20)) / 720.0 * 88.0,3.0,6.0)
             var bar := ColorRect.new()
-            var px := clampf(float(platform.get("x",640))/1280.0*440.0-20.0,0.0,420.0)
-            var py := clampf(float(platform.get("y",500))/720.0*58.0,5.0,50.0)
-            var pw := clampf(float(platform.get("w",180))/1280.0*440.0,24.0,130.0)
-            bar.position = Vector2(px,py)
-            bar.size = Vector2(pw,6)
-            bar.color = Color("#70d7c3") if i == map_index else Color("#8da9cb")
+            bar.position = Vector2(clampf(center_x - platform_w * 0.5,0.0,490.0-platform_w),clampf(center_y-platform_h*0.5,2.0,76.0))
+            bar.size = Vector2(platform_w,platform_h)
+            bar.color = accent if selected else accent.darkened(0.12)
             preview.add_child(bar)
+
+        var spawn_left := ColorRect.new()
+        spawn_left.position = Vector2(32,69)
+        spawn_left.size = Vector2(7,12)
+        spawn_left.color = Color("#f2e5ce")
+        preview.add_child(spawn_left)
+        var spawn_right := ColorRect.new()
+        spawn_right.position = Vector2(451,69)
+        spawn_right.size = Vector2(7,12)
+        spawn_right.color = Color("#ff786f")
+        preview.add_child(spawn_right)
+
         var select := Button.new()
-        select.text = "ВЫБРАНА" if i == map_index else "ВЫБРАТЬ ЭТУ АРЕНУ"
-        select.custom_minimum_size = Vector2(440,38)
+        select.text = "АРЕНА ВЫБРАНА  ✓" if selected else "ВЫБРАТЬ АРЕНУ"
+        select.custom_minimum_size = Vector2(470,34)
+        select.focus_mode = Control.FOCUS_NONE
+        select.add_theme_stylebox_override("normal",_menu_button_style(Color("#526b35") if selected else Color("#29394d"),accent))
         select.pressed.connect(_select_training_map.bind(i))
         column.add_child(select)
         grid.add_child(panel)
