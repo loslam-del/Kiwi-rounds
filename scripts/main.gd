@@ -1108,7 +1108,7 @@ func _add_kiwi_mascot(parent: Control, center: Vector2) -> void:
 
 func _show_mode_menu() -> void:
     _show_panel("ВЫБОР РЕЖИМА",[
-        ["ОНЛАЙН — ПОЗЖЕ",Callable(self,"_show_online_info")],
+        ["ОНЛАЙН",Callable(self,"_show_online_info")],
         ["ПРОТИВ БОТОВ",Callable(self,"_show_difficulty_menu")],
         ["ТРЕНИРОВКА",Callable(self,"_start_training")],
         ["НАЗАД",Callable(self,"_show_main_menu")]
