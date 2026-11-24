@@ -24,11 +24,12 @@ var rival: ArenaPlayer
 var ui: Control
 var hud: Label
 var overlay: PanelContainer
+var skin_button: Button
 var platform_nodes: Array[StaticBody2D] = []
 var mod_loader: GameModLoader
 var all_maps: Array[Dictionary] = []
 var all_upgrades: Array[Dictionary] = []
-var map_index := 0
+var skin_index := 0
 var score_player := 0
 var score_bot := 0
 var round_index := 1
@@ -100,9 +101,6 @@ func _add_platform(at: Vector2, dimensions: Vector2) -> void:
 func _make_players() -> void:
     player = PLAYER_SCRIPT.new()
     player.body_color = Color("#39d6c5")
-    if not mod_loader.skins.is_empty():
-        var skin: Dictionary = mod_loader.skins[0]
-        player.body_color = Color.from_string(str(skin.get("color", "#39d6c5")), Color("#39d6c5"))
     player.position = Vector2(350, 390)
     player.pulse_requested.connect(_spawn_pulse)
     add_child(player)
@@ -113,6 +111,24 @@ func _make_players() -> void:
     rival.target = player
     rival.pulse_requested.connect(_spawn_pulse)
     add_child(rival)
+    _apply_skin()
+
+func _apply_skin() -> void:
+    if mod_loader.skins.is_empty():
+        player.body_color = Color("#39d6c5")
+        return
+    skin_index = skin_index % mod_loader.skins.size()
+    var skin: Dictionary = mod_loader.skins[skin_index]
+    player.body_color = Color.from_string(str(skin.get("color", "#39d6c5")), Color("#39d6c5"))
+    player.queue_redraw()
+    if is_instance_valid(skin_button):
+        skin_button.text = "СКИН: " + str(skin.get("name", skin.get("id", "MOD")))
+
+func _cycle_skin() -> void:
+    if mod_loader.skins.is_empty():
+        return
+    skin_index = (skin_index + 1) % mod_loader.skins.size()
+    _apply_skin()
 
 func _spawn_pulse(origin: Vector2, direction: Vector2, force: float, tint: Color) -> void:
     var pulse: EnergyPulse = PULSE_SCRIPT.new()
@@ -134,6 +150,10 @@ func _make_ui() -> void:
     hud.add_theme_font_size_override("font_size", 28)
     hud.add_theme_color_override("font_color", Color("#f4f7ff"))
     ui.add_child(hud)
+
+    skin_button = _add_button("СКИН", Vector2(1080, 20), Vector2(150, 54))
+    skin_button.visible = not mod_loader.skins.is_empty()
+    skin_button.pressed.connect(_cycle_skin)
 
     var movement_joystick: VirtualJoystick = JOYSTICK_SCRIPT.new()
     movement_joystick.position = Vector2(35, 535)
