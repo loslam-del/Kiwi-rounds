@@ -188,56 +188,48 @@ func reset_round(spawn: Vector2) -> void:
 
 func _draw() -> void:
     var moving := absf(velocity.x) > 35.0 and is_on_floor()
-    var stride := sin(animation_time) * 9.0 if moving else 0.0
-    var bob := absf(sin(animation_time * 2.0)) * 1.5 if moving else 0.0
-
-    # Тень и ноги рисуются первыми, чтобы корпус находился поверх них.
-    draw_circle(Vector2(0.0,45.0), 15.0, Color(0.0,0.0,0.0,0.22))
-    var left_hip := Vector2(-7.0, 14.0 + bob)
-    var right_hip := Vector2(7.0, 14.0 + bob)
-    var left_foot := Vector2(-9.0 + stride, 43.0)
-    var right_foot := Vector2(9.0 - stride, 43.0)
-    draw_line(left_hip, left_foot, Color("#26334a"), 10.0, true)
-    draw_line(right_hip, right_foot, Color("#26334a"), 10.0, true)
-    draw_line(left_foot + Vector2(-3.0,0), left_foot + Vector2(5.0,0), Color("#e7edf6"), 7.0, true)
-    draw_line(right_foot + Vector2(-3.0,0), right_foot + Vector2(5.0,0), Color("#e7edf6"), 7.0, true)
-
-    # Дальняя рука.
-    var rear_hand := Vector2(-facing * 20.0, 5.0 + sin(animation_time + PI) * 3.0)
-    draw_line(Vector2(-facing * 10.0,-7.0), rear_hand, Color("#d9a77f"), 8.0, true)
-    draw_circle(rear_hand, 5.0, Color("#f0bd91"))
-
-    # Корпус и шея.
-    draw_rect(Rect2(-14.0,-13.0,28.0,34.0), body_color)
-    draw_rect(Rect2(-14.0,-13.0,28.0,34.0), Color("#17233b"), false, 2.5)
-    draw_rect(Rect2(-5.0,-18.0,10.0,8.0), Color("#e9b88e"))
-
-    # Голова, глаза и контур.
-    draw_circle(Vector2(0.0,-29.0-bob), 13.0, Color("#efbd94"))
-    draw_arc(Vector2(0.0,-29.0-bob), 13.0, PI, TAU, 20, Color("#17233b"), 2.5, true)
-    draw_circle(Vector2(facing * 5.0,-30.0-bob), 2.2, Color("#17233b"))
-    draw_circle(Vector2(facing * 8.0,-30.0-bob), 1.0, Color.WHITE)
-
-    # Передняя рука держит пистолет.
+    var stride := sin(animation_time) * 8.0 if moving else 0.0
+    var bob := absf(sin(animation_time * 2.0)) * 1.8 if moving else 0.0
+    var skin := Color("#efbd94")
+    var dark := Color("#202633")
+    draw_circle(Vector2(0,46),19,Color(0,0,0,0.24))
+    var foot_l := Vector2(-10+stride,42)
+    var foot_r := Vector2(10-stride,42)
+    draw_line(Vector2(-7,13+bob),foot_l,dark,11,true)
+    draw_line(Vector2(7,13+bob),foot_r,dark,11,true)
+    draw_line(foot_l+Vector2(-5,2),foot_l+Vector2(7,2),Color("#e8eaf0"),8,true)
+    draw_line(foot_r+Vector2(-5,2),foot_r+Vector2(7,2),Color("#e8eaf0"),8,true)
+    var rear := Vector2(-facing*21,2+sin(animation_time+PI)*3)
+    draw_line(Vector2(-facing*10,-8),rear,Color("#27313f"),12,true)
+    draw_line(rear,rear+Vector2(-facing*3,9),skin,8,true)
+    draw_colored_polygon(PackedVector2Array([Vector2(-16,-15),Vector2(16,-15),Vector2(18,13),Vector2(11,23),Vector2(-11,23),Vector2(-18,13)]),body_color)
+    draw_polyline(PackedVector2Array([Vector2(-16,-15),Vector2(-18,13),Vector2(-11,23),Vector2(11,23),Vector2(18,13),Vector2(16,-15)]),dark,2.5,true)
+    draw_line(Vector2(0,-11),Vector2(0,18),Color("#e6e9ef"),2,true)
+    draw_rect(Rect2(-12,16,24,4),dark)
+    draw_rect(Rect2(-5,-22,10,10),skin)
+    draw_circle(Vector2(0,-34-bob),14,skin)
+    draw_arc(Vector2(0,-34-bob),14,PI,TAU,24,dark,3,true)
+    draw_colored_polygon(PackedVector2Array([Vector2(-14,-37-bob),Vector2(-10,-48-bob),Vector2(0,-52-bob),Vector2(12,-47-bob),Vector2(15,-35-bob),Vector2(7,-40-bob),Vector2(-2,-42-bob),Vector2(-10,-37-bob)]),Color("#293044"))
+    draw_circle(Vector2(facing*5,-34-bob),2.3,dark)
+    draw_circle(Vector2(facing*8,-34-bob),1.0,Color.WHITE)
+    draw_line(Vector2(facing,-26-bob),Vector2(facing*5,-25-bob),Color("#9b5e55"),1.5,true)
     var gun_dir := aim_input.normalized()
     if gun_dir == Vector2.ZERO:
-        gun_dir = Vector2(facing,0.0)
+        gun_dir = Vector2(facing,0)
     var side := Vector2(-gun_dir.y,gun_dir.x)
-    var hand := Vector2(facing * 10.0,-5.0) + gun_dir * 22.0
-    draw_line(Vector2(facing * 10.0,-7.0), hand, Color("#efbd94"), 9.0, true)
-    draw_circle(hand, 5.5, Color("#efbd94"))
-
-    # Пистолет: рукоять, затвор, ствол и мушка.
-    var gun_body := PackedVector2Array([
-        hand - side * 5.0 - gun_dir * 5.0,
-        hand + side * 5.0 - gun_dir * 5.0,
-        hand + side * 4.0 + gun_dir * 16.0,
-        hand - side * 4.0 + gun_dir * 16.0
-    ])
-    draw_colored_polygon(gun_body, Color("#303b50"))
-    draw_line(hand + side * 2.0, hand + side * 11.0 - gun_dir * 1.0, Color("#303b50"), 6.0, true)
-    draw_line(hand + gun_dir * 11.0, hand + gun_dir * 25.0, Color("#9daec4"), 5.0, true)
-    draw_line(hand + gun_dir * 12.0 + side * 2.0, hand + gun_dir * 12.0 - side * 2.0, Color("#dce6f3"), 2.0, true)
-
-    if pulse_cooldown > pulse_interval - 0.09:
-        draw_circle(hand + gun_dir * 27.0, 5.0, Color("#fff0ad"))
+    var shoulder := Vector2(facing*11,-9)
+    var grip := shoulder + gun_dir*22 + side*2
+    draw_line(shoulder,grip,Color("#293342"),11,true)
+    draw_circle(grip,5,skin)
+    var support := Vector2(-facing*7,-4)
+    draw_line(support,support+gun_dir*14,Color("#293342"),9,true)
+    draw_circle(support+gun_dir*14,4.5,skin)
+    var slide := PackedVector2Array([grip-side*5-gun_dir*8,grip+side*5-gun_dir*8,grip+side*5+gun_dir*20,grip-side*5+gun_dir*20])
+    draw_colored_polygon(slide,Color("#394354"))
+    draw_polyline(PackedVector2Array([slide[0],slide[1],slide[2],slide[3],slide[0]]),Color("#111722"),1.8,true)
+    draw_line(grip+gun_dir*15,grip+gun_dir*31,Color("#aeb8c8"),5,true)
+    draw_line(grip+side*3+gun_dir,grip+side*3-gun_dir*8,Color("#222936"),4,true)
+    draw_line(grip+side*4+gun_dir,grip+side*10-gun_dir*3,Color("#303b4c"),6,true)
+    draw_line(grip+gun_dir*31+side*2,grip+gun_dir*31-side*2,Color("#e4e9f1"),2,true)
+    if pulse_cooldown > pulse_interval-0.09:
+        draw_circle(grip+gun_dir*34,5,Color("#f6e78d"))
