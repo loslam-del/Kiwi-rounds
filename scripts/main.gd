@@ -42,23 +42,49 @@ var active_training_cards: Array[String] = []
 var selected_skin_color := Color("#39d6c5")
 var sound_enabled := true
 var vibration_enabled := true
+var boot_loading := true
+var boot_elapsed := 0.0
+var boot_angle := 0.0
+var boot_stage := "Подготовка игры..."
 
 func _ready() -> void:
     randomize()
+    queue_redraw()
+    call_deferred("_boot_game")
+
+func _boot_game() -> void:
+    boot_stage = "Загрузка модов..."
     mod_loader = MOD_LOADER_SCRIPT.new()
     mod_loader.load_all()
     all_maps = DEFAULT_MAPS.duplicate(true)
     all_maps.append_array(mod_loader.maps)
     all_upgrades = DEFAULT_UPGRADES.duplicate(true)
     all_upgrades.append_array(mod_loader.upgrades)
+    boot_stage = "Создание арены..."
     _make_arena(0)
+    boot_stage = "Создание персонажей..."
     _make_players()
+    boot_stage = "Подготовка интерфейса..."
     _make_ui()
+    boot_stage = "Запуск меню..."
     _show_main_menu()
     _update_hud()
+    boot_loading = false
+    queue_redraw()
 
 func _draw() -> void:
     draw_rect(Rect2(0, 0, 1280, 720), Color("#111111"))
+    if boot_loading:
+        draw_rect(Rect2(0, 0, 1280, 5), Color("#eeeeee"))
+        draw_rect(Rect2(0, 715, 1280, 5), Color("#333333"))
+        draw_string(ThemeDB.fallback_font, Vector2(0, 295), "KIWI ROUNDS", HORIZONTAL_ALIGNMENT_CENTER, 1280, 54, Color("#f2f2f2"))
+        draw_string(ThemeDB.fallback_font, Vector2(0, 345), "ЗАПУСК ИГРЫ", HORIZONTAL_ALIGNMENT_CENTER, 1280, 18, Color("#888888"))
+        var center := Vector2(640, 430)
+        draw_arc(center, 27.0, boot_angle, boot_angle + 4.4, 48, Color("#777777"), 6.0, true)
+        draw_circle(center + Vector2(cos(boot_angle) * 27.0, sin(boot_angle) * 27.0), 5.0, Color("#f2f2f2"))
+        draw_string(ThemeDB.fallback_font, Vector2(0, 500), boot_stage, HORIZONTAL_ALIGNMENT_CENTER, 1280, 18, Color("#aaaaaa"))
+        draw_string(ThemeDB.fallback_font, Vector2(0, 675), "Пожалуйста, подожди", HORIZONTAL_ALIGNMENT_CENTER, 1280, 15, Color("#666666"))
+        return
     draw_rect(Rect2(0, 0, 1280, 8), Color("#e6e6e6"))
     draw_rect(Rect2(0, 680, 1280, 40), Color("#202020"))
     for i in range(14):
@@ -218,7 +244,12 @@ func _button_style(color: Color) -> StyleBoxFlat:
     style.border_color = Color("#7895bc")
     return style
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+    if boot_loading:
+        boot_elapsed += delta
+        boot_angle = fmod(boot_angle + delta * 4.2, TAU)
+        queue_redraw()
+        return
     if phase != "fight":
         return
     if player.global_position.y > 850:
