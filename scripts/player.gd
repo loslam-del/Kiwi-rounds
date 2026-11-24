@@ -101,6 +101,7 @@ func _physics_process(delta: float) -> void:
         coyote_timer = COYOTE_TIME
     else:
         coyote_timer = maxf(0.0, coyote_timer - delta)
+    var jump_released := jump_was_held and not jump_held
     if jump_held and not jump_was_held:
         jump_buffer_timer = JUMP_BUFFER_TIME
     else:
@@ -134,10 +135,12 @@ func _physics_process(delta: float) -> void:
     if jump_held and jump_hold_timer > 0.0 and velocity.y < 0.0:
         velocity.y -= 980.0 * delta
         jump_hold_timer = maxf(0.0, jump_hold_timer - delta)
-    elif not jump_held:
+    elif jump_released:
         jump_hold_timer = 0.0
         if velocity.y < -180.0:
             velocity.y *= 0.58
+    elif not jump_held:
+        jump_hold_timer = 0.0
     if fire_held and pulse_cooldown <= 0.0 and reload_timer <= 0.0:
         if ammo > 0:
             _fire_pulse()
