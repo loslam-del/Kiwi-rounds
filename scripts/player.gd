@@ -97,7 +97,7 @@ func _ready() -> void:
     # The old torso-only circle let the drawn feet extend through platforms.
     var core := CapsuleShape2D.new()
     core.radius = 18.0
-    core.height = 82.0
+    core.height = 88.0
     shape.shape = core
     shape.position = Vector2(0.0, 8.0)
     add_child(shape)
