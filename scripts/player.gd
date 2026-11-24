@@ -421,6 +421,7 @@ func reset_round(spawn: Vector2) -> void:
     touch_jump = false
     touch_fire = false
     aim_input = Vector2(facing, 0.0)
+    weapon_hand_blend = 1.0
     pulse_cooldown = 0.4
     ammo = magazine_size
     reload_timer = 0.0
@@ -548,13 +549,15 @@ func _draw() -> void:
         draw_circle(center, 23.0, Color(1.0,0.45,0.34,hit_flash*0.24))
         draw_arc(center, 23.0, 0.0, TAU, 48, Color(1.0,0.82,0.72,hit_flash*0.8), 2.0, true)
     if reload_visual > 0.0:
-        # ROUNDS-style reload pip floats above and to the right of the fighter.
+        # Keep the reload pip at screen-right even while the fighter turns.
+        draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
         var reload_pip := center + Vector2(29.0, -39.0)
         draw_circle(reload_pip, 8.5, Color("#101a27", 0.92))
         draw_arc(reload_pip, 7.2, 0.0, TAU, 32, Color("#526174", 0.95), 2.2, true)
         var reload_progress := 1.0 - reload_visual
         draw_arc(reload_pip, 7.2, -PI/2.0, -PI/2.0 + TAU * reload_progress, 32, Color("#f2d66d"), 2.8, true)
         draw_circle(reload_pip, 2.0, Color("#f2d66d", 0.9))
+        draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
 
     # The blaster is anchored to the front hand instead of floating at the torso.
     var local_aim := Vector2(aim_input.x * facing, aim_input.y).normalized()
