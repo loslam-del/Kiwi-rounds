@@ -790,8 +790,8 @@ func _show_main_menu() -> void:
     menu_kiwi.skin_style = "kiwi"
     menu_kiwi.menu_mascot = true
     menu_kiwi.body_color = Color("#477b4c")
-    menu_kiwi.position = Vector2(690, 145)
-    menu_kiwi.scale = Vector2(1.38, 1.38)
+    menu_kiwi.position = Vector2(285, 45)
+    menu_kiwi.scale = Vector2(1.22, 1.22)
     menu_kiwi.set_physics_process(false)
     menu_kiwi.set_process(false)
     shade.add_child(menu_kiwi)
