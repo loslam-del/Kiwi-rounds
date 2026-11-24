@@ -749,41 +749,17 @@ func _show_main_menu() -> void:
         grid_line.color = Color("#43c9dc", 0.05)
         shade.add_child(grid_line)
 
-    var title_glow := Label.new()
-    title_glow.text = "KIWI"
-    title_glow.position = Vector2(82, 43)
-    title_glow.size = Vector2(520, 92)
-    title_glow.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-    title_glow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    title_glow.add_theme_font_size_override("font_size", 94)
-    title_glow.add_theme_color_override("font_color", Color("#173b50"))
-    title_glow.add_theme_constant_override("outline_size", 7)
-    title_glow.add_theme_color_override("font_outline_color", Color("#2ce8dc"))
-    shade.add_child(title_glow)
-
-    var title := Label.new()
-    title.text = "KIWI"
-    title.position = Vector2(86, 42)
-    title.size = Vector2(520, 92)
-    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-    title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size", 84)
-    title.add_theme_color_override("font_color", Color("#f4fff0"))
-    title.add_theme_constant_override("outline_size", 3)
-    title.add_theme_color_override("font_outline_color", Color("#285a45"))
-    shade.add_child(title)
-
-    var rounds_title := Label.new()
-    rounds_title.text = "ROUNDS"
-    rounds_title.position = Vector2(91, 126)
-    rounds_title.size = Vector2(450, 44)
-    rounds_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-    rounds_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    rounds_title.add_theme_font_size_override("font_size", 38)
-    rounds_title.add_theme_color_override("font_color", Color("#55e6d5"))
-    rounds_title.add_theme_constant_override("outline_size", 2)
-    rounds_title.add_theme_color_override("font_outline_color", Color("#173b50"))
-    shade.add_child(rounds_title)
+    var logo_texture := load("res://assets/1795552443370.jpg") as Texture2D
+    if logo_texture != null:
+        var logo := TextureRect.new()
+        logo.name = "MenuLogo"
+        logo.texture = logo_texture
+        logo.position = Vector2(72, 34)
+        logo.size = Vector2(540, 150)
+        logo.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+        logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+        logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        shade.add_child(logo)
 
     # Title mascot intentionally omitted; the user will provide custom artwork.
 
