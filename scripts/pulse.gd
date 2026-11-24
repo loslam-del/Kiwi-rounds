@@ -146,6 +146,7 @@ func _resolve_impact(body: Node2D, normal: Vector2) -> void:
         queue_redraw()
         return
     if body is ArenaPlayer:
+        body.take_damage(12)
         body.velocity += direction * push_force
         body.apply_hit_impulse(direction, push_force)
         body.velocity.y -= 150.0
