@@ -182,7 +182,10 @@ func _think_bot(delta: float) -> void:
         move_input = -signf(delta_x)
     else:
         move_input = 0.0
-    var aim_vector := (target.global_position - global_position).normalized()
+    var direct_vector := target.global_position - global_position
+    var travel_time := direct_vector.length() / 1050.0
+    var predicted_target := target.global_position + target.velocity * minf(travel_time,0.32)
+    var aim_vector := (predicted_target - global_position).normalized()
     set_aim(aim_vector)
     bot_jump_hold_timer = maxf(0.0,bot_jump_hold_timer-delta)
     if is_on_floor() and bot_jump_hold_timer <= 0.0 and (target.global_position.y < global_position.y - 70.0 or (distance_x < 100.0 and randf() < 0.018)):
