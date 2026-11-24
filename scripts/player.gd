@@ -24,6 +24,7 @@ var pulse_force := 610.0
 var pulse_cooldown := 0.0
 var pulse_interval := 0.78
 var bot_think := 0.0
+var bot_accuracy := 0.64
 var facing := 1.0
 
 func _ready() -> void:
@@ -100,7 +101,7 @@ func _think_bot(delta: float) -> void:
     bot_think -= delta
     if bot_think <= 0.0:
         bot_think = 0.18
-        if aim_vector.length() > 0.0 and randf() < 0.64:
+        if aim_vector.length() > 0.0 and randf() < bot_accuracy:
             _fire_pulse()
 
 func _fire_pulse() -> void:
