@@ -517,55 +517,18 @@ func _draw() -> void:
             draw_colored_polygon(PackedVector2Array([Vector2(0,-5),Vector2(5,0),Vector2(0,8),Vector2(-5,0)]),Color("#8fc65e",0.9))
         draw_set_transform(Vector2.ZERO,0.0,Vector2(facing,1.0))
 
-    if skin_style == "kiwi":
+    if skin_style == "kiwi_human":
         var hair := Color("#b8ae9e")
         var hair_light := Color("#f4eddf")
         var hair_shadow := Color("#81796f")
-        var shirt := Color("#f5f0e6")
-        var shirt_shadow := Color("#c8c1b5")
         var green := Color("#477b4c")
         var green_dark := Color("#294c38")
         var green_light := Color("#78a76a")
-        var tie := Color("#dcb84f")
-        # Matching trousers, jacket sleeves and boots cover the generic body-color limbs.
-        draw_line(hip_back,knee_back,outline,11.0,true)
-        draw_line(hip_back,knee_back,green_dark,7.2,true)
-        draw_line(knee_back,foot_back,outline,10.0,true)
-        draw_line(knee_back,foot_back,green_dark,6.6,true)
-        draw_line(foot_back+Vector2(-6,0),foot_back+Vector2(8,0),outline,8.0,true)
-        draw_line(foot_back+Vector2(-5,-1),foot_back+Vector2(7,-1),Color("#263344"),4.8,true)
-        draw_line(hip_front,knee_front,outline,11.0,true)
-        draw_line(hip_front,knee_front,green,7.2,true)
-        draw_line(knee_front,foot_front,outline,10.0,true)
-        draw_line(knee_front,foot_front,green_dark,6.6,true)
-        draw_line(foot_front+Vector2(-6,0),foot_front+Vector2(8,0),outline,8.0,true)
-        draw_line(foot_front+Vector2(-5,-1),foot_front+Vector2(7,-1),Color("#263344"),4.8,true)
-        # Tailored jacket, shirt panel and clear lapels instead of a flat torso patch.
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-17,-8),center+Vector2(17,-8),center+Vector2(20,22),center+Vector2(-20,22)]),green_dark)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-14,-7),center+Vector2(14,-7),center+Vector2(16,19),center+Vector2(-16,19)]),green)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-8,-7),center+Vector2(8,-7),center+Vector2(10,18),center+Vector2(-10,18)]),shirt)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-9,-8),center+Vector2(-2,-2),center+Vector2(-5,7),center+Vector2(-13,1)]),shirt_shadow)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(9,-8),center+Vector2(2,-2),center+Vector2(5,7),center+Vector2(13,1)]),shirt_shadow)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-3,-5),center+Vector2(3,-5),center+Vector2(4,16),center+Vector2(0,21),center+Vector2(-4,16)]),tie)
-        draw_line(center+Vector2(-15,3),center+Vector2(-16,18),green_light,1.8,true)
-        draw_line(center+Vector2(15,3),center+Vector2(16,18),green_light,1.8,true)
-        draw_circle(center+Vector2(11,11),1.4,tie)
-        # Round, compact Kiwi Araga hairstyle with a clean face opening.
-        draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-5,-10),center+Vector2(5,-10),
-            center+Vector2(6,2),center+Vector2(-6,2)
-        ]),Color("#e9c9aa"))
-
-        # A circular bob silhouette is drawn behind the face.
-        draw_circle(center+Vector2(0,-29),25.0,hair_shadow)
-        draw_circle(center+Vector2(0,-29),22.5,hair)
-        draw_arc(center+Vector2(0,-29),23.0,PI*1.05,PI*1.95,36,hair_light,1.6,true)
-
-        # Soft rounded face, centered inside the hair.
-        draw_circle(center+Vector2(0,-23),15.5,Color("#f2d7bd"))
-        draw_arc(center+Vector2(0,-23),15.5,0.0,TAU,40,Color("#d3aa91"),1.0,true)
-
-        # Rounded fringe with three separated locks.
+        # Keep the original ROUNDS fighter body and limbs; only add Kiwi's hairstyle and cap.
+        # The body itself uses a natural human skin tone set by the menu preview.
+        draw_circle(center + Vector2(0,-29), 25.0, hair_shadow)
+        draw_circle(center + Vector2(0,-29), 22.5, hair)
+        draw_arc(center + Vector2(0,-29), 23.0, PI*1.05, PI*1.95, 36, hair_light, 1.6, true)
         draw_colored_polygon(PackedVector2Array([
             center+Vector2(-23,-25),center+Vector2(-22,-39),
             center+Vector2(-14,-50),center+Vector2(-2,-54),
@@ -592,34 +555,11 @@ func _draw() -> void:
             center+Vector2(18,-37),center+Vector2(11,-35),
             center+Vector2(5,-39)
         ]),hair_light)
-
-        # Side locks frame the cheeks instead of hiding the eyes.
         draw_line(center+Vector2(-20,-27),center+Vector2(-18,1),hair_shadow,7.0,true)
         draw_line(center+Vector2(-19,-27),center+Vector2(-17,0),hair,4.2,true)
         draw_line(center+Vector2(20,-27),center+Vector2(18,1),hair_shadow,7.0,true)
         draw_line(center+Vector2(19,-27),center+Vector2(17,0),hair,4.2,true)
-
-        # Clear anime-style eyes, brows and a small expression.
-        draw_line(center+Vector2(-10,-31),center+Vector2(-4,-33),hair_shadow,1.7,true)
-        draw_line(center+Vector2(4,-33),center+Vector2(10,-31),hair_shadow,1.7,true)
-        draw_circle(center+Vector2(-6.5,-25),3.0,Color.WHITE)
-        draw_circle(center+Vector2(6.5,-25),3.0,Color.WHITE)
-        draw_circle(center+Vector2(-6,-24.5),1.9,Color("#684b4d"))
-        draw_circle(center+Vector2(7,-24.5),1.9,Color("#684b4d"))
-        draw_circle(center+Vector2(-5.5,-25.5),0.8,Color.WHITE)
-        draw_circle(center+Vector2(7.5,-25.5),0.8,Color.WHITE)
-        draw_line(center+Vector2(0,-21),center+Vector2(-1,-16),Color("#c49b83"),1.1,true)
-        draw_line(center+Vector2(-4,-11),center+Vector2(0,-9),Color("#a45e66"),1.5,true)
-        draw_line(center+Vector2(0,-9),center+Vector2(4,-11),Color("#a45e66"),1.5,true)
-        draw_circle(center+Vector2(-10,-14),2.2,Color("#e6a1a0",0.45))
-        draw_circle(center+Vector2(10,-14),2.2,Color("#e6a1a0",0.45))
-        # A tiny green hair ornament ties the silhouette to Kiwi's outfit.
-        draw_circle(center+Vector2(17,-47),3.0,green_light)
-        draw_colored_polygon(PackedVector2Array([
-            center+Vector2(17,-49),center+Vector2(23,-55),
-            center+Vector2(22,-47),center+Vector2(17,-45)
-        ]),green_light)
-        # Kiwi's green cap is layered over her hair, keeping the full humanoid silhouette.
+        # Kiwi's recognizable green cap, clearly separated from the hair.
         draw_colored_polygon(PackedVector2Array([
             center+Vector2(-20,-43),center+Vector2(-15,-55),
             center+Vector2(-5,-61),center+Vector2(9,-60),
@@ -633,6 +573,7 @@ func _draw() -> void:
             center+Vector2(7,-48),center+Vector2(-5,-48)
         ]),green)
         draw_line(center+Vector2(-17,-44),center+Vector2(18,-43),green_light,3.0,true)
+        draw_circle(center+Vector2(17,-47),3.0,green_light)
 
     if hit_flash > 0.0:
         draw_circle(center, 23.0, Color(1.0,0.45,0.34,hit_flash*0.24))
