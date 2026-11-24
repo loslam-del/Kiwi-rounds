@@ -35,6 +35,24 @@ func _physics_process(delta: float) -> void:
     if life <= 0.0 or global_position.x < -100.0 or global_position.x > 1380.0 or global_position.y < -100.0 or global_position.y > 820.0:
         queue_free()
 
+func _spawn_impact_particles() -> void:
+    var particles := CPUParticles2D.new()
+    particles.one_shot = true
+    particles.amount = 14
+    particles.lifetime = 0.24
+    particles.explosiveness = 1.0
+    particles.direction = direction
+    particles.spread = 155.0
+    particles.initial_velocity_min = 90.0
+    particles.initial_velocity_max = 260.0
+    particles.gravity = Vector2(0.0,220.0)
+    particles.scale_amount = 2.4
+    particles.color = tint.lightened(0.35)
+    get_tree().current_scene.add_child(particles)
+    particles.global_position = global_position
+    particles.finished.connect(particles.queue_free)
+    particles.emitting = true
+
 func _on_body_entered(body: Node2D) -> void:
     if body == shooter:
         return
@@ -45,6 +63,7 @@ func _on_body_entered(body: Node2D) -> void:
         body.got_hit.emit(direction)
         queue_free()
     else:
+        _spawn_impact_particles()
         queue_free()
 
 func _draw() -> void:
