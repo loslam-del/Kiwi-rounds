@@ -6,11 +6,11 @@ const JOYSTICK_SCRIPT = preload("res://scripts/virtual_joystick.gd")
 const MOD_LOADER_SCRIPT = preload("res://scripts/mod_loader.gd")
 
 const DEFAULT_UPGRADES := [
-    {"id":"swift","name":"Лёгкие ноги","desc":"Скорость движения +16%","effect":"swift"},
-    {"id":"spring","name":"Пружинный прыжок","desc":"Прыжок становится выше","effect":"spring"},
-    {"id":"wave","name":"Сильная волна","desc":"Импульс сильнее отталкивает","effect":"wave"},
-    {"id":"rapid","name":"Быстрая перезарядка","desc":"Импульсы доступны чаще","effect":"rapid"},
-    {"id":"sturdy","name":"Разгон","desc":"Немного скорости и силы","effect":"sturdy"}
+    {"id":"swift","name":"Турбоботинки","desc":"Скорость движения увеличена на 16%","effect":"swift"},
+    {"id":"spring","name":"Пружинный модуль","desc":"Прыжок становится выше на 12%","effect":"spring"},
+    {"id":"wave","name":"Тяжёлый калибр","desc":"Снаряды сильнее отбрасывают противника на 22%","effect":"wave"},
+    {"id":"rapid","name":"Быстрый затвор","desc":"Перезарядка оружия быстрее на 18%","effect":"rapid"},
+    {"id":"sturdy","name":"Боевой разгон","desc":"Скорость +6% и сила отбрасывания +10%","effect":"sturdy"}
 ]
 const DEFAULT_MAPS := [
     {"name":"Сумеречная арена","platforms":[{"x":330,"y":545,"w":250,"h":24},{"x":950,"y":545,"w":250,"h":24},{"x":640,"y":420,"w":190,"h":22},{"x":130,"y":635,"w":170,"h":20},{"x":1150,"y":635,"w":170,"h":20}]},
@@ -197,7 +197,7 @@ func _make_ui() -> void:
     movement_joystick.size = Vector2(150,150)
     movement_joystick.value_changed.connect(player.set_move)
     game_controls.add_child(movement_joystick)
-    var fire_button := _add_button("ВОЛНА",Vector2(205,585),Vector2(125,88),game_controls)
+    var fire_button := _add_button("ВЫСТРЕЛ",Vector2(205,585),Vector2(125,88),game_controls)
     fire_button.button_down.connect(player.set_fire.bind(true))
     fire_button.button_up.connect(player.set_fire.bind(false))
     var aim_joystick: VirtualJoystick = JOYSTICK_SCRIPT.new()
@@ -436,15 +436,66 @@ func _open_training_cards() -> void:
             ["НАЗАД",Callable(self,"_resume_game")]
         ],"Выдавать и удалять карточки можно в режиме тренировки.")
         return
+
     phase = "paused"
-    var lines := "Нажми на карточку, чтобы выдать или убрать её.\nАктивно: %d" % active_training_cards.size()
-    var buttons: Array = []
+    _close_overlay()
+    game_controls.visible = false
+
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#101722")
+    ui.add_child(shade)
+    overlay = shade
+
+    var title := Label.new()
+    title.text = "КАРТОЧКИ УЛУЧШЕНИЙ"
+    title.position = Vector2(0,42)
+    title.size = Vector2(1280,66)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",38)
+    title.add_theme_color_override("font_color",Color("#f4f7ff"))
+    shade.add_child(title)
+
+    var info := Label.new()
+    info.text = "Нажми на карточку, чтобы включить или убрать эффект. Активно: %d из %d" % [active_training_cards.size(),all_upgrades.size()]
+    info.position = Vector2(100,112)
+    info.size = Vector2(1080,42)
+    info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    info.add_theme_font_size_override("font_size",18)
+    info.add_theme_color_override("font_color",Color("#aab8cc"))
+    shade.add_child(info)
+
+    var grid := GridContainer.new()
+    grid.columns = 3
+    grid.position = Vector2(110,178)
+    grid.size = Vector2(1060,350)
+    grid.add_theme_constant_override("h_separation",18)
+    grid.add_theme_constant_override("v_separation",16)
+    shade.add_child(grid)
+
     for card in all_upgrades:
         var id := str(card.get("effect",card.get("id","")))
-        var mark := "✓ " if active_training_cards.has(id) else "+ "
-        buttons.append([mark + str(card.get("name",id)),Callable(self,"_toggle_training_card").bind(id)])
-    buttons.append(["ГОТОВО",Callable(self,"_resume_game")])
-    _show_panel("КАРТОЧКИ ТРЕНИРОВКИ",buttons,lines)
+        var active := active_training_cards.has(id)
+        var card_button := Button.new()
+        var status := "✓  АКТИВНА" if active else "+  ВЫБРАТЬ"
+        card_button.text = status + "\n" + str(card.get("name",id)) + "\n\n" + str(card.get("desc",""))
+        card_button.custom_minimum_size = Vector2(330,150)
+        card_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        card_button.focus_mode = Control.FOCUS_NONE
+        card_button.add_theme_font_size_override("font_size",18)
+        card_button.add_theme_color_override("font_color",Color("#f5f7fb"))
+        card_button.add_theme_color_override("font_hover_color",Color("#ffffff"))
+        var fill := Color("#245b58") if active else Color("#26364d")
+        var edge := Color("#64d6bd") if active else Color("#526b8c")
+        card_button.add_theme_stylebox_override("normal",_menu_button_style(fill,edge))
+        card_button.add_theme_stylebox_override("hover",_menu_button_style(Color("#385779"),Color("#b8d7ff")))
+        card_button.add_theme_stylebox_override("pressed",_menu_button_style(Color("#17263a"),Color("#ffffff")))
+        card_button.pressed.connect(_toggle_training_card.bind(id))
+        grid.add_child(card_button)
+
+    var done := _add_button("ГОТОВО",Vector2(520,590),Vector2(240,66),shade)
+    done.add_theme_font_size_override("font_size",22)
+    done.pressed.connect(_resume_game)
 
 func _toggle_training_card(card_id: String) -> void:
     if active_training_cards.has(card_id):
