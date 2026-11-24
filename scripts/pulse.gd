@@ -2,11 +2,10 @@ extends Area2D
 class_name EnergyPulse
 
 var direction := Vector2.RIGHT
-var push_force := 610.0
+var push_force := 780.0
 var tint := Color("#39d6c5")
-var life := 1.4
-var speed := 760.0
-var hit_ids: Array[int] = []
+var life := 1.25
+var speed := 1050.0
 
 func configure(dir: Vector2, force: float, color: Color) -> void:
     direction = dir.normalized()
@@ -19,9 +18,10 @@ func _ready() -> void:
     collision_layer = 0
     collision_mask = 1
     monitoring = true
+    rotation = direction.angle()
     var shape := CollisionShape2D.new()
     var circle := CircleShape2D.new()
-    circle.radius = 19.0
+    circle.radius = 9.0
     shape.shape = circle
     add_child(shape)
     body_entered.connect(_on_body_entered)
@@ -34,13 +34,20 @@ func _physics_process(delta: float) -> void:
         queue_free()
 
 func _on_body_entered(body: Node2D) -> void:
-    if body is ArenaPlayer and not hit_ids.has(body.get_instance_id()):
-        hit_ids.append(body.get_instance_id())
+    if body is ArenaPlayer:
         body.velocity += direction * push_force
-        body.velocity.y -= 110.0
+        body.velocity.y -= 150.0
         queue_free()
 
 func _draw() -> void:
-    draw_circle(Vector2.ZERO, 15.0, Color(tint, 0.26))
-    draw_circle(Vector2.ZERO, 8.0, tint)
-    draw_circle(Vector2.ZERO, 3.0, Color.WHITE)
+    # Яркий кинетический снаряд, а не круглая декоративная волна.
+    draw_line(Vector2(-22.0,0.0),Vector2(2.0,0.0),Color(tint,0.35),9.0,true)
+    var bullet := PackedVector2Array([
+        Vector2(-9.0,-5.0),
+        Vector2(5.0,-5.0),
+        Vector2(12.0,0.0),
+        Vector2(5.0,5.0),
+        Vector2(-9.0,5.0)
+    ])
+    draw_colored_polygon(bullet,tint)
+    draw_circle(Vector2(5.0,0.0),2.5,Color.WHITE)
