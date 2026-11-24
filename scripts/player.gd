@@ -66,6 +66,17 @@ var ground_accel_scale := 1.0
 var wall_jump_scale := 1.0
 var kiwi_aura := false
 
+# Lightweight ragdoll-style limb physics. Angles and angular velocity are
+# simulated independently, while shoulder/hip anchors follow the torso.
+var arm_back_angle := -0.18
+var arm_front_angle := 0.18
+var leg_back_angle := -0.08
+var leg_front_angle := 0.08
+var arm_back_angular_velocity := 0.0
+var arm_front_angular_velocity := 0.0
+var leg_back_angular_velocity := 0.0
+var leg_front_angular_velocity := 0.0
+
 
 func _ready() -> void:
     collision_layer = 1
@@ -179,10 +190,50 @@ func _physics_process(delta: float) -> void:
             _fire_pulse()
         else:
             start_reload()
+    var previous_horizontal_velocity := velocity.x
     move_and_slide()
+    var horizontal_acceleration := (velocity.x - previous_horizontal_velocity) / maxf(delta, 0.001)
+    _step_limb_physics(delta, horizontal_acceleration)
     if is_on_wall() and not is_on_floor() and velocity.y > 160.0:
         velocity.y = minf(velocity.y, 270.0)
     queue_redraw()
+func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
+    # Gravity pulls each limb down; acceleration and movement swing them.
+    # Spring torque keeps the joints near a natural pose without locking them.
+    var walk_drive := move_input * (1.0 if is_on_floor() else 0.25)
+    var jump_drive := clampf(-velocity.y / 900.0, -0.8, 0.8)
+    var arm_target_back := -walk_drive * 0.62 - jump_drive * 0.18
+    var arm_target_front := walk_drive * 0.62 - jump_drive * 0.18
+    var leg_target_back := walk_drive * 0.48 + jump_drive * 0.25
+    var leg_target_front := -walk_drive * 0.48 + jump_drive * 0.25
+    var accel_swing := clampf(horizontal_acceleration / 2200.0, -1.2, 1.2)
+
+    arm_back_angular_velocity += (arm_target_back - arm_back_angle) * 24.0 * delta
+    arm_front_angular_velocity += (arm_target_front - arm_front_angle) * 24.0 * delta
+    leg_back_angular_velocity += (leg_target_back - leg_back_angle) * 20.0 * delta
+    leg_front_angular_velocity += (leg_target_front - leg_front_angle) * 20.0 * delta
+
+    arm_back_angular_velocity += (-sin(arm_back_angle) * 4.0 - accel_swing * 1.2) * delta
+    arm_front_angular_velocity += (-sin(arm_front_angle) * 4.0 - accel_swing * 1.2) * delta
+    leg_back_angular_velocity += (-sin(leg_back_angle) * 4.8 + accel_swing * 0.9) * delta
+    leg_front_angular_velocity += (-sin(leg_front_angle) * 4.8 + accel_swing * 0.9) * delta
+
+    var damping := exp(-5.2 * delta)
+    arm_back_angular_velocity *= damping
+    arm_front_angular_velocity *= damping
+    leg_back_angular_velocity *= damping
+    leg_front_angular_velocity *= damping
+    arm_back_angle += arm_back_angular_velocity * delta
+    arm_front_angle += arm_front_angular_velocity * delta
+    leg_back_angle += leg_back_angular_velocity * delta
+    leg_front_angle += leg_front_angular_velocity * delta
+
+    arm_back_angle = clampf(arm_back_angle, -1.35, 1.35)
+    arm_front_angle = clampf(arm_front_angle, -1.35, 1.35)
+    leg_back_angle = clampf(leg_back_angle, -1.05, 1.05)
+    leg_front_angle = clampf(leg_front_angle, -1.05, 1.05)
+
+
 func _read_keyboard() -> void:
     var horizontal := 0.0
     if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
@@ -354,51 +405,47 @@ func _draw() -> void:
     var face := Color("#102536")
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
 
-    # ROUNDS-style articulated limbs: the torso stays stable while the
-    # arms and legs swing from visible shoulder/hip joints during locomotion.
-    var walk_phase := animation_time
-    var leg_swing := stride * 0.72
-    var lift_back := maxf(0.0, sin(walk_phase)) * 5.0 if moving else 0.0
-    var lift_front := maxf(0.0, -sin(walk_phase)) * 5.0 if moving else 0.0
+    # Physical, jointed-looking limbs with independent angular momentum.
+    var leg_len := 12.0
+    var arm_len := 10.0
     var hip_back := Vector2(-8.0, 10.0)
     var hip_front := Vector2(8.0, 10.0)
-    var knee_back := hip_back + Vector2(sin(leg_swing) * 8.0, 11.0 - lift_back * 0.35)
-    var knee_front := hip_front + Vector2(-sin(leg_swing) * 8.0, 11.0 - lift_front * 0.35)
-    var foot_back := knee_back + Vector2(sin(leg_swing + 0.35) * 7.0, 10.0 - lift_back)
-    var foot_front := knee_front + Vector2(-sin(leg_swing + 0.35) * 7.0, 10.0 - lift_front)
-    draw_line(hip_back, knee_back, outline, 10.0, true)
-    draw_line(hip_back, knee_back, body_color.darkened(0.18), 6.0, true)
-    draw_line(knee_back, foot_back, outline, 9.0, true)
-    draw_line(knee_back, foot_back, body_color.darkened(0.08), 5.5, true)
-    draw_line(foot_back + Vector2(-3, 0), foot_back + Vector2(6, 0), outline, 5.5, true)
-    draw_line(hip_front, knee_front, outline, 10.0, true)
-    draw_line(hip_front, knee_front, body_color.lightened(0.08), 6.0, true)
-    draw_line(knee_front, foot_front, outline, 9.0, true)
-    draw_line(knee_front, foot_front, body_color, 5.5, true)
-    draw_line(foot_front + Vector2(-3, 0), foot_front + Vector2(7, 0), outline, 5.5, true)
-    draw_circle(hip_back, 4.5, body_color.darkened(0.15))
-    draw_circle(hip_front, 4.5, body_color)
-
-    var arm_phase := -stride * 0.62
     var shoulder_back := Vector2(-16.0, -7.0)
     var shoulder_front := Vector2(15.0, -7.0)
-    var elbow_back := shoulder_back + Vector2(-7.0 + arm_phase * 8.0, 10.0)
-    var elbow_front := shoulder_front + Vector2(7.0 - arm_phase * 8.0, 9.0)
-    var hand_back := elbow_back + Vector2(-2.0 + arm_phase * 5.0, 9.0)
-    var hand_front := elbow_front + Vector2(3.0 - arm_phase * 5.0, 8.0)
-    draw_line(shoulder_back, elbow_back, outline, 9.0, true)
-    draw_line(shoulder_back, elbow_back, body_color.darkened(0.18), 5.5, true)
-    draw_line(elbow_back, hand_back, outline, 8.0, true)
-    draw_line(elbow_back, hand_back, body_color.darkened(0.08), 5.0, true)
-    draw_circle(hand_back, 3.5, body_color.darkened(0.08))
-    draw_line(shoulder_front, elbow_front, outline, 9.0, true)
-    draw_line(shoulder_front, elbow_front, body_color.lightened(0.08), 5.5, true)
-    draw_line(elbow_front, hand_front, outline, 8.0, true)
-    draw_line(elbow_front, hand_front, body_color, 5.0, true)
-    draw_circle(hand_front, 3.5, body_color)
-    draw_circle(shoulder_back, 4.5, body_color.darkened(0.15))
-    draw_circle(shoulder_front, 4.5, body_color)
-    
+    var knee_back := hip_back + Vector2(sin(leg_back_angle) * leg_len, cos(leg_back_angle) * leg_len)
+    var knee_front := hip_front + Vector2(sin(leg_front_angle) * leg_len, cos(leg_front_angle) * leg_len)
+    var foot_back := knee_back + Vector2(sin(leg_back_angle * 0.72) * leg_len, cos(leg_back_angle * 0.72) * leg_len)
+    var foot_front := knee_front + Vector2(sin(leg_front_angle * 0.72) * leg_len, cos(leg_front_angle * 0.72) * leg_len)
+    draw_line(hip_back, knee_back, outline, 9.0, true)
+    draw_line(hip_back, knee_back, body_color.darkened(0.18), 5.5, true)
+    draw_line(knee_back, foot_back, outline, 8.0, true)
+    draw_line(knee_back, foot_back, body_color.darkened(0.08), 5.0, true)
+    draw_line(foot_back + Vector2(-3, 0), foot_back + Vector2(6, 0), outline, 5.0, true)
+    draw_line(hip_front, knee_front, outline, 9.0, true)
+    draw_line(hip_front, knee_front, body_color.lightened(0.08), 5.5, true)
+    draw_line(knee_front, foot_front, outline, 8.0, true)
+    draw_line(knee_front, foot_front, body_color, 5.0, true)
+    draw_line(foot_front + Vector2(-3, 0), foot_front + Vector2(7, 0), outline, 5.0, true)
+    draw_circle(hip_back, 4.0, body_color.darkened(0.15))
+    draw_circle(hip_front, 4.0, body_color)
+
+    var elbow_back := shoulder_back + Vector2(sin(arm_back_angle) * arm_len, cos(arm_back_angle) * arm_len)
+    var elbow_front := shoulder_front + Vector2(sin(arm_front_angle) * arm_len, cos(arm_front_angle) * arm_len)
+    var hand_back := elbow_back + Vector2(sin(arm_back_angle * 0.8) * arm_len, cos(arm_back_angle * 0.8) * arm_len)
+    var hand_front := elbow_front + Vector2(sin(arm_front_angle * 0.8) * arm_len, cos(arm_front_angle * 0.8) * arm_len)
+    draw_line(shoulder_back, elbow_back, outline, 8.5, true)
+    draw_line(shoulder_back, elbow_back, body_color.darkened(0.18), 5.0, true)
+    draw_line(elbow_back, hand_back, outline, 7.5, true)
+    draw_line(elbow_back, hand_back, body_color.darkened(0.08), 4.5, true)
+    draw_circle(hand_back, 3.2, body_color.darkened(0.08))
+    draw_line(shoulder_front, elbow_front, outline, 8.5, true)
+    draw_line(shoulder_front, elbow_front, body_color.lightened(0.08), 5.0, true)
+    draw_line(elbow_front, hand_front, outline, 7.5, true)
+    draw_line(elbow_front, hand_front, body_color, 4.5, true)
+    draw_circle(hand_front, 3.2, body_color)
+    draw_circle(shoulder_back, 4.0, body_color.darkened(0.15))
+    draw_circle(shoulder_front, 4.0, body_color)
+
     # Rounded armored body with a readable face and bright rim.
     draw_circle(center, 28.0, Color(body_color, 0.07))
     draw_circle(center, 23.0, outline)
