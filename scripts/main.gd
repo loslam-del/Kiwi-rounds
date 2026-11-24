@@ -1308,10 +1308,17 @@ func _build_upgrade_cards(shade: Control) -> void:
         var panel := PanelContainer.new()
         panel.custom_minimum_size = Vector2(355,385)
         var style := StyleBoxFlat.new()
-        style.bg_color = Color("#30352b") if active else Color("#20242e")
-        style.border_color = Color("#d9ef70") if active else Color("#454b5b")
-        style.set_border_width_all(3 if active else 1)
-        style.set_corner_radius_all(18)
+        style.bg_color = Color("#20291f") if active else Color("#171d29")
+        style.border_color = Color("#d9ef70") if active else Color("#53647b")
+        style.set_border_width_all(3 if active else 2)
+        style.set_corner_radius_all(15)
+        style.shadow_color = Color(0.0,0.0,0.0,0.42)
+        style.shadow_size = 10
+        style.shadow_offset = Vector2(0,4)
+        style.content_margin_left = 12
+        style.content_margin_right = 12
+        style.content_margin_top = 10
+        style.content_margin_bottom = 10
         panel.add_theme_stylebox_override("panel",style)
         var column := VBoxContainer.new()
         column.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -1320,8 +1327,10 @@ func _build_upgrade_cards(shade: Control) -> void:
         var art_area := Panel.new()
         art_area.custom_minimum_size = Vector2(315,125)
         var art_style := StyleBoxFlat.new()
-        art_style.bg_color = Color("#343b2b") if active else Color("#292f3c")
-        art_style.set_corner_radius_all(12)
+        art_style.bg_color = Color("#34452f") if active else Color("#222d3c")
+        art_style.border_color = Color("#91b75d") if active else Color("#64758e")
+        art_style.set_border_width_all(1)
+        art_style.set_corner_radius_all(11)
         art_area.add_theme_stylebox_override("panel",art_style)
         column.add_child(art_area)
         _add_card_illustration(art_area, id, active)
