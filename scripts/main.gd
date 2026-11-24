@@ -146,9 +146,16 @@ func _make_players() -> void:
     rival.pulse_requested.connect(_spawn_pulse)
     add_child(rival)
 
-func _apply_skin() -> void:
+func _get_skins() -> Array[Dictionary]:
     if mod_loader == null:
         mod_loader = MOD_LOADER_SCRIPT.new()
+    if not mods_loaded:
+        mod_loader.load_all()
+        all_maps.assign(DEFAULT_MAPS)
+        all_maps.append_array(mod_loader.maps)
+        all_upgrades.assign(DEFAULT_UPGRADES)
+        all_upgrades.append_array(mod_loader.upgrades)
+        mods_loaded = true
     var skins: Array[Dictionary] = [
         {"name":"Бирюзовый","color":"#39d6c5"},
         {"name":"Лазурный","color":"#4b9cff"},
@@ -157,13 +164,18 @@ func _apply_skin() -> void:
         {"name":"Розовый","color":"#ff78b7"}
     ]
     skins.append_array(mod_loader.skins)
+    return skins
+
+func _apply_skin() -> void:
+    var skins := _get_skins()
     if skins.is_empty():
         return
     skin_index = posmod(skin_index, skins.size())
     var skin: Dictionary = skins[skin_index]
     selected_skin_color = Color.from_string(str(skin.get("color","#39d6c5")),Color("#39d6c5"))
-    player.body_color = selected_skin_color
-    player.queue_redraw()
+    if is_instance_valid(player):
+        player.body_color = selected_skin_color
+        player.queue_redraw()
     if is_instance_valid(skin_button):
         skin_button.text = "СКИН: " + str(skin.get("name",skin.get("id","MOD")))
 
@@ -393,14 +405,76 @@ func _open_skins() -> void:
         phase = "paused"
         player.set_physics_process(false)
         rival.set_physics_process(false)
-    var skin_count := 5 + mod_loader.skins.size()
-    var current_name := "Выбран скин " + str(skin_index + 1) + " из " + str(skin_count)
-    _show_panel("СКИНЫ",[
-        ["ПРЕДЫДУЩИЙ",Callable(self,"_previous_skin")],
-        ["СЛЕДУЮЩИЙ",Callable(self,"_cycle_skin")],
-        ["ПРИМЕНИТЬ И НАЗАД",Callable(self,"_apply_skin_and_return")],
-        ["В ГЛАВНОЕ МЕНЮ",Callable(self,"_show_main_menu")]
-    ],current_name + "\nЦвет персонажа меняется сразу")
+    var skins := _get_skins()
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#101722")
+    ui.add_child(shade)
+    overlay = shade
+    var title := Label.new()
+    title.text = "ВЫБОР ПЕРСОНАЖА"
+    title.position = Vector2(0,35)
+    title.size = Vector2(1280,58)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",38)
+    title.add_theme_color_override("font_color",Color("#f4f7ff"))
+    shade.add_child(title)
+    var subtitle := Label.new()
+    subtitle.text = "Выбери цветовой стиль — он сразу появится на персонаже"
+    subtitle.position = Vector2(0,95)
+    subtitle.size = Vector2(1280,34)
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size",17)
+    subtitle.add_theme_color_override("font_color",Color("#aab8cc"))
+    shade.add_child(subtitle)
+    var grid := GridContainer.new()
+    grid.columns = 3
+    grid.position = Vector2(170,155)
+    grid.size = Vector2(940,390)
+    grid.add_theme_constant_override("h_separation",20)
+    grid.add_theme_constant_override("v_separation",16)
+    shade.add_child(grid)
+    for i in range(skins.size()):
+        var skin: Dictionary = skins[i]
+        var color := Color.from_string(str(skin.get("color","#39d6c5")),Color("#39d6c5"))
+        var panel := PanelContainer.new()
+        panel.custom_minimum_size = Vector2(295,170)
+        var style := StyleBoxFlat.new()
+        style.bg_color = Color("#244d4c") if i == skin_index else Color("#202e42")
+        style.border_color = Color("#64d6bd") if i == skin_index else Color("#526b8c")
+        style.set_border_width_all(3 if i == skin_index else 1)
+        style.set_corner_radius_all(16)
+        panel.add_theme_stylebox_override("panel",style)
+        var column := VBoxContainer.new()
+        column.alignment = BoxContainer.ALIGNMENT_CENTER
+        column.add_theme_constant_override("separation",8)
+        panel.add_child(column)
+        var swatch := ColorRect.new()
+        swatch.color = color
+        swatch.custom_minimum_size = Vector2(70,55)
+        column.add_child(swatch)
+        var name_label := Label.new()
+        name_label.text = str(skin.get("name",skin.get("id","MOD"))) + ("  ✓" if i == skin_index else "")
+        name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        name_label.add_theme_font_size_override("font_size",21)
+        name_label.add_theme_color_override("font_color",Color("#f4f7ff"))
+        column.add_child(name_label)
+        var choose := Button.new()
+        choose.text = "ВЫБРАНО" if i == skin_index else "ВЫБРАТЬ"
+        choose.custom_minimum_size = Vector2(230,42)
+        choose.add_theme_stylebox_override("normal",_menu_button_style(Color("#245b58") if i == skin_index else Color("#263b5b"),Color("#64d6bd") if i == skin_index else Color("#7895bc")))
+        choose.pressed.connect(_select_skin.bind(i))
+        column.add_child(choose)
+        grid.add_child(panel)
+    var back := _add_button("НАЗАД",Vector2(500,600),Vector2(280,62),shade)
+    back.pressed.connect(_apply_skin_and_return)
+
+func _select_skin(index: int) -> void:
+    skin_index = index
+    _apply_skin()
+    _open_skins()
 
 func _previous_skin() -> void:
     skin_index -= 1
@@ -415,15 +489,7 @@ func _apply_skin_and_return() -> void:
         _show_main_menu()
 
 func _open_mods() -> void:
-    if mod_loader == null:
-        mod_loader = MOD_LOADER_SCRIPT.new()
-    if not mods_loaded:
-        mod_loader.load_all()
-        all_maps.assign(DEFAULT_MAPS)
-        all_maps.append_array(mod_loader.maps)
-        all_upgrades.assign(DEFAULT_UPGRADES)
-        all_upgrades.append_array(mod_loader.upgrades)
-        mods_loaded = true
+    _get_skins()
     var description := "Найдено модов: %d\nСкинов: %d  •  карт: %d  •  карточек: %d\nПапка: user://mods/\nКаждый мод должен содержать mod.json." % [mod_loader.loaded_mod_names.size(),mod_loader.skins.size(),mod_loader.maps.size(),mod_loader.upgrades.size()]
     if not mod_loader.loaded_mod_names.is_empty():
         for mod_name in mod_loader.loaded_mod_names:
