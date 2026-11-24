@@ -785,16 +785,7 @@ func _show_main_menu() -> void:
     rounds_title.add_theme_color_override("font_outline_color", Color("#173b50"))
     shade.add_child(rounds_title)
 
-    # Keep the round mascot separate from the title text.
-    var menu_kiwi: ArenaPlayer = PLAYER_SCRIPT.new()
-    menu_kiwi.skin_style = "kiwi"
-    menu_kiwi.menu_mascot = true
-    menu_kiwi.body_color = Color("#477b4c")
-    menu_kiwi.position = Vector2(285, 45)
-    menu_kiwi.scale = Vector2(1.22, 1.22)
-    menu_kiwi.set_physics_process(false)
-    menu_kiwi.set_process(false)
-    shade.add_child(menu_kiwi)
+    # Title mascot intentionally omitted; the user will provide custom artwork.
 
     var subtitle := Label.new()
     subtitle.text = "NEON BOT ARENA  /  RANDOM MAPS  /  RANDOM BUILDS"
@@ -851,7 +842,7 @@ func _show_main_menu() -> void:
     _create_menu_bot_preview(shade)
 
 func _create_menu_bot_preview(parent: Control) -> void:
-    # A live miniature duel: every menu entry rolls a different arena and random bot builds.
+    # A live miniature duel in a stable ground-level arena; map decorations vary without shifting bot spawn points.
     var stage := Node2D.new()
     stage.name = "MenuBotPreview"
     parent.add_child(stage)
@@ -917,7 +908,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_a.is_bot = true
     bot_a.menu_preview_mode = true
     bot_a.body_color = Color("#36e6df")
-    bot_a.position = Vector2(850, 510)
+    bot_a.position = Vector2(850, 586)
     bot_a.bot_accuracy = 1.0
     bot_a.move_speed = 390.0
     bot_a.pulse_force = 520.0
@@ -932,7 +923,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_b.is_bot = true
     bot_b.menu_preview_mode = true
     bot_b.body_color = Color("#ff6fae")
-    bot_b.position = Vector2(1140, 510)
+    bot_b.position = Vector2(1150, 586)
     bot_b.bot_accuracy = 1.0
     bot_b.move_speed = 390.0
     bot_b.pulse_force = 520.0
