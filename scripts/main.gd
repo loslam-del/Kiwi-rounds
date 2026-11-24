@@ -92,6 +92,16 @@ var cards_button: Button
 var mod_json_input: TextEdit
 var mod_status_message := "Вставь JSON мода и нажми ИМПОРТИРОВАТЬ."
 var mod_json_buffer := ""
+const ONLINE_SERVER_URL := "wss://kiwi-rounds-server.onrender.com/ws"
+var online_socket := WebSocketPeer.new()
+var online_connected := false
+var online_connecting := false
+var online_status_label: Label
+var online_rooms_list: VBoxContainer
+var online_name_input: LineEdit
+var online_room_name_input: LineEdit
+var online_password_input: LineEdit
+
 
 func _ready() -> void:
     boot_status_label = get_node_or_null("StartupLayer/BootScreen/BootStatus") as Label
@@ -629,6 +639,7 @@ func _button_style(color: Color) -> StyleBoxFlat:
     return style
 
 func _process(delta: float) -> void:
+    _poll_online_socket()
     background_time += delta
     queue_redraw()
     impact_flash = maxf(0.0, impact_flash - delta * 2.8)
@@ -1131,9 +1142,210 @@ func _start_training() -> void:
     _start_game("training")
 
 func _show_online_info() -> void:
-    _show_panel("ОНЛАЙН",[
-        ["НАЗАД",Callable(self,"_show_mode_menu")]
-    ],"Сетевой режим пока не подключён. Сейчас доступны полноценные бои с ботом и тренировка.")
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#0b1019")
+    ui.add_child(shade)
+    overlay = shade
+    _add_menu_ornaments(shade)
+    var title := Label.new()
+    title.text = "СЕТЕВАЯ ИГРА"
+    title.position = Vector2(0, 25)
+    title.size = Vector2(1280, 55)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 38)
+    title.add_theme_color_override("font_color", Color("#f3f1e8"))
+    shade.add_child(title)
+    online_status_label = Label.new()
+    online_status_label.position = Vector2(250, 90)
+    online_status_label.size = Vector2(780, 38)
+    online_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    online_status_label.add_theme_font_size_override("font_size", 17)
+    online_status_label.text = "Подключение..."
+    shade.add_child(online_status_label)
+    var left := Panel.new()
+    left.position = Vector2(105, 150)
+    left.size = Vector2(500, 430)
+    left.add_theme_stylebox_override("panel", _menu_button_style(Color("#172333"), Color("#36e6df")))
+    shade.add_child(left)
+    var right := Panel.new()
+    right.position = Vector2(675, 150)
+    right.size = Vector2(500, 430)
+    right.add_theme_stylebox_override("panel", _menu_button_style(Color("#172333"), Color("#8b67ff")))
+    shade.add_child(right)
+    var name_title := Label.new()
+    name_title.text = "ТВОЙ НИК"
+    name_title.position = Vector2(140, 175)
+    name_title.size = Vector2(430, 30)
+    name_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    name_title.add_theme_color_override("font_color", Color("#f3f1e8"))
+    shade.add_child(name_title)
+    online_name_input = LineEdit.new()
+    online_name_input.text = "Игрок"
+    online_name_input.placeholder_text = "Имя игрока"
+    online_name_input.position = Vector2(165, 215)
+    online_name_input.size = Vector2(380, 42)
+    shade.add_child(online_name_input)
+    var room_title := Label.new()
+    room_title.text = "НАЗВАНИЕ НОВОЙ КОМНАТЫ"
+    room_title.position = Vector2(140, 275)
+    room_title.size = Vector2(430, 30)
+    room_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    room_title.add_theme_color_override("font_color", Color("#f3f1e8"))
+    shade.add_child(room_title)
+    online_room_name_input = LineEdit.new()
+    online_room_name_input.text = "Комната Kiwi"
+    online_room_name_input.position = Vector2(165, 315)
+    online_room_name_input.size = Vector2(380, 42)
+    shade.add_child(online_room_name_input)
+    online_password_input = LineEdit.new()
+    online_password_input.placeholder_text = "Пароль комнаты (необязательно)"
+    online_password_input.secret = true
+    online_password_input.position = Vector2(165, 370)
+    online_password_input.size = Vector2(380, 42)
+    shade.add_child(online_password_input)
+    var create := _add_button("СОЗДАТЬ КОМНАТУ", Vector2(205, 435), Vector2(300, 52), shade)
+    create.pressed.connect(_online_create_room)
+    var refresh := _add_button("ОБНОВИТЬ", Vector2(775, 175), Vector2(300, 48), shade)
+    refresh.pressed.connect(_online_request_rooms)
+    var rooms_title := Label.new()
+    rooms_title.text = "СПИСОК КОМНАТ"
+    rooms_title.position = Vector2(700, 235)
+    rooms_title.size = Vector2(450, 32)
+    rooms_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    rooms_title.add_theme_color_override("font_color", Color("#f3f1e8"))
+    shade.add_child(rooms_title)
+    var scroll := ScrollContainer.new()
+    scroll.position = Vector2(710, 275)
+    scroll.size = Vector2(430, 270)
+    shade.add_child(scroll)
+    online_rooms_list = VBoxContainer.new()
+    online_rooms_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    online_rooms_list.add_theme_constant_override("separation", 8)
+    scroll.add_child(online_rooms_list)
+    var back := _add_button("НАЗАД", Vector2(520, 615), Vector2(240, 52), shade)
+    back.pressed.connect(_show_mode_menu)
+    if online_socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
+        online_connected = true
+        _online_set_status("Подключено к серверу", Color("#9be89b"))
+        _online_request_rooms()
+    else:
+        _online_connect()
+
+func _online_connect() -> void:
+    if online_connecting:
+        return
+    online_socket = WebSocketPeer.new()
+    var err := online_socket.connect_to_url(ONLINE_SERVER_URL)
+    if err != OK:
+        _online_set_status("Ошибка подключения: " + str(err), Color("#ff8b8b"))
+        return
+    online_connecting = true
+    _online_set_status("Подключаемся к серверу...", Color("#d9ef70"))
+
+func _poll_online_socket() -> void:
+    if online_socket == null:
+        return
+    online_socket.poll()
+    var state := online_socket.get_ready_state()
+    if state == WebSocketPeer.STATE_OPEN:
+        if not online_connected:
+            online_connected = true
+            online_connecting = false
+            _online_set_status("Соединение установлено", Color("#9be89b"))
+            var nick := "Игрок"
+            if is_instance_valid(online_name_input) and online_name_input.text.strip_edges() != "":
+                nick = online_name_input.text.strip_edges()
+            _online_send({"type":"set_name", "name":nick})
+            _online_request_rooms()
+        while online_socket.get_available_packet_count() > 0:
+            var packet := online_socket.get_packet()
+            var data: Variant = JSON.parse_string(packet.get_string_from_utf8())
+            if typeof(data) == TYPE_DICTIONARY:
+                _online_handle_message(data)
+    elif state == WebSocketPeer.STATE_CLOSED and (online_connected or online_connecting):
+        online_connected = false
+        online_connecting = false
+        _online_set_status("Связь потеряна. Нажми ПЕРЕПОДКЛЮЧИТЬСЯ.", Color("#ff8b8b"))
+
+func _online_send(data: Dictionary) -> void:
+    if online_socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
+        online_socket.send_text(JSON.stringify(data))
+
+func _online_request_rooms() -> void:
+    if online_connected:
+        _online_send({"type":"list_rooms"})
+
+func _online_create_room() -> void:
+    if not online_connected:
+        _online_set_status("Нет соединения с сервером", Color("#ff8b8b"))
+        return
+    var nick := online_name_input.text.strip_edges()
+    if nick == "":
+        nick = "Игрок"
+    _online_send({"type":"set_name", "name":nick})
+    _online_send({"type":"create_room", "name":online_room_name_input.text.strip_edges(), "password":online_password_input.text})
+    _online_set_status("Создаём комнату...", Color("#d9ef70"))
+
+func _online_join_room(room_id: String) -> void:
+    if not online_connected:
+        return
+    var nick := online_name_input.text.strip_edges()
+    if nick == "":
+        nick = "Игрок"
+    _online_send({"type":"set_name", "name":nick})
+    _online_send({"type":"join_room", "roomId":room_id, "password":online_password_input.text})
+    _online_set_status("Подключаемся к комнате...", Color("#d9ef70"))
+
+func _online_handle_message(data: Dictionary) -> void:
+    match str(data.get("type", "")):
+        "connected":
+            _online_set_status("Сервер принял подключение", Color("#9be89b"))
+        "room_list":
+            _online_render_rooms(data.get("rooms", []))
+        "room_joined":
+            _online_set_status("В комнате " + str(data.get("roomId", "")) + ". Ожидаем соперника.", Color("#9be89b"))
+        "room_state":
+            var room: Dictionary = data.get("room", {})
+            var names: Array[String] = []
+            for person in room.get("players", []):
+                if typeof(person) == TYPE_DICTIONARY:
+                    names.append(str(person.get("name", "Игрок")))
+            _online_set_status(str(room.get("name", "Комната")) + " • " + ", ".join(names), Color("#9be89b"))
+        "error":
+            _online_set_status(str(data.get("message", "Ошибка сервера")), Color("#ff8b8b"))
+
+func _online_render_rooms(rooms: Variant) -> void:
+    if not is_instance_valid(online_rooms_list):
+        return
+    for child in online_rooms_list.get_children():
+        child.queue_free()
+    if typeof(rooms) != TYPE_ARRAY or rooms.is_empty():
+        var empty := Label.new()
+        empty.text = "Открытых комнат пока нет"
+        empty.add_theme_color_override("font_color", Color("#a7a9b2"))
+        online_rooms_list.add_child(empty)
+        return
+    for item in rooms:
+        if typeof(item) != TYPE_DICTIONARY:
+            continue
+        var room: Dictionary = item
+        var room_id := str(room.get("id", ""))
+        var button := Button.new()
+        button.text = str(room.get("name", "Комната")) + "  •  " + str(room.get("players", 0)) + "/" + str(room.get("maxPlayers", 8)) + ("  •  ЗАКРЫТА" if bool(room.get("locked", false)) else "")
+        button.custom_minimum_size = Vector2(410, 48)
+        button.add_theme_font_size_override("font_size", 15)
+        button.add_theme_color_override("font_color", Color("#f3f1e8"))
+        button.add_theme_stylebox_override("normal", _menu_button_style(Color("#303644"), Color("#596174")))
+        button.pressed.connect(_online_join_room.bind(room_id))
+        online_rooms_list.add_child(button)
+
+func _online_set_status(message: String, tint: Color = Color("#d9ef70")) -> void:
+    if is_instance_valid(online_status_label):
+        online_status_label.text = message
+        online_status_label.add_theme_color_override("font_color", tint)
 
 func _show_pause_menu() -> void:
     phase = "paused"
