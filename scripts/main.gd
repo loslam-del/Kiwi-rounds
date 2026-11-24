@@ -188,6 +188,7 @@ func _make_players() -> void:
     player.position = Vector2(350,390)
     player.pulse_requested.connect(_spawn_pulse)
     player.got_hit.connect(_on_player_hit)
+    player.reload_started.connect(_play_sfx.bind("reload"))
     add_child(player)
     rival = PLAYER_SCRIPT.new()
     rival.is_bot = true
@@ -196,6 +197,7 @@ func _make_players() -> void:
     rival.target = player
     rival.pulse_requested.connect(_spawn_pulse)
     rival.got_hit.connect(_on_player_hit)
+    rival.reload_started.connect(_play_sfx.bind("reload"))
     arena_camera = Camera2D.new()
     arena_camera.position = Vector2(640,360)
     arena_camera.enabled = true
@@ -297,7 +299,6 @@ func _make_ui() -> void:
     reload_button = _add_button("ПЕРЕЗАРЯДКА",Vector2(365,585),Vector2(175,76),game_controls)
     reload_button.add_theme_font_size_override("font_size",15)
     reload_button.pressed.connect(player.start_reload)
-    reload_button.pressed.connect(_play_sfx.bind("reload"))
     ammo_label = Label.new()
     ammo_label.position = Vector2(190,545)
     ammo_label.size = Vector2(360,32)
