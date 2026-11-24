@@ -54,6 +54,15 @@ var mods_loaded := false
 var arena_camera: Camera2D
 var camera_shake_timer := 0.0
 var camera_shake_strength := 0.0
+var shake_enabled := true
+var controls_mirrored := false
+var sound_level := 0.72
+var movement_joystick: VirtualJoystick
+var aim_joystick: VirtualJoystick
+var reload_button: Button
+var jump_button: Button
+var menu_button: Button
+var cards_button: Button
 
 func _ready() -> void:
     randomize()
@@ -237,9 +246,13 @@ func _cycle_skin() -> void:
     skin_index += 1
     _apply_skin()
 
-func _on_player_hit(_direction: Vector2) -> void:
-    camera_shake_timer = 0.16
-    camera_shake_strength = 7.0
+func _on_player_hit(_direction: Vector2, hit_target: Node2D) -> void:
+    if shake_enabled:
+        camera_shake_timer = 0.16
+        camera_shake_strength = 7.0
+    _play_sfx("hit")
+    if hit_target == player and vibration_enabled:
+        Input.vibrate_handheld(55,0.25)
 
 func _clear_pulses() -> void:
     for node in get_children():
@@ -249,6 +262,7 @@ func _clear_pulses() -> void:
 func _spawn_pulse(origin: Vector2, direction: Vector2, force: float, tint: Color, shooter: Node2D) -> void:
     var pulse: EnergyPulse = PULSE_SCRIPT.new()
     pulse.configure(direction,force,tint,shooter)
+    _play_sfx("shot")
     pulse.global_position = origin
     add_child(pulse)
 
@@ -270,7 +284,7 @@ func _make_ui() -> void:
     ui.add_child(game_controls)
     skin_button = _add_button("СКИН",Vector2(1080,18),Vector2(150,50),game_controls)
     skin_button.pressed.connect(_open_skins)
-    var movement_joystick: VirtualJoystick = JOYSTICK_SCRIPT.new()
+    movement_joystick = JOYSTICK_SCRIPT.new()
     movement_joystick.position = Vector2(35,535)
     movement_joystick.size = Vector2(150,150)
     movement_joystick.value_changed.connect(player.set_move)
@@ -278,9 +292,10 @@ func _make_ui() -> void:
     fire_button = _add_button("ВЫСТРЕЛ",Vector2(205,585),Vector2(145,76),game_controls)
     fire_button.button_down.connect(player.set_fire.bind(true))
     fire_button.button_up.connect(player.set_fire.bind(false))
-    var reload_button := _add_button("ПЕРЕЗАРЯДКА",Vector2(365,585),Vector2(175,76),game_controls)
+    reload_button = _add_button("ПЕРЕЗАРЯДКА",Vector2(365,585),Vector2(175,76),game_controls)
     reload_button.add_theme_font_size_override("font_size",15)
     reload_button.pressed.connect(player.start_reload)
+    reload_button.pressed.connect(_play_sfx.bind("reload"))
     ammo_label = Label.new()
     ammo_label.position = Vector2(190,545)
     ammo_label.size = Vector2(360,32)
@@ -288,19 +303,91 @@ func _make_ui() -> void:
     ammo_label.add_theme_font_size_override("font_size",18)
     ammo_label.add_theme_color_override("font_color",Color("#f4f7ff"))
     game_controls.add_child(ammo_label)
-    var aim_joystick: VirtualJoystick = JOYSTICK_SCRIPT.new()
+    aim_joystick = JOYSTICK_SCRIPT.new()
     aim_joystick.position = Vector2(1080,535)
     aim_joystick.size = Vector2(150,150)
     aim_joystick.value_changed.connect(player.set_aim)
     game_controls.add_child(aim_joystick)
-    var jump_button := _add_button("ПРЫЖОК",Vector2(1090,405),Vector2(130,82),game_controls)
+    jump_button = _add_button("ПРЫЖОК",Vector2(1090,405),Vector2(130,82),game_controls)
     jump_button.button_down.connect(player.set_jump.bind(true))
     jump_button.button_up.connect(player.set_jump.bind(false))
-    var menu_button := _add_button("МЕНЮ",Vector2(18,18),Vector2(120,50),game_controls)
+    menu_button = _add_button("МЕНЮ",Vector2(18,18),Vector2(120,50),game_controls)
     menu_button.pressed.connect(_show_pause_menu)
-    var cards_button := _add_button("КАРТОЧКИ",Vector2(150,18),Vector2(160,50),game_controls)
+    cards_button = _add_button("КАРТОЧКИ",Vector2(150,18),Vector2(160,50),game_controls)
     cards_button.pressed.connect(_open_training_cards)
     _apply_skin()
+    _apply_control_layout()
+    _apply_audio_settings()
+
+func _apply_control_layout() -> void:
+    if not is_instance_valid(movement_joystick) or not is_instance_valid(aim_joystick):
+        return
+    if controls_mirrored:
+        movement_joystick.position = Vector2(1080,535)
+        aim_joystick.position = Vector2(35,535)
+        fire_button.position = Vector2(820,585)
+        reload_button.position = Vector2(820,495)
+        jump_button.position = Vector2(35,405)
+    else:
+        movement_joystick.position = Vector2(35,535)
+        aim_joystick.position = Vector2(1080,535)
+        fire_button.position = Vector2(820,585)
+        reload_button.position = Vector2(820,495)
+        jump_button.position = Vector2(1090,405)
+    menu_button.position = Vector2(18,18)
+    cards_button.position = Vector2(150,18)
+
+func _apply_audio_settings() -> void:
+    if AudioServer.bus_count > 0:
+        AudioServer.set_bus_volume_linear(0,sound_level)
+        AudioServer.set_bus_mute(0,sound_level <= 0.001)
+
+func _play_sfx(kind: String) -> void:
+    if sound_level <= 0.001:
+        return
+    var duration := 0.12
+    var start_hz := 440.0
+    var end_hz := 220.0
+    var gain := 0.45
+    match kind:
+        "shot":
+            duration = 0.10
+            start_hz = 720.0
+            end_hz = 180.0
+            gain = 0.32
+        "hit":
+            duration = 0.16
+            start_hz = 190.0
+            end_hz = 65.0
+            gain = 0.55
+        "reload":
+            duration = 0.22
+            start_hz = 380.0
+            end_hz = 620.0
+            gain = 0.25
+    var sample_rate := 22050
+    var sample_count := int(sample_rate * duration)
+    var bytes := PackedByteArray()
+    bytes.resize(sample_count * 2)
+    for i in range(sample_count):
+        var t := float(i) / float(sample_rate)
+        var progress := float(i) / float(maxi(sample_count - 1,1))
+        var frequency := lerpf(start_hz,end_hz,progress)
+        var envelope := pow(1.0-progress,2.0)
+        var sample := int(sin(TAU * frequency * t) * envelope * gain * sound_level * 18000.0)
+        bytes[i*2] = sample & 0xff
+        bytes[i*2+1] = (sample >> 8) & 0xff
+    var stream := AudioStreamWAV.new()
+    stream.format = AudioStreamWAV.FORMAT_16_BITS
+    stream.mix_rate = sample_rate
+    stream.stereo = false
+    stream.data = bytes
+    var audio := AudioStreamPlayer.new()
+    audio.stream = stream
+    audio.bus = "Master"
+    add_child(audio)
+    audio.finished.connect(audio.queue_free)
+    audio.play()
 
 func _add_button(caption: String, at: Vector2, dimensions: Vector2, parent: Control = null) -> Button:
     var button := Button.new()
@@ -334,7 +421,7 @@ func _button_style(color: Color) -> StyleBoxFlat:
 
 func _process(delta: float) -> void:
     if is_instance_valid(arena_camera):
-        if camera_shake_timer > 0.0:
+        if shake_enabled and camera_shake_timer > 0.0:
             camera_shake_timer = maxf(0.0,camera_shake_timer-delta)
             arena_camera.offset = Vector2(randf_range(-camera_shake_strength,camera_shake_strength),randf_range(-camera_shake_strength,camera_shake_strength))
         else:
@@ -546,16 +633,41 @@ func _resume_game() -> void:
 func _show_settings() -> void:
     _show_panel("НАСТРОЙКИ",[
         ["ЗВУК: " + ("ВКЛ" if sound_enabled else "ВЫКЛ"),Callable(self,"_toggle_sound")],
+        ["ГРОМКОСТЬ: " + str(roundi(sound_level*100)) + "%  ↻",Callable(self,"_cycle_volume")],
         ["ВИБРАЦИЯ: " + ("ВКЛ" if vibration_enabled else "ВЫКЛ"),Callable(self,"_toggle_vibration")],
+        ["ТРЯСКА КАМЕРЫ: " + ("ВКЛ" if shake_enabled else "ВЫКЛ"),Callable(self,"_toggle_shake")],
+        ["РАСКЛАДКА: " + ("ЛЕВША" if controls_mirrored else "ПРАВША"),Callable(self,"_toggle_controls")],
         ["НАЗАД",Callable(self,"_show_main_menu")]
-    ],"Звуковые эффекты и вибрация будут подключены отдельно")
+    ],"Настройки применяются сразу. Нажми на громкость, чтобы переключить уровень.")
 
 func _toggle_sound() -> void:
     sound_enabled = not sound_enabled
+    sound_level = 0.72 if sound_enabled else 0.0
+    _apply_audio_settings()
     _show_settings()
 
 func _toggle_vibration() -> void:
     vibration_enabled = not vibration_enabled
+    _show_settings()
+
+func _cycle_volume() -> void:
+    if sound_level <= 0.001:
+        sound_level = 0.35
+    elif sound_level < 0.5:
+        sound_level = 0.72
+    else:
+        sound_level = 1.0
+    sound_enabled = sound_level > 0.001
+    _apply_audio_settings()
+    _show_settings()
+
+func _toggle_shake() -> void:
+    shake_enabled = not shake_enabled
+    _show_settings()
+
+func _toggle_controls() -> void:
+    controls_mirrored = not controls_mirrored
+    _apply_control_layout()
     _show_settings()
 
 func _open_skins() -> void:
