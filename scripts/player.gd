@@ -538,23 +538,37 @@ func _draw() -> void:
     var gun_origin := hand_front + local_aim * 1.5
     draw_set_transform(gun_origin, local_aim.angle(), Vector2.ONE)
     var metal := Color("#202c3b")
+    var metal_light := Color("#53677d")
     var trim := body_color.lightened(0.42)
-    var barrel_len := 24.0 + float(weapon_level) * 3.0
-    draw_circle(Vector2(0,0), 7.0, Color(trim,0.16))
-    draw_rect(Rect2(-5,-5,barrel_len+8,10), outline)
-    draw_rect(Rect2(-4,-3,barrel_len+6,6), metal)
-    draw_rect(Rect2(0,-2,barrel_len+3,2), trim)
-    draw_rect(Rect2(-4,4,8,8), outline)
-    draw_rect(Rect2(-2,5,4,5), trim.darkened(0.18))
-    draw_rect(Rect2(2,-7,7,2), Color("#91a5bb"))
+    var barrel_len := 23.0 + float(weapon_level) * 3.0
+    # A compact sidearm silhouette: slide, muzzle, trigger guard and angled grip.
+    var pistol := PackedVector2Array([
+        Vector2(-7,-5), Vector2(barrel_len-4,-5), Vector2(barrel_len+1,-2),
+        Vector2(barrel_len+1,2), Vector2(2,3), Vector2(0,9),
+        Vector2(-6,9), Vector2(-5,3), Vector2(-9,1), Vector2(-9,-3)
+    ])
+    draw_colored_polygon(pistol,outline)
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-5,-3),Vector2(barrel_len-4,-3),Vector2(barrel_len-2,0),
+        Vector2(1,1),Vector2(-2,2),Vector2(-6,1)
+    ]),metal)
+    draw_line(Vector2(-3,-2),Vector2(barrel_len-5,-2),trim,1.8,true)
+    draw_rect(Rect2(barrel_len-1,-1.8,3.0,3.6),Color("#101820"))
+    draw_line(Vector2(-4,4),Vector2(-5,8),metal_light,1.4,true)
+    draw_line(Vector2(-7,5),Vector2(-3,5),metal_light,1.2,true)
+    # Trigger guard and trigger are separate so the grip reads as a pistol.
+    draw_arc(Vector2(-1,4),4.0,0.0,PI*0.92,16,outline,2.0,true)
+    draw_line(Vector2(-1,3),Vector2(1,6),metal_light,1.2,true)
+    draw_rect(Rect2(-3,-7,6,2),metal_light)
+    draw_circle(Vector2(1,-6),1.1,trim)
     if weapon_level >= 1:
-        draw_rect(Rect2(6,-8,barrel_len-1,2), trim)
-        draw_circle(Vector2(barrel_len,0), 3.5, Color(trim,0.55))
+        draw_rect(Rect2(5,-8,barrel_len-7,2),trim)
+        draw_circle(Vector2(barrel_len-1,0),3.0,Color(trim,0.5))
     if weapon_level >= 2:
-        draw_rect(Rect2(6,7,barrel_len-7,2), Color("#d8e6f0"))
+        draw_line(Vector2(4,7),Vector2(barrel_len-5,7),Color("#d8e6f0"),1.6,true)
     if weapon_level >= 3:
-        draw_arc(Vector2(8,0), 11.0, -PI*0.75, PI*0.75, 24, trim, 2.0, true)
+        draw_arc(Vector2(8,0),12.0,-PI*0.72,PI*0.72,24,trim,2.0,true)
     if muzzle_flash > 0.0:
         var flash_size := 7.0 + muzzle_flash * 80.0
-        draw_colored_polygon(PackedVector2Array([Vector2(barrel_len+2,0),Vector2(barrel_len+flash_size,-flash_size*0.4),Vector2(barrel_len+flash_size*0.55,0),Vector2(barrel_len+flash_size,flash_size*0.4)]),Color("#fff0a8",0.9))
+        draw_colored_polygon(PackedVector2Array([Vector2(barrel_len+1,0),Vector2(barrel_len+flash_size,-flash_size*0.4),Vector2(barrel_len+flash_size*0.55,0),Vector2(barrel_len+flash_size,flash_size*0.4)]),Color("#fff0a8",0.9))
     draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
