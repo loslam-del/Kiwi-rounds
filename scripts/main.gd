@@ -604,7 +604,7 @@ func _add_kiwi_mascot(parent: Control, center: Vector2) -> void:
 
 func _show_mode_menu() -> void:
     _show_panel("ВЫБОР РЕЖИМА",[
-        ["ИГРАТЬ ОНЛАЙН",Callable(self,"_show_online_info")],
+        ["ОНЛАЙН — ПОЗЖЕ",Callable(self,"_show_online_info")],
         ["ПРОТИВ БОТОВ",Callable(self,"_show_difficulty_menu")],
         ["ТРЕНИРОВКА",Callable(self,"_start_training")],
         ["НАЗАД",Callable(self,"_show_main_menu")]
@@ -640,7 +640,7 @@ func _start_training() -> void:
 func _show_online_info() -> void:
     _show_panel("ОНЛАЙН",[
         ["НАЗАД",Callable(self,"_show_mode_menu")]
-    ],"Сетевой матчмейкинг ещё не подключён. Этот пункт подготовлен для будущего онлайн-режима.")
+    ],"Сетевой режим пока не подключён. Сейчас доступны полноценные бои с ботом и тренировка.")
 
 func _show_pause_menu() -> void:
     phase = "paused"
