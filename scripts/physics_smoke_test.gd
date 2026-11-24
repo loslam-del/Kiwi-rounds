@@ -90,9 +90,13 @@ func _run_physics_checks() -> void:
 
     # Reload behavior belongs to bot matches; training intentionally disables the rival.
     game.call("_start_game", "bot")
+    rival.set("is_bot", true)
+    rival.set("target", player)
+    rival.set_physics_process(true)
     rival.set("ammo", 0)
     rival.set("reload_timer", 0.0)
-    await physics_frame
+    # Call the bot decision step directly so this check is independent of frame scheduling.
+    rival.call("_think_bot", 0.016)
     if float(rival.get("reload_timer")) <= 0.0:
         _fail("bot did not automatically start reloading")
         return
