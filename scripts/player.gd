@@ -359,62 +359,57 @@ func _draw_limb(from_point: Vector2, to_point: Vector2, width: float, fill: Colo
     draw_circle(to_point, width * 0.30, fill)
 
 func _draw() -> void:
-    var bob := absf(sin(animation_time * 2.0)) * 1.5 if absf(velocity.x) > 35.0 and is_on_floor() else 0.0
-    var center := Vector2(0.0, -8.0 + bob)
-    var ink := Color("#102536")
+    # Compact, flat ROUNDS-like fighter silhouette: one colored ball and noodle limbs.
+    var bob := absf(sin(animation_time * 2.0)) * 1.1 if absf(velocity.x) > 35.0 and is_on_floor() else 0.0
+    var center := Vector2(0.0, -7.0 + bob)
     var limb := body_color
     var face := Color("#102536")
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
 
-    # ROUNDS-inspired noodle legs: long, thin, bendy lines with no shoes or clothes.
-    var hip_l := Vector2(-9.0, 13.0 + bob)
-    var hip_r := Vector2(9.0, 13.0 + bob)
-    var knee_l := hip_l + _limb_vector(ragdoll_angles["leg_l"], 18.0)
-    var knee_r := hip_r + _limb_vector(ragdoll_angles["leg_r"], 18.0)
-    var foot_l := knee_l + _limb_vector(ragdoll_angles["leg_l"] + ragdoll_angles["shin_l"], 17.0)
-    var foot_r := knee_r + _limb_vector(ragdoll_angles["leg_r"] + ragdoll_angles["shin_r"], 17.0)
-    draw_line(hip_l, knee_l, limb, 4.4, true)
-    draw_line(knee_l, foot_l, limb, 4.4, true)
-    draw_circle(knee_l, 2.2, limb)
-    draw_line(hip_r, knee_r, limb, 4.4, true)
-    draw_line(knee_r, foot_r, limb, 4.4, true)
-    draw_circle(knee_r, 2.2, limb)
+    # Legs: thin, soft-ended segments, with no shoes or clothing.
+    var hip_l := Vector2(-7.5, 10.0 + bob)
+    var hip_r := Vector2(7.5, 10.0 + bob)
+    var knee_l := hip_l + _limb_vector(ragdoll_angles["leg_l"], 15.0)
+    var knee_r := hip_r + _limb_vector(ragdoll_angles["leg_r"], 15.0)
+    var foot_l := knee_l + _limb_vector(ragdoll_angles["leg_l"] + ragdoll_angles["shin_l"], 13.0)
+    var foot_r := knee_r + _limb_vector(ragdoll_angles["leg_r"] + ragdoll_angles["shin_r"], 13.0)
+    draw_line(hip_l, knee_l, limb, 3.2, true)
+    draw_line(knee_l, foot_l, limb, 3.2, true)
+    draw_circle(knee_l, 1.6, limb)
+    draw_circle(foot_l, 1.6, limb)
+    draw_line(hip_r, knee_r, limb, 3.2, true)
+    draw_line(knee_r, foot_r, limb, 3.2, true)
+    draw_circle(knee_r, 1.6, limb)
+    draw_circle(foot_r, 1.6, limb)
 
-    # Long noodle arms, independently swinging at shoulders and elbows.
-    var shoulder_l := Vector2(-20.0, -5.0 + bob)
-    var shoulder_r := Vector2(20.0, -5.0 + bob)
-    var elbow_l := shoulder_l + _limb_vector(ragdoll_angles["arm_l"], 19.0)
-    var elbow_r := shoulder_r + _limb_vector(ragdoll_angles["arm_r"], 19.0)
-    var hand_l := elbow_l + _limb_vector(ragdoll_angles["arm_l"] + ragdoll_angles["forearm_l"], 18.0)
-    var hand_r := elbow_r + _limb_vector(ragdoll_angles["arm_r"] + ragdoll_angles["forearm_r"], 18.0)
-    draw_line(shoulder_l, elbow_l, limb, 4.6, true)
-    draw_line(elbow_l, hand_l, limb, 4.6, true)
-    draw_circle(elbow_l, 2.3, limb)
-    draw_circle(hand_l, 2.3, limb)
-    draw_line(shoulder_r, elbow_r, limb, 4.6, true)
-    draw_line(elbow_r, hand_r, limb, 4.6, true)
-    draw_circle(elbow_r, 2.3, limb)
-    draw_circle(hand_r, 2.3, limb)
+    # Arms: long, narrow, flexible noodles attached directly to the ball.
+    var shoulder_l := Vector2(-17.0, -5.0 + bob)
+    var shoulder_r := Vector2(17.0, -5.0 + bob)
+    var elbow_l := shoulder_l + _limb_vector(ragdoll_angles["arm_l"], 16.0)
+    var elbow_r := shoulder_r + _limb_vector(ragdoll_angles["arm_r"], 16.0)
+    var hand_l := elbow_l + _limb_vector(ragdoll_angles["arm_l"] + ragdoll_angles["forearm_l"], 15.0)
+    var hand_r := elbow_r + _limb_vector(ragdoll_angles["arm_r"] + ragdoll_angles["forearm_r"], 15.0)
+    draw_line(shoulder_l, elbow_l, limb, 3.3, true)
+    draw_line(elbow_l, hand_l, limb, 3.3, true)
+    draw_circle(elbow_l, 1.7, limb)
+    draw_circle(hand_l, 1.7, limb)
+    draw_line(shoulder_r, elbow_r, limb, 3.3, true)
+    draw_line(elbow_r, hand_r, limb, 3.3, true)
+    draw_circle(elbow_r, 1.7, limb)
+    draw_circle(hand_r, 1.7, limb)
 
-    # Simple solid-color ball body and expressive face, like the original fighters.
-    draw_circle(center, 26.0, ink)
-    draw_circle(center, 24.5, body_color)
-    draw_circle(Vector2(-8.0, -10.0 + bob), 3.0, face)
-    draw_circle(Vector2(8.0, -10.0 + bob), 3.0, face)
-    draw_circle(Vector2(-7.2, -10.8 + bob), 0.9, Color.WHITE)
-    draw_circle(Vector2(8.8, -10.8 + bob), 0.9, Color.WHITE)
-    draw_arc(Vector2(0.0, -1.0 + bob), 6.0, 0.12, PI - 0.12, 18, face, 2.2, true)
+    # The body is a clean, unoutlined colored ball. Kiwi identity comes from its color.
+    draw_circle(center, 21.0, body_color)
 
-    # A tiny Kiwi leaf is the only decorative detail.
-    draw_colored_polygon(PackedVector2Array([
-        Vector2(-2.0, -29.0 + bob), Vector2(2.0, -38.0 + bob),
-        Vector2(11.0, -36.0 + bob), Vector2(7.0, -28.0 + bob),
-        Vector2(2.0, -25.0 + bob)
-    ]), Color("#8bd34c"))
-    draw_line(Vector2(1.0, -28.0 + bob), Vector2(7.0, -35.0 + bob), Color("#397b3c"), 1.4, true)
+    # Minimal face: two dark oval eyes and a short mouth, without glossy highlights.
+    draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
+    draw_set_transform(center, 0.0, Vector2.ONE)
+    draw_circle(Vector2(-6.0, -2.0), 1.9, face)
+    draw_circle(Vector2(6.0, -2.0), 1.9, face)
+    draw_line(Vector2(-3.0, 6.0), Vector2(3.0, 6.0), face, 1.8, true)
 
     if hit_flash > 0.0:
-        draw_circle(center, 29.0, Color(1.0, 0.35, 0.28, hit_flash * 0.35))
+        draw_circle(Vector2.ZERO, 24.0, Color(1.0, 0.35, 0.28, hit_flash * 0.28))
     if reload_visual > 0.0:
-        draw_arc(center, 31.0, -PI / 2.0, -PI / 2.0 + TAU * (1.0 - reload_visual), 32, Color.WHITE, 2.5, true)
+        draw_arc(Vector2.ZERO, 25.0, -PI / 2.0, -PI / 2.0 + TAU * (1.0 - reload_visual), 28, Color.WHITE, 2.0, true)
     draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
