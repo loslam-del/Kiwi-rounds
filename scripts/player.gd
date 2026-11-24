@@ -60,13 +60,6 @@ var air_control_scale := 1.0
 var ground_accel_scale := 1.0
 var wall_jump_scale := 1.0
 
-# Lightweight articulated ragdoll: every limb segment has its own angular inertia.
-var ragdoll_angles := {
-    "arm_l": -0.95, "forearm_l": -0.72,
-    "arm_r": 0.95, "forearm_r": 0.72,
-    "leg_l": -0.12, "shin_l": -0.08,
-    "leg_r": 0.12, "shin_r": 0.08
-}
 var ragdoll_anchor_body: StaticBody2D
 var ragdoll_parts: Array[RigidBody2D] = []
 var ragdoll_joints: Array[PinJoint2D] = []
@@ -435,39 +428,6 @@ func _sync_ragdoll_anchor_joints() -> void:
         if is_instance_valid(joint):
             var offset: Vector2 = ragdoll_anchor_offsets[i]
             joint.global_position = global_position + Vector2(offset.x * facing, offset.y)
-
-func _limb_vector(angle: float, length: float) -> Vector2:
-    var grounded := is_on_floor()
-    var run_cycle := sin(animation_time) if absf(velocity.x) > 35.0 and grounded else 0.0
-    var air := 0.0 if grounded else clampf(absf(velocity.y) / 850.0, 0.0, 1.0)
-    var local_aim := Vector2(aim_input.x * facing, aim_input.y).normalized()
-    if local_aim.length() < 0.1:
-        local_aim = Vector2.RIGHT
-    var weapon_angle := PI * 0.5 - local_aim.angle()
-    var targets := {
-        "arm_l": -0.92 - run_cycle * 0.28 - air * 0.55,
-        "forearm_l": -0.62 - run_cycle * 0.18 - air * 0.35,
-        "arm_r": lerpf(0.88, weapon_angle, 0.82) + air * 0.48,
-        "forearm_r": lerpf(0.62, weapon_angle + 0.18, 0.86) + air * 0.32,
-        "leg_l": -0.10 + run_cycle * 0.58 + air * -0.22,
-        "shin_l": -0.05 + maxf(0.0, run_cycle) * 0.48 + air * 0.72,
-        "leg_r": 0.10 - run_cycle * 0.58 + air * 0.22,
-        "shin_r": 0.05 + maxf(0.0, -run_cycle) * 0.48 - air * 0.72
-    }
-    targets["arm_r"] = float(targets["arm_r"]) - recoil_kick * 0.035
-    targets["forearm_r"] = float(targets["forearm_r"]) - recoil_kick * 0.055
-    for key in ragdoll_angles.keys():
-        var angle_now: float = ragdoll_angles[key]
-        var speed_now: float = ragdoll_speeds[key]
-        var target_angle: float = float(targets[key])
-        var stiffness := 17.0 if key.begins_with("shin") or key.begins_with("forearm") else 12.0
-        var damping := 5.2
-        var gravity_torque := -sin(angle_now) * (2.2 + air * 1.5)
-        var acceleration := (target_angle - angle_now) * stiffness + gravity_torque - speed_now * damping
-        speed_now += acceleration * delta
-        angle_now += speed_now * delta
-        ragdoll_speeds[key] = speed_now
-        ragdoll_angles[key] = angle_now
 
 func _limb_vector(angle: float, length: float) -> Vector2:
     return Vector2(sin(angle), cos(angle)) * length
