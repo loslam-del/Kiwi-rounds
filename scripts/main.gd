@@ -749,6 +749,8 @@ func _process(delta: float) -> void:
     _poll_online_socket()
     _online_sync_tick(delta)
     background_time += delta
+    if is_instance_valid(menu_record_needle):
+        menu_record_needle.rotation = background_time * 2.8
     queue_redraw()
     impact_flash = maxf(0.0, impact_flash - delta * 2.8)
     if is_instance_valid(arena_camera):
@@ -771,6 +773,14 @@ func _process(delta: float) -> void:
         queue_redraw()
         return
     if phase != "fight":
+        if is_instance_valid(player_health_bar):
+            player_health_bar.visible = false
+        if is_instance_valid(rival_health_bar):
+            rival_health_bar.visible = false
+        if is_instance_valid(player_health_text):
+            player_health_text.visible = false
+        if is_instance_valid(rival_health_text):
+            rival_health_text.visible = false
         return
     if is_instance_valid(ammo_label):
         ammo_label.text = player.ammo_text()
@@ -849,6 +859,7 @@ func _show_main_menu() -> void:
 
     # Full-screen live arena is created first, so all menu controls render above it.
     _create_menu_bot_preview(shade)
+    _create_menu_record(shade)
 
     var logo := Label.new()
     logo.name = "MenuLogo"
@@ -917,6 +928,65 @@ func _show_main_menu() -> void:
     footer.add_theme_font_size_override("font_size", 12)
     footer.add_theme_color_override("font_color", Color("#9bb8c9"))
     shade.add_child(footer)
+
+func _create_menu_record(parent: Control) -> void:
+    var record := Panel.new()
+    record.name = "MenuVinylRecord"
+    record.position = Vector2(1120, 64)
+    record.size = Vector2(96, 96)
+    record.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var outer := StyleBoxFlat.new()
+    outer.bg_color = Color("#101923")
+    outer.border_color = Color("#526779")
+    outer.set_border_width_all(2)
+    outer.set_corner_radius_all(48)
+    record.add_theme_stylebox_override("panel", outer)
+    parent.add_child(record)
+
+    var ring := Panel.new()
+    ring.position = Vector2(12, 12)
+    ring.size = Vector2(72, 72)
+    ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var ring_style := StyleBoxFlat.new()
+    ring_style.bg_color = Color("#172536")
+    ring_style.border_color = Color("#526779", 0.8)
+    ring_style.set_border_width_all(2)
+    ring_style.set_corner_radius_all(36)
+    ring.add_theme_stylebox_override("panel", ring_style)
+    record.add_child(ring)
+
+    for i in range(3):
+        var groove := Panel.new()
+        var inset := 20.0 + float(i) * 10.0
+        groove.position = Vector2(inset, inset)
+        groove.size = Vector2(72.0 - inset * 2.0, 72.0 - inset * 2.0)
+        groove.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        var groove_style := StyleBoxFlat.new()
+        groove_style.bg_color = Color(0, 0, 0, 0)
+        groove_style.border_color = Color("#718095", 0.42)
+        groove_style.set_border_width_all(1)
+        groove_style.set_corner_radius_all(36)
+        groove.add_theme_stylebox_override("panel", groove_style)
+        ring.add_child(groove)
+
+    menu_record_needle = ColorRect.new()
+    menu_record_needle.name = "MenuRecordNeedle"
+    menu_record_needle.position = Vector2(47, 46)
+    menu_record_needle.size = Vector2(35, 4)
+    menu_record_needle.pivot_offset = Vector2(2, 2)
+    menu_record_needle.color = Color("#36e6df")
+    menu_record_needle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    record.add_child(menu_record_needle)
+
+    var hub := Panel.new()
+    hub.position = Vector2(39, 39)
+    hub.size = Vector2(18, 18)
+    hub.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var hub_style := StyleBoxFlat.new()
+    hub_style.bg_color = Color("#d9ef70")
+    hub_style.set_corner_radius_all(9)
+    hub.add_theme_stylebox_override("panel", hub_style)
+    record.add_child(hub)
 
 func _create_menu_bot_preview(parent: Control) -> void:
     # Full-screen background sparring match, independent from the real match state.
