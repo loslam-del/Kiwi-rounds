@@ -26,6 +26,7 @@ func _run_physics_checks() -> void:
 
     game.set("vibration_enabled", false)
     game.call("_start_game", "training")
+    rival.set("bot_accuracy", 0.0)
     player.call("set_move", Vector2.RIGHT)
     for _i in range(12):
         await physics_frame
@@ -33,6 +34,8 @@ func _run_physics_checks() -> void:
         _fail("player movement did not accelerate")
         return
 
+    player.call("set_move", Vector2.ZERO)
+    player.velocity.x = 0.0
     player.call("set_jump", true)
     for _i in range(2):
         await physics_frame
@@ -40,8 +43,24 @@ func _run_physics_checks() -> void:
         _fail("jump did not apply upward velocity")
         return
     player.call("set_jump", false)
+    for _i in range(75):
+        await physics_frame
+    if not player.is_on_floor():
+        _fail("player did not land on the platform")
+        return
 
-    for _i in range(32):
+    player.global_position = Vector2(50.0, 300.0)
+    player.velocity = Vector2(-850.0, 0.0)
+    player.call("set_move", Vector2.LEFT)
+    for _i in range(18):
+        await physics_frame
+    if player.global_position.x < 18.0:
+        _fail("side wall did not stop the player")
+        return
+    player.call("set_move", Vector2.ZERO)
+    player.velocity = Vector2.ZERO
+
+    for _i in range(8):
         await physics_frame
     var ammo_before: int = int(player.get("ammo"))
     player.call("set_fire", true)
