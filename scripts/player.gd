@@ -354,25 +354,51 @@ func _draw() -> void:
     var face := Color("#102536")
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
 
-    # A single coherent fighter silhouette: limbs are decorative drawing only,
-    # never separate physics bodies, so they cannot scatter across the arena.
-    var back_leg := Vector2(-8.0, 12.0)
-    var front_leg := Vector2(8.0, 12.0)
-    var back_foot := back_leg + Vector2(stride * 5.0, 12.0 + absf(stride) * 1.5)
-    var front_foot := front_leg + Vector2(-stride * 5.0, 12.0 + absf(stride) * 1.5)
-    draw_line(back_leg, back_foot, outline, 10.0, true)
-    draw_line(back_leg, back_foot, body_color.darkened(0.12), 6.5, true)
-    draw_line(front_leg, front_foot, outline, 10.0, true)
-    draw_line(front_leg, front_foot, body_color, 6.5, true)
-    draw_line(back_foot + Vector2(-3,0), back_foot + Vector2(6,0), outline, 5.0, true)
-    draw_line(front_foot + Vector2(-3,0), front_foot + Vector2(6,0), outline, 5.0, true)
+    # ROUNDS-style articulated limbs: the torso stays stable while the
+    # arms and legs swing from visible shoulder/hip joints during locomotion.
+    var walk_phase := animation_time
+    var leg_swing := stride * 0.72
+    var lift_back := maxf(0.0, sin(walk_phase)) * 5.0 if moving else 0.0
+    var lift_front := maxf(0.0, -sin(walk_phase)) * 5.0 if moving else 0.0
+    var hip_back := Vector2(-8.0, 10.0)
+    var hip_front := Vector2(8.0, 10.0)
+    var knee_back := hip_back + Vector2(sin(leg_swing) * 8.0, 11.0 - lift_back * 0.35)
+    var knee_front := hip_front + Vector2(-sin(leg_swing) * 8.0, 11.0 - lift_front * 0.35)
+    var foot_back := knee_back + Vector2(sin(leg_swing + 0.35) * 7.0, 10.0 - lift_back)
+    var foot_front := knee_front + Vector2(-sin(leg_swing + 0.35) * 7.0, 10.0 - lift_front)
+    draw_line(hip_back, knee_back, outline, 10.0, true)
+    draw_line(hip_back, knee_back, body_color.darkened(0.18), 6.0, true)
+    draw_line(knee_back, foot_back, outline, 9.0, true)
+    draw_line(knee_back, foot_back, body_color.darkened(0.08), 5.5, true)
+    draw_line(foot_back + Vector2(-3, 0), foot_back + Vector2(6, 0), outline, 5.5, true)
+    draw_line(hip_front, knee_front, outline, 10.0, true)
+    draw_line(hip_front, knee_front, body_color.lightened(0.08), 6.0, true)
+    draw_line(knee_front, foot_front, outline, 9.0, true)
+    draw_line(knee_front, foot_front, body_color, 5.5, true)
+    draw_line(foot_front + Vector2(-3, 0), foot_front + Vector2(7, 0), outline, 5.5, true)
+    draw_circle(hip_back, 4.5, body_color.darkened(0.15))
+    draw_circle(hip_front, 4.5, body_color)
 
-    var arm_swing := stride * 4.0
-    draw_line(Vector2(-15,-8), Vector2(-19-arm_swing,-1), outline, 9.0, true)
-    draw_line(Vector2(-15,-8), Vector2(-19-arm_swing,-1), body_color.darkened(0.12), 5.5, true)
-    draw_line(Vector2(14,-8), Vector2(19+arm_swing,-3), outline, 9.0, true)
-    draw_line(Vector2(14,-8), Vector2(19+arm_swing,-3), body_color.lightened(0.08), 5.5, true)
-
+    var arm_phase := -stride * 0.62
+    var shoulder_back := Vector2(-16.0, -7.0)
+    var shoulder_front := Vector2(15.0, -7.0)
+    var elbow_back := shoulder_back + Vector2(-7.0 + arm_phase * 8.0, 10.0)
+    var elbow_front := shoulder_front + Vector2(7.0 - arm_phase * 8.0, 9.0)
+    var hand_back := elbow_back + Vector2(-2.0 + arm_phase * 5.0, 9.0)
+    var hand_front := elbow_front + Vector2(3.0 - arm_phase * 5.0, 8.0)
+    draw_line(shoulder_back, elbow_back, outline, 9.0, true)
+    draw_line(shoulder_back, elbow_back, body_color.darkened(0.18), 5.5, true)
+    draw_line(elbow_back, hand_back, outline, 8.0, true)
+    draw_line(elbow_back, hand_back, body_color.darkened(0.08), 5.0, true)
+    draw_circle(hand_back, 3.5, body_color.darkened(0.08))
+    draw_line(shoulder_front, elbow_front, outline, 9.0, true)
+    draw_line(shoulder_front, elbow_front, body_color.lightened(0.08), 5.5, true)
+    draw_line(elbow_front, hand_front, outline, 8.0, true)
+    draw_line(elbow_front, hand_front, body_color, 5.0, true)
+    draw_circle(hand_front, 3.5, body_color)
+    draw_circle(shoulder_back, 4.5, body_color.darkened(0.15))
+    draw_circle(shoulder_front, 4.5, body_color)
+    
     # Rounded armored body with a readable face and bright rim.
     draw_circle(center, 28.0, Color(body_color, 0.07))
     draw_circle(center, 23.0, outline)
