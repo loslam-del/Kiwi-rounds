@@ -337,6 +337,20 @@ func _on_player_hit(_direction: Vector2, hit_target: Node2D) -> void:
     if hit_target == player and vibration_enabled:
         Input.vibrate_handheld(55,0.25)
 
+func _clear_control_inputs() -> void:
+    if is_instance_valid(player):
+        player.clear_touch_controls()
+    if is_instance_valid(movement_joystick):
+        movement_joystick.cancel_input()
+    if is_instance_valid(aim_joystick):
+        aim_joystick.cancel_input()
+    if is_instance_valid(fire_button):
+        fire_button.cancel_input()
+    if is_instance_valid(jump_button):
+        jump_button.cancel_input()
+    if is_instance_valid(reload_button):
+        reload_button.cancel_input()
+
 func _clear_pulses() -> void:
     for node in get_children():
         if node is EnergyPulse:
@@ -786,6 +800,7 @@ func _show_online_info() -> void:
 
 func _show_pause_menu() -> void:
     phase = "paused"
+    _clear_control_inputs()
     _clear_pulses()
     player.set_physics_process(false)
     rival.set_physics_process(false)
@@ -853,6 +868,7 @@ func _open_skins() -> void:
     if phase == "fight":
         skin_return_to_game = true
         phase = "paused"
+        _clear_control_inputs()
         _clear_pulses()
         player.set_physics_process(false)
         rival.set_physics_process(false)
@@ -1068,6 +1084,7 @@ func _reload_mods() -> void:
 func _open_training_cards() -> void:
     if game_mode != "training":
         phase = "paused"
+        _clear_control_inputs()
         _clear_pulses()
         player.set_physics_process(false)
         rival.set_physics_process(false)
@@ -1077,6 +1094,7 @@ func _open_training_cards() -> void:
         ],"Карточки и выбор арены доступны в тренировке.")
         return
     phase = "paused"
+    _clear_control_inputs()
     _clear_pulses()
     player.set_physics_process(false)
     rival.set_physics_process(false)
@@ -1475,6 +1493,7 @@ func _close_overlay() -> void:
 func _finish_round(player_won: bool) -> void:
     if phase != "fight":
         return
+    _clear_control_inputs()
     _clear_pulses()
     phase = "upgrade"
     player.set_physics_process(false)
