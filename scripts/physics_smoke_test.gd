@@ -59,7 +59,7 @@ func _run_physics_checks() -> void:
         return
 
     var pulse_script := load("res://scripts/pulse.gd") as Script
-    var pulse := pulse_script.new()
+    var pulse := pulse_script.new() as Area2D
     game.add_child(pulse)
     pulse.call("configure", Vector2.RIGHT, 610.0, Color.WHITE, rival)
     pulse.global_position = player.global_position - Vector2(35.0, 0.0)
