@@ -8,14 +8,14 @@ signal reload_started
 @export var is_bot := false
 @export var body_color := Color("#39d6c5")
 
-const GRAVITY := 1680.0
-const JUMP_SPEED := -690.0
+const GRAVITY := 1420.0
+const JUMP_SPEED := -715.0
 const BASE_SPEED := 430.0
-const GROUND_ACCEL := 2550.0
-const AIR_ACCEL := 1120.0
-const GROUND_FRICTION := 2050.0
-const AIR_DRAG := 120.0
-const MAX_FALL_SPEED := 1120.0
+const GROUND_ACCEL := 2850.0
+const AIR_ACCEL := 1450.0
+const GROUND_FRICTION := 2350.0
+const AIR_DRAG := 55.0
+const MAX_FALL_SPEED := 1380.0
 const COYOTE_TIME := 0.105
 const JUMP_BUFFER_TIME := 0.13
 const WALL_JUMP_X := 475.0
@@ -53,6 +53,7 @@ var reload_visual := 0.0
 var hit_flash := 0.0
 var hitstun_timer := 0.0
 var bot_jump_hold_timer := 0.0
+var air_jumps_left := 1
 
 func _ready() -> void:
     collision_layer = 1
@@ -102,6 +103,7 @@ func _physics_process(delta: float) -> void:
         facing = signf(move_input)
     if is_on_floor():
         coyote_timer = COYOTE_TIME
+        air_jumps_left = 1
     else:
         coyote_timer = maxf(0.0, coyote_timer - delta)
     var jump_released := jump_was_held and not jump_held
@@ -137,6 +139,11 @@ func _physics_process(delta: float) -> void:
         coyote_timer = 0.0
         wall_jump_lock = 0.16
         jump_hold_timer = 0.12
+    elif jump_buffer_timer > 0.0 and air_jumps_left > 0 and not is_on_floor():
+        velocity.y = jump_speed * 0.86
+        air_jumps_left -= 1
+        jump_buffer_timer = 0.0
+        jump_hold_timer = 0.13
     if jump_held and jump_hold_timer > 0.0 and velocity.y < 0.0:
         velocity.y -= 980.0 * delta
         jump_hold_timer = maxf(0.0, jump_hold_timer - delta)
@@ -282,72 +289,81 @@ func reset_round(spawn: Vector2) -> void:
     hit_flash = 0.0
     hitstun_timer = 0.0
     bot_jump_hold_timer = 0.0
+    air_jumps_left = 1
 
 func _draw() -> void:
     var grounded := is_on_floor()
-    var moving := absf(velocity.x) > 35.0 and grounded
-    var stride := sin(animation_time) * 9.0 if moving else 0.0
-    var bob := absf(sin(animation_time * 2.0)) * 2.0 if moving else 0.0
+    var moving := absf(velocity.x) > 30.0 and grounded
+    var stride := sin(animation_time) * 10.0 if moving else 0.0
+    var bob := absf(sin(animation_time * 2.0)) * 2.8 if moving else 0.0
+    var body_center := Vector2(0.0,-8.0+bob)
+    var outline := Color("#20232b")
+    var hair := Color("#f0e6c9")
+    var hair_shadow := Color("#c9bd9e")
+    var green := body_color
+    var skin := Color("#f4d9c5")
+
+    # Noodle legs: deliberately simple and elastic, like an arena fighter.
+    var hip_left := Vector2(-9.0,13.0+bob)
+    var hip_right := Vector2(9.0,13.0+bob)
+    var foot_left := Vector2(-12.0+stride,43.0)
+    var foot_right := Vector2(12.0-stride,43.0)
+    draw_line(hip_left,foot_left,outline,7.0,true)
+    draw_line(hip_right,foot_right,outline,7.0,true)
+    draw_line(foot_left+Vector2(-5,1),foot_left+Vector2(6,1),hair,7.0,true)
+    draw_line(foot_right+Vector2(-5,1),foot_right+Vector2(6,1),hair,7.0,true)
+
+    # Small dress-like body with a green waist ribbon.
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-12,-2+bob),Vector2(12,-2+bob),Vector2(15,20+bob),
+        Vector2(20,31+bob),Vector2(-20,31+bob),Vector2(-15,20+bob)
+    ]),hair)
+    draw_polyline(PackedVector2Array([
+        Vector2(-12,-2+bob),Vector2(12,-2+bob),Vector2(15,20+bob),
+        Vector2(20,31+bob),Vector2(-20,31+bob),Vector2(-15,20+bob),
+        Vector2(-12,-2+bob)
+    ]),outline,2.5,true)
+    draw_line(Vector2(-14,13+bob),Vector2(14,13+bob),green,5.0,true)
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(0,10+bob),Vector2(7,15+bob),Vector2(0,20+bob),Vector2(-7,15+bob)
+    ]),green)
+
+    # Loose noodle arms swing with movement.
+    var swing := sin(animation_time)*5.0 if moving else 0.0
+    var shoulder_left := Vector2(-13,-1+bob)
+    var shoulder_right := Vector2(13,-1+bob)
+    var hand_left := Vector2(-27-swing,-8+bob)
+    var hand_right := Vector2(27+swing,-8+bob)
+    draw_line(shoulder_left,hand_left,outline,6.0,true)
+    draw_line(shoulder_right,hand_right,outline,6.0,true)
+    draw_circle(hand_left,4.0,skin)
+    draw_circle(hand_right,4.0,skin)
+
+    # Round Kiwi face, cream fringe, green leaf pin and bold outline.
+    draw_circle(body_center,27.0,outline)
+    draw_circle(body_center,23.5,skin)
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-23,-16+bob),Vector2(-20,-29+bob),Vector2(-8,-35+bob),
+        Vector2(7,-33+bob),Vector2(21,-24+bob),Vector2(24,-12+bob),
+        Vector2(13,-17+bob),Vector2(2,-20+bob),Vector2(-9,-17+bob)
+    ]),hair)
+    draw_polyline(PackedVector2Array([
+        Vector2(-23,-16+bob),Vector2(-20,-29+bob),Vector2(-8,-35+bob),
+        Vector2(7,-33+bob),Vector2(21,-24+bob),Vector2(24,-12+bob)
+    ]),outline,2.4,true)
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-4,-33+bob),Vector2(4,-43+bob),Vector2(17,-40+bob),
+        Vector2(9,-31+bob),Vector2(2,-27+bob)
+    ]),green)
+    draw_circle(Vector2(-8,-8+bob),2.5,outline)
+    draw_circle(Vector2(9,-8+bob),2.5,outline)
+    draw_circle(Vector2(-7,-9+bob),0.8,Color.WHITE)
+    draw_circle(Vector2(10,-9+bob),0.8,Color.WHITE)
+    draw_arc(Vector2(1,1+bob),5.0,0.15,PI-0.15,16,Color("#9a655d"),1.8,true)
+    draw_circle(Vector2(-17,1+bob),3.0,Color("#eaa59c",0.55))
+    draw_circle(Vector2(17,1+bob),3.0,Color("#eaa59c",0.55))
+
     if hit_flash > 0.0:
-        draw_circle(Vector2(0,-8),37.0,Color(1.0,0.32,0.28,hit_flash*0.8))
-    var skin := Color("#efbd94")
-    var outline := Color("#18212d")
-    var suit := body_color
-    draw_circle(Vector2(0,48),19.0,Color(0.0,0.0,0.0,0.22))
-    var left_foot := Vector2(-11.0 + stride,43.0)
-    var right_foot := Vector2(11.0 - stride,43.0)
-    draw_line(Vector2(-7,13+bob),left_foot,outline,12.0,true)
-    draw_line(Vector2(7,13+bob),right_foot,outline,12.0,true)
-    draw_line(left_foot+Vector2(-5,2),left_foot+Vector2(8,2),Color("#e8edf5"),8.0,true)
-    draw_line(right_foot+Vector2(-5,2),right_foot+Vector2(8,2),Color("#e8edf5"),8.0,true)
-    draw_colored_polygon(PackedVector2Array([Vector2(-15,-12),Vector2(-23,-8),Vector2(-23,12),Vector2(-14,18)]),Color("#273344"))
-    draw_colored_polygon(PackedVector2Array([Vector2(-16,-17),Vector2(13,-17),Vector2(19,-7),Vector2(16,14),Vector2(10,23),Vector2(-11,23),Vector2(-18,12),Vector2(-19,-5)]),suit)
-    draw_polyline(PackedVector2Array([Vector2(-16,-17),Vector2(-19,-5),Vector2(-18,12),Vector2(-11,23),Vector2(10,23),Vector2(16,14),Vector2(19,-7),Vector2(13,-17)]),outline,3.0,true)
-    draw_colored_polygon(PackedVector2Array([Vector2(-8,-14),Vector2(7,-14),Vector2(5,12),Vector2(-4,15)]),suit.lightened(0.23))
-    draw_line(Vector2(0,-10),Vector2(0,16),Color("#e8edf5",0.7),2.0,true)
-    draw_rect(Rect2(-13,15,26,5),outline)
-    draw_rect(Rect2(-8,17,16,2),Color("#d9ef70"))
-    draw_rect(Rect2(-5,-25,10,12),skin)
-    draw_circle(Vector2(0,-36-bob),15.0,skin)
-    draw_arc(Vector2(0,-36-bob),15.0,PI,TAU,28,outline,3.0,true)
-    draw_colored_polygon(PackedVector2Array([Vector2(-15,-39-bob),Vector2(-12,-50-bob),Vector2(-2,-54-bob),Vector2(10,-51-bob),Vector2(16,-41-bob),Vector2(9,-43-bob),Vector2(1,-46-bob),Vector2(-8,-42-bob)]),Color("#283247"))
-    draw_circle(Vector2(facing*6,-36-bob),2.4,outline)
-    draw_circle(Vector2(facing*7,-37-bob),0.9,Color.WHITE)
-    draw_line(Vector2(facing,-27-bob),Vector2(facing*6,-27-bob),Color("#9b5e55"),1.7,true)
-    var aim := aim_input.normalized()
-    if aim == Vector2.ZERO:
-        aim = Vector2(facing,0.0)
-    var side := Vector2(-aim.y,aim.x)
-    var shoulder := Vector2(facing*12,-10)
-    var back_shoulder := Vector2(-facing*12,-8)
-    draw_line(back_shoulder,back_shoulder+Vector2(-facing*8,14),Color("#263448"),10.0,true)
-    draw_circle(back_shoulder+Vector2(-facing*8,14),5.0,skin)
-    var hand := shoulder + aim*(25.0-recoil_kick*0.3)
-    draw_line(shoulder,hand,Color("#263448"),13.0,true)
-    draw_line(shoulder+Vector2(0,-2),hand+Vector2(0,-2),suit.lightened(0.2),4.0,true)
-    draw_circle(hand,6.0,skin)
-    var gun_origin := hand + aim*5.0
-    var gun_back := gun_origin - aim*13.0
-    var barrel_end := gun_origin + aim*37.0
-    var casing := PackedVector2Array([gun_back+side*7.0,gun_origin+side*8.0,barrel_end+side*5.0,barrel_end-side*5.0,gun_origin-side*8.0,gun_back-side*7.0])
-    draw_colored_polygon(casing,Color("#293647"))
-    draw_polyline(PackedVector2Array([casing[0],casing[1],casing[2],casing[3],casing[4],casing[5],casing[0]]),outline,2.2,true)
-    draw_colored_polygon(PackedVector2Array([gun_origin+side*5.0+aim*2.0,gun_origin+side*5.0+aim*23.0,gun_origin-side*5.0+aim*23.0,gun_origin-side*5.0+aim*2.0]),Color("#53657b"))
-    draw_line(gun_origin+aim*25.0+side*3.0,barrel_end+side*3.0,Color("#aebed0"),3.0,true)
-    draw_line(gun_origin+aim*25.0-side*3.0,barrel_end-side*3.0,Color("#aebed0"),3.0,true)
-    draw_colored_polygon(PackedVector2Array([gun_origin+aim*5.0+side*4.0,gun_origin+aim*13.0+side*4.0,gun_origin+aim*13.0-side*4.0,gun_origin+aim*5.0-side*4.0]),Color("#d9ef70"))
-    draw_line(gun_origin+aim*4.0+side*7.0,gun_origin+aim*4.0-side*7.0,Color("#dce8f5"),2.0,true)
-    var grip_start := gun_origin-aim*3.0-side*5.0
-    var grip_end := grip_start-aim*4.0-side*14.0
-    draw_colored_polygon(PackedVector2Array([grip_start,grip_start+side*7.0,grip_end+side*5.0,grip_end]),Color("#202a38"))
-    draw_line(grip_start,grip_end,Color("#65778d"),2.0,true)
-    draw_circle(gun_origin+aim*13.0,3.0,Color("#eaf6ad"))
-    if muzzle_flash > 0.0:
-        var flash_center := barrel_end+aim*7.0
-        draw_colored_polygon(PackedVector2Array([flash_center+aim*14.0,flash_center+side*5.0,flash_center-aim*3.0,flash_center-side*5.0]),Color("#f7ed9c",clampf(muzzle_flash/0.075,0.0,1.0)))
-        draw_circle(flash_center,5.0,Color("#ffffff",clampf(muzzle_flash/0.075,0.0,1.0)))
-    for i in range(magazine_size):
-        var pip_color := Color("#d9ef70") if i < ammo else Color("#505b6c")
-        draw_circle(Vector2(-14.0+float(i)*5.5,29.0),1.9,pip_color)
+        draw_circle(body_center,31.0,Color(1.0,0.35,0.28,hit_flash*0.35))
     if reload_visual > 0.0:
-        draw_arc(Vector2(0,-36-bob),21.0,-PI/2.0,-PI/2.0+TAU*(1.0-reload_visual),32,Color("#d9ef70"),3.0,true)
+        draw_arc(body_center,32.0,-PI/2.0,-PI/2.0+TAU*(1.0-reload_visual),32,green,3.0,true)
