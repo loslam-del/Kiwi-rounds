@@ -242,6 +242,13 @@ func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
     knee_front_angle = clampf(knee_front_angle + knee_front_angular_velocity * delta, -0.35, 0.95)
 
 
+func _weapon_hand_local() -> Vector2:
+    var shoulder := Vector2(13.0, -7.0)
+    var elbow := shoulder + Vector2(sin(arm_front_angle) * 15.0, cos(arm_front_angle) * 15.0)
+    var forearm_angle := arm_front_angle + elbow_front_angle
+    return elbow + Vector2(sin(forearm_angle) * 14.0, cos(forearm_angle) * 14.0)
+
+
 func apply_hit_impulse(direction: Vector2, force: float) -> void:
     var side := signf(direction.x)
     if side == 0.0:
@@ -329,7 +336,8 @@ func _fire_pulse() -> void:
         facing = signf(direction.x)
 
     # Spawn from the hand-held blaster muzzle, not from the fighter's chest.
-    var muzzle := Vector2(facing * 39.0, -6.0) + direction * 29.0
+    var hand_world_offset := Vector2(_weapon_hand_local().x * facing, _weapon_hand_local().y)
+    var muzzle := hand_world_offset + direction * 23.0
     pulse_requested.emit(global_position + muzzle, direction, pulse_force, body_color, self)
 
 func start_reload() -> void:
@@ -453,7 +461,7 @@ func _draw() -> void:
     var wrist_back_angle := arm_back_angle + elbow_back_angle
     var wrist_front_angle := arm_front_angle + elbow_front_angle
     var hand_back := elbow_back + Vector2(sin(wrist_back_angle) * forearm_len, cos(wrist_back_angle) * forearm_len)
-    var hand_front := elbow_front + Vector2(sin(wrist_front_angle) * forearm_len, cos(wrist_front_angle) * forearm_len)
+    var hand_front := _weapon_hand_local()
     draw_line(shoulder_back, elbow_back, outline, 10.0, true)
     draw_line(shoulder_back, elbow_back, dark, 6.2, true)
     draw_line(elbow_back, hand_back, outline, 9.0, true)
