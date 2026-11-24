@@ -34,7 +34,6 @@ func _ready() -> void:
     circle.radius = 25.0
     shape.shape = circle
     add_child(shape)
-    queue_redraw()
 
 func set_left(value: bool) -> void:
     touch_left = value
@@ -50,32 +49,32 @@ func set_fire(value: bool) -> void:
 
 func _physics_process(delta: float) -> void:
     pulse_cooldown = maxf(0.0, pulse_cooldown - delta)
-
     if is_bot:
         _think_bot(delta)
     else:
         _read_keyboard()
-
     if move_input != 0.0:
         facing = signf(move_input)
     velocity.x = move_toward(velocity.x, move_input * move_speed, 2400.0 * delta)
     velocity.y += GRAVITY * delta
-
     if jump_held and is_on_floor():
         velocity.y = jump_speed
-
     if fire_held and pulse_cooldown <= 0.0:
         _fire_pulse()
-
     move_and_slide()
 
 func _read_keyboard() -> void:
     var horizontal := 0.0
+    var touch_axis := 0.0
     if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
         horizontal -= 1.0
     if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
         horizontal += 1.0
-    move_input = clampf(horizontal + float(touch_right) - float(touch_left), -1.0, 1.0)
+    if touch_right:
+        touch_axis += 1.0
+    if touch_left:
+        touch_axis -= 1.0
+    move_input = clampf(horizontal + touch_axis, -1.0, 1.0)
     jump_held = Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP) or touch_jump
     fire_held = Input.is_key_pressed(KEY_SPACE) or touch_fire
 
@@ -91,9 +90,8 @@ func _think_bot(delta: float) -> void:
     bot_think -= delta
     if bot_think <= 0.0:
         bot_think = 0.22
-        if absf(dx) < 560.0 and signf(dx) == facing:
-            if randf() < 0.62:
-                _fire_pulse()
+        if absf(dx) < 560.0 and signf(dx) == facing and randf() < 0.62:
+            _fire_pulse()
 
 func _fire_pulse() -> void:
     if pulse_cooldown > 0.0:
@@ -128,8 +126,8 @@ func reset_round(spawn: Vector2) -> void:
     pulse_cooldown = 0.4
 
 func _draw() -> void:
-    draw_circle(Vector2(0, 0), 25.0, body_color)
-    draw_circle(Vector2(0, 0), 25.0, Color("#17233b"), false, 3.0)
+    draw_circle(Vector2.ZERO, 25.0, body_color)
+    draw_circle(Vector2.ZERO, 25.0, Color("#17233b"), false, 3.0)
     draw_circle(Vector2(facing * 8.0, -5.0), 4.0, Color.WHITE)
     draw_circle(Vector2(facing * 9.5, -5.0), 2.0, Color("#17233b"))
     draw_arc(Vector2(0, 2), 10.0, 0.25, PI - 0.25, 16, Color("#17233b"), 2.5)
