@@ -652,7 +652,7 @@ func _draw() -> void:
 
 
 func _draw_kiwi_ball() -> void:
-    # Kiwi is a clean ROUNDS-style sphere, not a miniature humanoid.
+    # Kiwi stays a simple green ROUNDS ball: no human face or torso.
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
     var center := Vector2(0.0, -7.0)
     var outline := Color("#172333")
@@ -661,27 +661,50 @@ func _draw_kiwi_ball() -> void:
     var hair := Color("#c9c0b2")
     var hair_light := Color("#f0e9dc")
     var hair_dark := Color("#8f887e")
-    var skin := Color("#f2d7bd")
-    # Round body with a soft highlight and a crisp outer rim.
+
+    # Short animated legs are attached directly under the sphere.
+    var stride := sin(animation_time) if is_on_floor() and absf(velocity.x) > 35.0 else 0.0
+    var hip_back := center + Vector2(-9.0, 15.0)
+    var hip_front := center + Vector2(9.0, 15.0)
+    var back_angle := leg_back_angle + stride * 0.62
+    var front_angle := leg_front_angle - stride * 0.62
+    var knee_back := hip_back + Vector2(sin(back_angle) * 13.0, cos(back_angle) * 13.0)
+    var knee_front := hip_front + Vector2(sin(front_angle) * 13.0, cos(front_angle) * 13.0)
+    var foot_back := knee_back + Vector2(sin(back_angle + knee_back_angle) * 12.0, cos(back_angle + knee_back_angle) * 12.0)
+    var foot_front := knee_front + Vector2(sin(front_angle + knee_front_angle) * 12.0, cos(front_angle + knee_front_angle) * 12.0)
+
+    # Sitting pose for the menu mascot: feet hang over the title letters.
+    if menu_mascot:
+        knee_back = hip_back + Vector2(-5.0, 12.0)
+        foot_back = knee_back + Vector2(-8.0, 10.0)
+        knee_front = hip_front + Vector2(7.0, 12.0)
+        foot_front = knee_front + Vector2(10.0, 10.0)
+
+    draw_line(hip_back, knee_back, outline, 7.0, true)
+    draw_line(hip_back, knee_back, Color("#31583d"), 4.4, true)
+    draw_line(knee_back, foot_back, outline, 6.5, true)
+    draw_line(knee_back, foot_back, Color("#31583d"), 4.0, true)
+    draw_line(foot_back + Vector2(-4.0, 0.0), foot_back + Vector2(6.0, 1.0), outline, 6.0, true)
+    draw_line(foot_back + Vector2(-3.0, -1.0), foot_back + Vector2(5.0, 0.0), Color("#263344"), 3.5, true)
+
+    # The whole body is one green sphere.
     draw_circle(center + Vector2(0.0, 2.0), 28.0, Color("#101a27", 0.30))
     draw_circle(center, 26.0, outline)
     draw_circle(center, 23.0, green)
     draw_arc(center, 22.4, PI * 1.08, PI * 1.92, 36, green_light, 2.0, true)
     draw_circle(center + Vector2(-8.0, -9.0), 6.0, Color(1.0, 1.0, 1.0, 0.10))
-    # Twin low hair buns, visible on both sides of the ball.
+
+    # Light hair buns and side locks frame the ball, not a human head.
     draw_circle(center + Vector2(-21.0, -22.0), 9.0, hair_dark)
     draw_circle(center + Vector2(-21.0, -22.0), 7.2, hair)
     draw_circle(center + Vector2(21.0, -22.0), 9.0, hair_dark)
     draw_circle(center + Vector2(21.0, -22.0), 7.2, hair)
     draw_arc(center + Vector2(-21.0, -22.0), 7.0, PI * 1.1, PI * 1.8, 16, hair_light, 1.3, true)
     draw_arc(center + Vector2(21.0, -22.0), 7.0, PI * 1.1, PI * 1.8, 16, hair_light, 1.3, true)
-    # Face and two soft side locks.
-    draw_circle(center + Vector2(0.0, -8.0), 16.0, skin)
     draw_line(center + Vector2(-17.0, -15.0), center + Vector2(-15.0, 7.0), hair_dark, 6.0, true)
     draw_line(center + Vector2(-17.0, -15.0), center + Vector2(-15.0, 7.0), hair, 3.6, true)
     draw_line(center + Vector2(17.0, -15.0), center + Vector2(15.0, 7.0), hair_dark, 6.0, true)
     draw_line(center + Vector2(17.0, -15.0), center + Vector2(15.0, 7.0), hair, 3.6, true)
-    # Rounded bangs.
     draw_colored_polygon(PackedVector2Array([
         center + Vector2(-17.0, -14.0), center + Vector2(-15.0, -27.0),
         center + Vector2(-8.0, -34.0), center + Vector2(1.0, -36.0),
@@ -697,11 +720,8 @@ func _draw_kiwi_ball() -> void:
         center + Vector2(0.0, -19.0), center + Vector2(-6.0, -24.0)
     ]), hair)
     draw_line(center + Vector2(-10.0, -30.0), center + Vector2(-5.0, -33.0), hair_light, 1.8, true)
-    # Simple red-violet eyes and the tiny beauty mark.
-    draw_circle(center + Vector2(-6.0, -8.0), 2.1, Color("#9c4f68"))
-    draw_circle(center + Vector2(6.0, -8.0), 2.1, Color("#9c4f68"))
-    draw_circle(center + Vector2(11.0, -1.0), 1.1, Color("#49333a"))
-    # Small green military cap, with a short brim and gold star.
+
+    # Original green cap, placed directly on the hairstyle.
     draw_colored_polygon(PackedVector2Array([
         center + Vector2(-17.0, -28.0), center + Vector2(-13.0, -39.0),
         center + Vector2(-4.0, -45.0), center + Vector2(8.0, -44.0),
@@ -721,9 +741,19 @@ func _draw_kiwi_ball() -> void:
         center + Vector2(-4.0, -28.0), center + Vector2(-3.0, -32.0),
         center + Vector2(-6.0, -35.0), center + Vector2(-2.0, -35.0)
     ]), Color("#e4c66e"))
+
+    # Near-side leg is drawn last so both feet remain clearly visible.
+    draw_line(hip_front, knee_front, outline, 7.0, true)
+    draw_line(hip_front, knee_front, Color("#477b4c"), 4.4, true)
+    draw_line(knee_front, foot_front, outline, 6.5, true)
+    draw_line(knee_front, foot_front, Color("#31583d"), 4.0, true)
+    draw_line(foot_front + Vector2(-4.0, 0.0), foot_front + Vector2(6.0, 1.0), outline, 6.0, true)
+    draw_line(foot_front + Vector2(-3.0, -1.0), foot_front + Vector2(5.0, 0.0), Color("#263344"), 3.5, true)
+
     if hit_flash > 0.0:
         draw_arc(center, 29.0, 0.0, TAU, 48, Color(1.0, 0.86, 0.72, hit_flash * 0.8), 2.0, true)
     draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
 
 func _draw_two_hand_blaster(center: Vector2) -> void:
     draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
