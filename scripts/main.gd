@@ -65,6 +65,7 @@ var menu_button: Button
 var cards_button: Button
 var mod_json_input: TextEdit
 var mod_status_message := "Вставь JSON мода и нажми ИМПОРТИРОВАТЬ."
+var mod_json_buffer := ""
 
 func _ready() -> void:
     randomize()
@@ -686,6 +687,7 @@ func _cycle_volume() -> void:
         sound_level = 1.0
     sound_enabled = sound_level > 0.001
     _apply_audio_settings()
+    _save_settings()
     _show_settings()
 
 func _toggle_shake() -> void:
@@ -837,7 +839,7 @@ func _open_mods() -> void:
     mod_json_input = TextEdit.new()
     mod_json_input.position = Vector2(120,170)
     mod_json_input.size = Vector2(1040,365)
-    mod_json_input.text = '{"name":"Мой мод","skins":[{"name":"Мятный","color":"#39d6c5"}],"maps":[{"name":"Моя арена","platforms":[{"x":300,"y":550,"w":180,"h":22},{"x":950,"y":550,"w":180,"h":22}]}],"upgrades":[]}'
+    mod_json_input.text = mod_json_buffer if mod_json_buffer != "" else mod_json_input.text = '{"name":"Мой мод","skins":[{"name":"Мятный","color":"#39d6c5"}],"maps":[{"name":"Моя арена","platforms":[{"x":300,"y":550,"w":180,"h":22},{"x":950,"y":550,"w":180,"h":22}]}],"upgrades":[]}'
     mod_json_input.add_theme_font_size_override("font_size",16)
     mod_json_input.add_theme_color_override("font_color",Color("#e9eef8"))
     mod_json_input.add_theme_color_override("background_color",Color("#202938"))
@@ -871,6 +873,7 @@ func _open_mods() -> void:
 func _import_mod_from_text() -> void:
     if not is_instance_valid(mod_json_input):
         return
+    mod_json_buffer = mod_json_input.text
     var parsed: Variant = JSON.parse_string(mod_json_input.text)
     if typeof(parsed) != TYPE_DICTIONARY:
         mod_status_message = "Ошибка: проверь JSON — скобки, кавычки и запятые."
