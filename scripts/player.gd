@@ -51,6 +51,7 @@ var recoil_kick := 0.0
 var muzzle_flash := 0.0
 var reload_visual := 0.0
 var hit_flash := 0.0
+var hitstun_timer := 0.0
 var bot_jump_hold_timer := 0.0
 
 func _ready() -> void:
@@ -86,6 +87,7 @@ func _physics_process(delta: float) -> void:
     recoil_kick = move_toward(recoil_kick, 0.0, delta * 38.0)
     muzzle_flash = maxf(0.0, muzzle_flash - delta)
     hit_flash = maxf(0.0, hit_flash - delta)
+    hitstun_timer = maxf(0.0,hitstun_timer-delta)
     if reload_timer > 0.0:
         reload_timer = maxf(0.0, reload_timer - delta)
         reload_visual = reload_timer / maxf(reload_duration, 0.01)
@@ -112,6 +114,8 @@ func _physics_process(delta: float) -> void:
     var accel := GROUND_ACCEL if is_on_floor() else AIR_ACCEL
     if wall_jump_lock > 0.0:
         accel *= 0.18
+    if hitstun_timer > 0.0:
+        accel *= 0.16
     if absf(move_input) > 0.01:
         velocity.x = move_toward(velocity.x, move_input * move_speed, accel * delta)
     elif is_on_floor():
@@ -276,6 +280,7 @@ func reset_round(spawn: Vector2) -> void:
     recoil_kick = 0.0
     muzzle_flash = 0.0
     hit_flash = 0.0
+    hitstun_timer = 0.0
     bot_jump_hold_timer = 0.0
 
 func _draw() -> void:
