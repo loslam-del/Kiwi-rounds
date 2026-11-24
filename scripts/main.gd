@@ -66,7 +66,7 @@ var controls_mirrored := false
 var sound_level := 0.72
 var movement_joystick: VirtualJoystick
 var aim_joystick: VirtualJoystick
-var reload_button: Button
+var reload_button: VirtualActionButton
 var jump_button: VirtualActionButton
 var menu_button: Button
 var cards_button: Button
@@ -334,9 +334,12 @@ func _make_ui() -> void:
     fire_button.button_down.connect(player.set_fire.bind(true))
     fire_button.button_up.connect(player.set_fire.bind(false))
     game_controls.add_child(fire_button)
-    reload_button = _add_button("ПЕРЕЗАРЯДКА",Vector2(205,585),Vector2(175,76),game_controls)
-    reload_button.add_theme_font_size_override("font_size",15)
+    reload_button = ACTION_BUTTON_SCRIPT.new()
+    reload_button.caption = "ПЕРЕЗАРЯДКА"
+    reload_button.position = Vector2(205,585)
+    reload_button.size = Vector2(175,76)
     reload_button.pressed.connect(player.start_reload)
+    game_controls.add_child(reload_button)
     ammo_label = Label.new()
     ammo_label.position = Vector2(190,545)
     ammo_label.size = Vector2(360,32)
