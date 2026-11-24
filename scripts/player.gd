@@ -301,7 +301,6 @@ func _read_keyboard() -> void:
 func _think_bot(delta: float) -> void:
     if not is_instance_valid(target):
         move_input = 0.0
-        fire_held = false
         return
 
     var delta_x := target.global_position.x - global_position.x
@@ -312,31 +311,28 @@ func _think_bot(delta: float) -> void:
         move_input = -signf(delta_x)
     else:
         move_input = 0.0
-
     var direct_vector := target.global_position - global_position
     var travel_time := direct_vector.length() / maxf(projectile_speed, 1.0)
-    var predicted_target: Vector2 = target.global_position + target.velocity * minf(travel_time, 0.32)
+    var predicted_target: Vector2 = target.global_position + target.velocity * minf(travel_time,0.32)
     var aim_vector: Vector2 = (predicted_target - global_position).normalized()
-    bot_think -= delta
-    if bot_think <= 0.0:
-        bot_think = 0.12
-        var aim_error := (1.0 - clampf(bot_accuracy, 0.0, 1.0)) * 0.18
-        set_aim(aim_vector.rotated(randf_range(-aim_error, aim_error)))
-
-    # Fire is held continuously; the normal cooldown and automatic reload
-    # control the actual shot cadence. This avoids bots waiting on random rolls.
-    fire_held = true
+    set_aim(aim_vector)
     if menu_preview_mode:
+        # Menu sparring is deliberately grounded: no repeated jump loops or floating bots.
         bot_jump_hold_timer = 0.0
         jump_held = false
     else:
-        bot_jump_hold_timer = maxf(0.0, bot_jump_hold_timer - delta)
+        bot_jump_hold_timer = maxf(0.0,bot_jump_hold_timer-delta)
         if is_on_floor() and bot_jump_hold_timer <= 0.0 and (target.global_position.y < global_position.y - 70.0 or (distance_x < 100.0 and randf() < 0.018)):
             bot_jump_hold_timer = 0.23
         jump_held = bot_jump_hold_timer > 0.0
 
+    bot_think -= delta
     if ammo <= 0 and reload_timer <= 0.0:
         start_reload()
+    if bot_think <= 0.0:
+        bot_think = 0.18
+        if ammo > 0 and reload_timer <= 0.0 and aim_vector.length() > 0.0 and randf() < bot_accuracy:
+            _fire_pulse()
 
 func _fire_pulse() -> void:
     if pulse_cooldown > 0.0:
