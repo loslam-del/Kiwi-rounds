@@ -924,10 +924,12 @@ func _open_skins() -> void:
     subtitle.add_theme_color_override("font_color",Color("#a7a9b2"))
     shade.add_child(subtitle)
     var scroll := ScrollContainer.new()
+    scroll.name = "SkinScroll"
     scroll.position = Vector2(65,135)
     scroll.size = Vector2(1150,465)
     shade.add_child(scroll)
     var grid := GridContainer.new()
+    grid.name = "SkinGrid"
     grid.columns = 3
     grid.add_theme_constant_override("h_separation",18)
     grid.add_theme_constant_override("v_separation",16)
