@@ -46,6 +46,17 @@ jobs:
             exit 1
           fi
 
+      - name: Run physics and combat smoke tests
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --path . --script res://scripts/physics_smoke_test.gd 2>&1 | tee /tmp/kiwi-physics.log
+          if grep -E "PHYSICS TEST FAILED|SCRIPT ERROR|Parse Error|ERROR:" /tmp/kiwi-physics.log; then
+            echo "Physics smoke test reported an error."
+            exit 1
+          fi
+          grep -q "PHYSICS TEST PASSED" /tmp/kiwi-physics.log
+
       - name: Build debug APK
         run: |
           mkdir -p build/android
