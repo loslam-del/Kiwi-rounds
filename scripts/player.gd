@@ -393,14 +393,37 @@ func _draw() -> void:
         draw_set_transform(Vector2.ZERO,0.0,Vector2(facing,1.0))
 
     if skin_style == "kiwi":
-        # Kiwi Araga-inspired cosmetic: cream-blonde fringe and a green leaf bow.
-        draw_colored_polygon(PackedVector2Array([center+Vector2(-20,-17),center+Vector2(-16,-32),center+Vector2(-4,-39),center+Vector2(12,-34),center+Vector2(21,-20),center+Vector2(8,-25),center+Vector2(-3,-22),center+Vector2(-13,-14)]),Color("#f3e8d0"))
-        draw_line(center+Vector2(-20,-17),center+Vector2(-16,-32),Color("#27303a"),1.8,true)
-        draw_colored_polygon(PackedVector2Array([center+Vector2(4,-34),center+Vector2(-8,-48),center+Vector2(-20,-45),center+Vector2(-16,-32)]),Color("#8fc65e"))
-        draw_colored_polygon(PackedVector2Array([center+Vector2(5,-34),center+Vector2(17,-49),center+Vector2(28,-42),center+Vector2(18,-29)]),Color("#6fa84f"))
-        draw_circle(center+Vector2(4,-35),3.5,Color("#4c8d45"))
-        draw_circle(center+Vector2(-10,7),3.0,Color("#eea6a0",0.65))
-        draw_circle(center+Vector2(10,7),3.0,Color("#eea6a0",0.65))
+        # Kiwi's school look: ash-blonde low twin buns, face-framing locks and uniform.
+        var hair := Color("#d8d0c3")
+        var hair_light := Color("#eee8dc")
+        var hair_shadow := Color("#aaa397")
+        var shirt := Color("#f4f0e8")
+        var green := Color("#477b4c")
+        var green_dark := Color("#294c38")
+        var tie := Color("#e5bd48")
+        # White shirt, green sailor collar and yellow necktie.
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-17,8),center+Vector2(17,8),center+Vector2(21,27),center+Vector2(-21,27)]),green_dark)
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-15,7),center+Vector2(15,7),center+Vector2(17,22),center+Vector2(-17,22)]),shirt)
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-17,7),center+Vector2(-4,13),center+Vector2(0,19),center+Vector2(4,13),center+Vector2(17,7),center+Vector2(13,18),center+Vector2(0,25),center+Vector2(-13,18)]),green)
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-3,9),center+Vector2(3,9),center+Vector2(5,21),center+Vector2(0,25),center+Vector2(-5,21)]),tie)
+        # Low twin buns behind the head.
+        draw_circle(center+Vector2(-20,-21),9.0,hair_shadow)
+        draw_circle(center+Vector2(-20,-22),7.0,hair)
+        draw_circle(center+Vector2(20,-21),9.0,hair_shadow)
+        draw_circle(center+Vector2(20,-22),7.0,hair)
+        # Ash-blonde layered fringe, shoulder-length side locks and ahoge.
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-22,-12),center+Vector2(-21,-29),center+Vector2(-12,-39),center+Vector2(0,-42),center+Vector2(14,-36),center+Vector2(22,-22),center+Vector2(18,-12),center+Vector2(8,-23),center+Vector2(0,-18),center+Vector2(-8,-24),center+Vector2(-17,-13)]),hair)
+        draw_colored_polygon(PackedVector2Array([center+Vector2(-20,-16),center+Vector2(-14,-30),center+Vector2(-5,-35),center+Vector2(-7,-20),center+Vector2(-13,-12)]),hair_light)
+        draw_colored_polygon(PackedVector2Array([center+Vector2(3,-36),center+Vector2(13,-34),center+Vector2(21,-21),center+Vector2(12,-25),center+Vector2(5,-20)]),hair_shadow)
+        draw_line(center+Vector2(-19,-17),center+Vector2(-17,5),hair_shadow,5.0,true)
+        draw_line(center+Vector2(18,-18),center+Vector2(17,4),hair_shadow,5.0,true)
+        draw_line(center+Vector2(-1,-39),center+Vector2(4,-49),hair_light,3.0,true)
+        # Wine-red eyes, a beauty mark and soft cheek color.
+        draw_circle(center+Vector2(-7,-3),2.8,Color("#792f48"))
+        draw_circle(center+Vector2(7,-3),2.8,Color("#792f48"))
+        draw_circle(center+Vector2(13,5),1.6,Color("#3b2930"))
+        draw_circle(center+Vector2(-10,7),2.8,Color("#d88c91",0.62))
+        draw_circle(center+Vector2(10,7),2.8,Color("#d88c91",0.62))
 
     if hit_flash > 0.0:
         draw_circle(center, 26.0, Color(1.0,0.45,0.34,hit_flash*0.24))
