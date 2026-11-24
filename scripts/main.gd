@@ -68,8 +68,29 @@ var mod_status_message := "Вставь JSON мода и нажми ИМПОРТ
 
 func _ready() -> void:
     randomize()
+    _load_settings()
     queue_redraw()
     call_deferred("_boot_game")
+
+func _load_settings() -> void:
+    var config := ConfigFile.new()
+    if config.load("user://settings.cfg") != OK:
+        return
+    sound_level = clampf(float(config.get_value("settings","sound_level",0.72)),0.0,1.0)
+    sound_enabled = sound_level > 0.001
+    vibration_enabled = bool(config.get_value("settings","vibration_enabled",true))
+    shake_enabled = bool(config.get_value("settings","shake_enabled",true))
+    controls_mirrored = bool(config.get_value("settings","controls_mirrored",false))
+    skin_index = maxi(0,int(config.get_value("settings","skin_index",0)))
+
+func _save_settings() -> void:
+    var config := ConfigFile.new()
+    config.set_value("settings","sound_level",sound_level)
+    config.set_value("settings","vibration_enabled",vibration_enabled)
+    config.set_value("settings","shake_enabled",shake_enabled)
+    config.set_value("settings","controls_mirrored",controls_mirrored)
+    config.set_value("settings","skin_index",skin_index)
+    config.save("user://settings.cfg")
 
 func _boot_game() -> void:
     boot_stage = "Подготовка игровых данных..."
@@ -245,6 +266,7 @@ func _apply_skin() -> void:
         player.queue_redraw()
     if is_instance_valid(skin_button):
         skin_button.text = "СКИН: " + str(skin.get("name",skin.get("id","MOD")))
+    _save_settings()
 
 func _cycle_skin() -> void:
     skin_index += 1
@@ -647,10 +669,12 @@ func _toggle_sound() -> void:
     sound_enabled = not sound_enabled
     sound_level = 0.72 if sound_enabled else 0.0
     _apply_audio_settings()
+    _save_settings()
     _show_settings()
 
 func _toggle_vibration() -> void:
     vibration_enabled = not vibration_enabled
+    _save_settings()
     _show_settings()
 
 func _cycle_volume() -> void:
@@ -666,11 +690,13 @@ func _cycle_volume() -> void:
 
 func _toggle_shake() -> void:
     shake_enabled = not shake_enabled
+    _save_settings()
     _show_settings()
 
 func _toggle_controls() -> void:
     controls_mirrored = not controls_mirrored
     _apply_control_layout()
+    _save_settings()
     _show_settings()
 
 func _open_skins() -> void:
