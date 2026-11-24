@@ -253,6 +253,14 @@ func _weapon_hand_local() -> Vector2:
     var forearm_angle := arm_front_angle + elbow_front_angle
     return elbow + Vector2(sin(forearm_angle) * 13.0, cos(forearm_angle) * 13.0)
 
+func _weapon_muzzle_local() -> Vector2:
+    var hand := _weapon_hand_local()
+    var direction := aim_input.normalized()
+    if direction.length_squared() < 0.01:
+        direction = Vector2(facing, 0.0)
+    var barrel_len := 23.0 + float(weapon_level) * 3.0
+    return Vector2(hand.x * facing, hand.y) + direction * (barrel_len + 3.5)
+
 
 func apply_hit_impulse(direction: Vector2, force: float) -> void:
     var side := signf(direction.x)
@@ -340,10 +348,8 @@ func _fire_pulse() -> void:
     if absf(direction.x) > 0.12:
         facing = signf(direction.x)
 
-    # Spawn from the hand-held blaster muzzle, not from the fighter's chest.
-    var hand_world_offset := Vector2(_weapon_hand_local().x * facing, _weapon_hand_local().y)
-    var muzzle := hand_world_offset + direction * (26.0 + float(weapon_level) * 3.0)
-    pulse_requested.emit(global_position + muzzle, direction, pulse_force, body_color, self)
+    # Use the exact same muzzle anchor as the drawn pistol, including facing and upgrades.
+    pulse_requested.emit(global_position + _weapon_muzzle_local(), direction, pulse_force, body_color, self)
 
 func start_reload() -> void:
     if reload_timer <= 0.0 and ammo < magazine_size:
@@ -545,11 +551,13 @@ func _draw() -> void:
         draw_arc(center, 26.0, -PI/2.0, -PI/2.0+TAU*(1.0-reload_visual), 32, Color.WHITE, 2.2, true)
 
     # The blaster is anchored to the front hand instead of floating at the torso.
-    var local_aim := Vector2(aim_input.x * facing, aim_input.y).normalized()
-    if local_aim.length_squared() < 0.01:
-        local_aim = Vector2.RIGHT
-    var gun_origin := hand_front + local_aim * 1.5
-    draw_set_transform(gun_origin, local_aim.angle(), Vector2.ONE)
+    var weapon_direction := aim_input.normalized()
+    if weapon_direction.length_squared() < 0.01:
+        weapon_direction = Vector2(facing, 0.0)
+    # The body is mirrored for left-facing poses, but this draw transform is in
+    # node-local coordinates, so mirror only the hand anchor and keep world aim.
+    var gun_origin := Vector2(hand_front.x * facing, hand_front.y) + weapon_direction * 1.5
+    draw_set_transform(gun_origin, weapon_direction.angle(), Vector2.ONE)
     var metal := Color("#202c3b")
     var metal_light := Color("#53677d")
     var trim := body_color.lightened(0.42)
