@@ -121,6 +121,7 @@ func _boot_game() -> void:
     _make_arena(0)
     boot_stage = "Создание персонажей..."
     _make_players()
+    _apply_skin()
     boot_stage = "Подготовка интерфейса..."
     _make_ui()
     boot_stage = "Запуск меню..."
@@ -305,18 +306,12 @@ func _get_skins() -> Array[Dictionary]:
     return skins
 
 func _apply_skin() -> void:
-    var skins: Array[Dictionary] = [
-        {"name":"Бирюзовый","color":"#39d6c5"},
-        {"name":"Лазурный","color":"#4b9cff"},
-        {"name":"Фиолетовый","color":"#b47cff"},
-        {"name":"Золотой","color":"#ffc857"},
-        {"name":"Розовый","color":"#ff78b7"},
-        {"id":"kiwi_araga","name":"Киви Арага","color":"#f2e5ce","style":"kiwi"}
-    ]
-    if mods_loaded and mod_loader != null:
-        skins.append_array(mod_loader.skins)
+    # Keep preview, saved selection and equipped skin on one shared list.
+    var skins := _get_skins()
     if skins.is_empty():
+        skin_index = 0
         return
+    skin_index = clampi(skin_index, 0, skins.size() - 1)
     skin_index = posmod(skin_index, skins.size())
     var skin: Dictionary = skins[skin_index]
     selected_skin_color = Color.from_string(str(skin.get("color","#39d6c5")),Color("#39d6c5"))
@@ -586,9 +581,12 @@ func _process(delta: float) -> void:
 
 func _start_game(mode: String) -> void:
     _clear_pulses()
-    player.set_physics_process(true)
-    rival.set_physics_process(true)
     game_mode = mode
+    player.set_physics_process(true)
+    rival.visible = mode != "training"
+    rival.set_physics_process(mode != "training")
+    rival.collision_layer = 0 if mode == "training" else 1
+    player.target = rival if mode != "training" else null
     score_player = 0
     score_bot = 0
     round_index = 1
@@ -599,7 +597,8 @@ func _start_game(mode: String) -> void:
     rival.move_speed = 340.0 if bot_difficulty == "easy" else (480.0 if bot_difficulty == "hard" else 430.0)
     _make_arena(map_index if mode == "training" else 0)
     player.reset_round(Vector2(350,390))
-    rival.reset_round(Vector2(930,390))
+    if mode != "training":
+        rival.reset_round(Vector2(930,390))
     phase = "fight"
     _close_overlay()
     game_controls.visible = true
@@ -833,7 +832,10 @@ func _show_pause_menu() -> void:
 func _resume_game() -> void:
     _close_overlay()
     player.set_physics_process(true)
-    rival.set_physics_process(true)
+    rival.visible = game_mode != "training"
+    rival.set_physics_process(game_mode != "training")
+    rival.collision_layer = 0 if game_mode == "training" else 1
+    player.target = rival if game_mode != "training" else null
     phase = "fight"
     game_controls.visible = true
 
@@ -1451,7 +1453,6 @@ func _select_training_map(index: int) -> void:
     map_index = posmod(index,all_maps.size())
     _make_arena(map_index)
     player.reset_round(Vector2(350,390))
-    rival.reset_round(Vector2(930,390))
     _open_training_cards()
 
 func _toggle_training_card(card_id: String) -> void:
@@ -1739,11 +1740,15 @@ func _next_round() -> void:
     _clear_pulses()
     _close_overlay()
     player.set_physics_process(true)
-    rival.set_physics_process(true)
+    rival.visible = game_mode != "training"
+    rival.set_physics_process(game_mode != "training")
+    rival.collision_layer = 0 if game_mode == "training" else 1
+    player.target = rival if game_mode != "training" else null
     round_index += 1
     _make_arena(map_index if game_mode == "training" else round_index - 1)
     player.reset_round(Vector2(350,390))
-    rival.reset_round(Vector2(930,390))
+    if game_mode != "training":
+        rival.reset_round(Vector2(930,390))
     phase = "fight"
     game_controls.visible = true
     _update_hud()
