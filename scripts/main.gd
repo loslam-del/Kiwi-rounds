@@ -625,6 +625,7 @@ func _reset_player_stats(who: ArenaPlayer) -> void:
     who.ricochet_count = 0
     who.projectile_speed = 1050.0
     who.weapon_level = 0
+    who.kiwi_aura = false
 
 func _show_main_menu() -> void:
     phase = "menu"
