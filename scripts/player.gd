@@ -11,8 +11,11 @@ const JUMP_SPEED := -735.0
 const BASE_SPEED := 430.0
 
 var move_input := 0.0
+var move_stick := Vector2.ZERO
 var jump_held := false
 var fire_held := false
+var touch_jump := false
+var touch_fire := false
 var aim_input := Vector2.RIGHT
 var target: Node2D
 var move_speed := BASE_SPEED
@@ -22,7 +25,6 @@ var pulse_cooldown := 0.0
 var pulse_interval := 0.78
 var bot_think := 0.0
 var facing := 1.0
-var arm_angle := 0.0
 
 func _ready() -> void:
     collision_layer = 1
@@ -34,19 +36,19 @@ func _ready() -> void:
     add_child(shape)
 
 func set_move(value: Vector2) -> void:
-    move_input = clampf(value.x, -1.0, 1.0)
+    move_stick = value
 
 func set_aim(value: Vector2) -> void:
     if value.length() > 0.16:
         aim_input = value.normalized()
-        facing = signf(aim_input.x) if absf(aim_input.x) > 0.12 else facing
-        arm_angle = aim_input.angle()
+        if absf(aim_input.x) > 0.12:
+            facing = signf(aim_input.x)
 
 func set_jump(value: bool) -> void:
-    jump_held = value
+    touch_jump = value
 
 func set_fire(value: bool) -> void:
-    fire_held = value
+    touch_fire = value
 
 func _physics_process(delta: float) -> void:
     pulse_cooldown = maxf(0.0, pulse_cooldown - delta)
@@ -71,9 +73,9 @@ func _read_keyboard() -> void:
         horizontal -= 1.0
     if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
         horizontal += 1.0
-    move_input = clampf(horizontal + move_input, -1.0, 1.0)
-    jump_held = jump_held or Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP)
-    fire_held = fire_held or Input.is_key_pressed(KEY_SPACE)
+    move_input = clampf(horizontal + move_stick.x, -1.0, 1.0)
+    jump_held = touch_jump or Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP)
+    fire_held = touch_fire or Input.is_key_pressed(KEY_SPACE)
     var aim := Vector2.ZERO
     if Input.is_key_pressed(KEY_J):
         aim.x -= 1.0
@@ -86,7 +88,7 @@ func _read_keyboard() -> void:
     if aim != Vector2.ZERO:
         set_aim(aim)
 
-func _think_bot(_delta: float) -> void:
+func _think_bot(delta: float) -> void:
     if not is_instance_valid(target):
         move_input = 0.0
         return
@@ -95,7 +97,7 @@ func _think_bot(_delta: float) -> void:
     var aim_vector := (target.global_position - global_position).normalized()
     set_aim(aim_vector)
     jump_held = is_on_floor() and target.global_position.y < global_position.y - 65.0
-    bot_think -= get_physics_process_delta_time()
+    bot_think -= delta
     if bot_think <= 0.0:
         bot_think = 0.18
         if aim_vector.length() > 0.0 and randf() < 0.64:
@@ -129,8 +131,11 @@ func reset_round(spawn: Vector2) -> void:
     global_position = spawn
     velocity = Vector2.ZERO
     move_input = 0.0
+    move_stick = Vector2.ZERO
     jump_held = false
     fire_held = false
+    touch_jump = false
+    touch_fire = false
     aim_input = Vector2(facing, 0.0)
     pulse_cooldown = 0.4
 
