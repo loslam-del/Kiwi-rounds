@@ -751,8 +751,8 @@ func _show_main_menu() -> void:
 
     var title_glow := Label.new()
     title_glow.text = "KIWI ROUNDS"
-    title_glow.position = Vector2(0, 62)
-    title_glow.size = Vector2(1280, 112)
+    title_glow.position = Vector2(80, 48)
+    title_glow.size = Vector2(850, 104)
     title_glow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     title_glow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     title_glow.add_theme_font_size_override("font_size", 88)
@@ -763,40 +763,27 @@ func _show_main_menu() -> void:
 
     var title := Label.new()
     title.text = "KIWI ROUNDS"
-    title.position = Vector2(0, 58)
-    title.size = Vector2(1280, 112)
+    title.position = Vector2(80, 44)
+    title.size = Vector2(850, 104)
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size", 84)
+    title.add_theme_font_size_override("font_size", 78)
     title.add_theme_color_override("font_color", Color("#e9fbff"))
     title.add_theme_constant_override("outline_size", 2)
     title.add_theme_color_override("font_outline_color", Color("#557d9b"))
     shade.add_child(title)
 
-    # Kiwi mascot sits on the title as the menu's signature detail.
-    var mascot_body := Polygon2D.new()
-    mascot_body.position = Vector2(642, 136)
-    mascot_body.polygon = PackedVector2Array([
-        Vector2(-19,18), Vector2(19,18), Vector2(24,56),
-        Vector2(12,72), Vector2(-12,72), Vector2(-24,56)
-    ])
-    mascot_body.color = Color("#477b4c")
-    shade.add_child(mascot_body)
-    var mascot_leg_a := Line2D.new()
-    mascot_leg_a.points = PackedVector2Array([Vector2(630,192),Vector2(606,207),Vector2(583,205)])
-    mascot_leg_a.width = 12
-    mascot_leg_a.default_color = Color("#294c38")
-    mascot_leg_a.begin_cap_mode = Line2D.LINE_CAP_ROUND
-    mascot_leg_a.end_cap_mode = Line2D.LINE_CAP_ROUND
-    shade.add_child(mascot_leg_a)
-    var mascot_leg_b := Line2D.new()
-    mascot_leg_b.points = PackedVector2Array([Vector2(654,192),Vector2(676,207),Vector2(698,205)])
-    mascot_leg_b.width = 12
-    mascot_leg_b.default_color = Color("#294c38")
-    mascot_leg_b.begin_cap_mode = Line2D.LINE_CAP_ROUND
-    mascot_leg_b.end_cap_mode = Line2D.LINE_CAP_ROUND
-    shade.add_child(mascot_leg_b)
-    _add_kiwi_mascot(shade, Vector2(642, 125))
+    # Original Kiwi is the round green mascot with her twin hair buns and exact cap.
+    # Kept to the right of the title so the lettering stays fully readable.
+    var menu_kiwi: ArenaPlayer = PLAYER_SCRIPT.new()
+    menu_kiwi.skin_style = "kiwi"
+    menu_kiwi.menu_mascot = true
+    menu_kiwi.body_color = Color("#477b4c")
+    menu_kiwi.position = Vector2(1050, 151)
+    menu_kiwi.scale = Vector2(1.18, 1.18)
+    menu_kiwi.set_physics_process(false)
+    menu_kiwi.set_process(false)
+    shade.add_child(menu_kiwi)
 
     var subtitle := Label.new()
     subtitle.text = "NEON BOT ARENA  /  RANDOM MAPS  /  RANDOM BUILDS"
@@ -876,7 +863,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     ground_shape.shape = ground_rect
     ground.add_child(ground_shape)
     stage.add_child(ground)
-    _add_menu_preview_platform(stage, Vector2(1000, 638), Vector2(570, 18), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")))
+    _add_menu_preview_platform(stage, Vector2(1000, 638), Vector2(570, 18), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")), false)
 
     var wall_left := StaticBody2D.new()
     wall_left.position = Vector2(720, 450)
@@ -907,16 +894,17 @@ func _create_menu_bot_preview(parent: Control) -> void:
             continue
         var py := clampf(float(item.get("y", 500)), 360.0, 590.0)
         var pw := clampf(float(item.get("w", 160)), 90.0, 260.0)
-        _add_menu_preview_platform(stage, Vector2(px, py), Vector2(pw, 16), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")))
+        _add_menu_preview_platform(stage, Vector2(px, py), Vector2(pw, 16), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")), false)
         added += 1
         if added >= 4:
             break
     if added == 0:
-        _add_menu_preview_platform(stage, Vector2(900, 520), Vector2(150, 16), Color("#36e6df"))
-        _add_menu_preview_platform(stage, Vector2(1110, 455), Vector2(150, 16), Color("#b58cff"))
+        _add_menu_preview_platform(stage, Vector2(900, 520), Vector2(150, 16), Color("#36e6df"), false)
+        _add_menu_preview_platform(stage, Vector2(1110, 455), Vector2(150, 16), Color("#b58cff"), false)
 
     var bot_a: ArenaPlayer = PLAYER_SCRIPT.new()
     bot_a.is_bot = true
+    bot_a.menu_preview_mode = true
     bot_a.body_color = Color("#36e6df")
     bot_a.position = Vector2(850, 510)
     bot_a.bot_accuracy = 0.42
@@ -927,6 +915,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
 
     var bot_b: ArenaPlayer = PLAYER_SCRIPT.new()
     bot_b.is_bot = true
+    bot_b.menu_preview_mode = true
     bot_b.body_color = Color("#ff6fae")
     bot_b.position = Vector2(1140, 510)
     bot_b.bot_accuracy = 0.42
@@ -939,8 +928,14 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_a.pulse_requested.connect(_spawn_menu_preview_pulse.bind(stage))
     bot_b.pulse_requested.connect(_spawn_menu_preview_pulse.bind(stage))
 
-    var upgrades_a := all_upgrades.duplicate()
-    var upgrades_b := all_upgrades.duplicate()
+    # Randomize combat cards only; mobility cards could leave preview bots airborne.
+    var preview_upgrade_pool: Array = []
+    for upgrade in all_upgrades:
+        var effect := str(upgrade.get("effect", upgrade.get("id", "")))
+        if effect in ["homing", "ricochet", "heavy", "rapid", "magazine", "piercing", "kiwi_charm"]:
+            preview_upgrade_pool.append(upgrade)
+    var upgrades_a: Array = preview_upgrade_pool.duplicate(true)
+    var upgrades_b: Array = preview_upgrade_pool.duplicate(true)
     upgrades_a.shuffle()
     upgrades_b.shuffle()
     for i in range(mini(2, upgrades_a.size())):
@@ -948,10 +943,10 @@ func _create_menu_bot_preview(parent: Control) -> void:
     for i in range(mini(2, upgrades_b.size())):
         bot_b.apply_upgrade(str(upgrades_b[i].get("effect", upgrades_b[i].get("id", ""))))
 
-func _add_menu_preview_platform(stage: Node2D, at: Vector2, dimensions: Vector2, accent: Color) -> void:
+func _add_menu_preview_platform(stage: Node2D, at: Vector2, dimensions: Vector2, accent: Color, collide: bool = true) -> void:
     var body := StaticBody2D.new()
     body.position = at
-    body.collision_layer = 2
+    body.collision_layer = 2 if collide else 0
     var shape := CollisionShape2D.new()
     var rect := RectangleShape2D.new()
     rect.size = dimensions
