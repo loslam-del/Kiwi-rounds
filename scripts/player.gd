@@ -361,6 +361,10 @@ func _make_ragdoll_part(world: Node, segment_length: float, at: Vector2, segment
     var direction := _limb_vector(segment_angle, 1.0).normalized()
     part.rotation = Vector2.DOWN.angle_to(direction)
     part.mass = 0.075
+    var material := PhysicsMaterial.new()
+    material.friction = 0.55
+    material.bounce = 0.08
+    part.physics_material_override = material
     part.gravity_scale = 1.0
     part.linear_damp = 0.65
     part.angular_damp = 2.0
@@ -390,10 +394,6 @@ func _make_ragdoll_part(world: Node, segment_length: float, at: Vector2, segment
 
 func add_collision_exceptions(part: RigidBody2D) -> void:
     part.add_collision_exception_with(self)
-    for other in ragdoll_parts:
-        if is_instance_valid(other):
-            part.add_collision_exception_with(other)
-            other.add_collision_exception_with(part)
 
 func apply_ragdoll_impulse(direction: Vector2, strength: float) -> void:
     var impulse := direction.normalized() * strength
