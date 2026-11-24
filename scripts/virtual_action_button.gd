@@ -22,7 +22,7 @@ func _ready() -> void:
     label_node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     label_node.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     label_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    label_node.add_theme_font_size_override("font_size", 19)
+    label_node.add_theme_font_size_override("font_size", 14)
     label_node.add_theme_color_override("font_color", Color.WHITE)
     add_child(label_node)
     queue_redraw()
@@ -63,6 +63,6 @@ func _make_style(color: Color) -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
     style.bg_color = color
     style.border_color = accent_color
-    style.set_border_width_all(3)
-    style.set_corner_radius_all(14)
+    style.set_border_width_all(2)
+    style.set_corner_radius_all(12)
     return style
