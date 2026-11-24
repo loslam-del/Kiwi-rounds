@@ -64,6 +64,7 @@ var projectile_speed := 1050.0
 var weapon_level := 0
 var ground_accel_scale := 1.0
 var wall_jump_scale := 1.0
+var kiwi_aura := false
 
 
 func _ready() -> void:
@@ -316,6 +317,8 @@ func apply_upgrade(upgrade_id: String) -> void:
             pulse_force *= 1.08
             reload_duration *= 1.16
             weapon_level += 2
+        "kiwi_charm":
+            kiwi_aura = true
 
 func reset_round(spawn: Vector2) -> void:
     global_position = spawn
@@ -380,6 +383,14 @@ func _draw() -> void:
     draw_circle(center + Vector2(6.0,-2.0), 2.0, face)
     draw_line(center + Vector2(-3.0,6.0), center + Vector2(3.0,6.0), face, 1.8, true)
     draw_arc(center + Vector2(0,2), 23.0, PI*0.12, PI*0.88, 28, Color(1,1,1,0.24), 1.3, true)
+
+    if kiwi_aura:
+        for leaf_index in range(4):
+            var leaf_angle := animation_time * 0.35 + TAU * float(leaf_index) / 4.0
+            var leaf_center := center + Vector2(cos(leaf_angle),sin(leaf_angle)) * 34.0
+            draw_set_transform(leaf_center,leaf_angle,Vector2.ONE)
+            draw_colored_polygon(PackedVector2Array([Vector2(0,-5),Vector2(5,0),Vector2(0,8),Vector2(-5,0)]),Color("#8fc65e",0.9))
+        draw_set_transform(Vector2.ZERO,0.0,Vector2(facing,1.0))
 
     if skin_style == "kiwi":
         # Kiwi Araga-inspired cosmetic: cream-blonde fringe and a green leaf bow.
