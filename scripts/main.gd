@@ -493,6 +493,7 @@ func _button_style(color: Color) -> StyleBoxFlat:
 
 func _process(delta: float) -> void:
     background_time += delta
+    queue_redraw()
     impact_flash = maxf(0.0, impact_flash - delta * 2.8)
     if is_instance_valid(arena_camera):
         if camera_shake_timer > 0.0:
