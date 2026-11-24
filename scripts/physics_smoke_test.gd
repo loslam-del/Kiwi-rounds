@@ -13,8 +13,8 @@ func _run_physics_checks() -> void:
         _fail("main scene could not be loaded")
         return
     var game := packed.instantiate()
-    current_scene = game
     root.add_child(game)
+    current_scene = game
     for _i in range(4):
         await process_frame
 
@@ -68,5 +68,6 @@ func _run_physics_checks() -> void:
         _fail("projectile hit did not apply hitstun")
         return
 
+    await create_timer(0.35).timeout
     print("PHYSICS TEST PASSED: movement, jump, firing, bot reload, projectile hit")
     quit(0)
