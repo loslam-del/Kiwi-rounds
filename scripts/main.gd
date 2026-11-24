@@ -116,6 +116,7 @@ var online_host_id := ""
 var online_is_host := false
 var online_in_match := false
 var online_sync_timer := 0.0
+var online_reload_pending := false
 var online_start_button: Button
 
 
@@ -508,7 +509,7 @@ func _make_ui() -> void:
     reload_button.caption = "ПЕРЕЗАРЯДКА"
     reload_button.position = Vector2(164,625)
     reload_button.size = Vector2(132,48)
-    reload_button.pressed.connect(player.start_reload)
+    reload_button.pressed.connect(_request_reload)
     game_controls.add_child(reload_button)
     ammo_label = Label.new()
     ammo_label.position = Vector2(158,590)
@@ -536,6 +537,12 @@ func _make_ui() -> void:
     _apply_skin()
     _apply_control_layout()
     _apply_audio_settings()
+
+func _request_reload() -> void:
+    if online_in_match and not online_is_host:
+        online_reload_pending = true
+    else:
+        player.start_reload()
 
 func _apply_control_layout() -> void:
     if not is_instance_valid(movement_joystick) or not is_instance_valid(aim_joystick):
@@ -718,6 +725,9 @@ func _process(delta: float) -> void:
 
 func _start_game(mode: String) -> void:
     _clear_pulses()
+    online_in_match = false
+    player.remote_controlled = false
+    rival.remote_controlled = false
     game_mode = mode
     player.set_physics_process(true)
     rival.visible = mode != "training"
@@ -1452,9 +1462,10 @@ func _online_sync_tick(delta: float) -> void:
                 "aimY":player.aim_input.y,
                 "jump":player.touch_jump or player.jump_held,
                 "fire":player.touch_fire or player.fire_held,
-                "reload":false
+                "reload":online_reload_pending
             }
         })
+        online_reload_pending = false
 
 func _apply_online_state(state: Variant) -> void:
     if typeof(state) != TYPE_DICTIONARY:
