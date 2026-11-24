@@ -63,6 +63,8 @@ var reload_button: Button
 var jump_button: Button
 var menu_button: Button
 var cards_button: Button
+var mod_json_input: TextEdit
+var mod_status_message := "Вставь JSON мода и нажми ИМПОРТИРОВАТЬ."
 
 func _ready() -> void:
     randomize()
@@ -774,14 +776,102 @@ func _apply_skin_and_return() -> void:
 
 func _open_mods() -> void:
     _get_skins()
-    var description := "Найдено модов: %d\nСкинов: %d  •  карт: %d  •  карточек: %d\nПапка: user://mods/\nКаждый мод должен содержать mod.json." % [mod_loader.loaded_mod_names.size(),mod_loader.skins.size(),mod_loader.maps.size(),mod_loader.upgrades.size()]
-    if not mod_loader.loaded_mod_names.is_empty():
-        for mod_name in mod_loader.loaded_mod_names:
-            description += "\n" + mod_name
-    _show_panel("МОДЫ",[
-        ["ПЕРЕЗАГРУЗИТЬ МОДЫ",Callable(self,"_reload_mods")],
-        ["НАЗАД",Callable(self,"_show_main_menu")]
-    ],description)
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#101722")
+    ui.add_child(shade)
+    overlay = shade
+    var title := Label.new()
+    title.text = "МАСТЕР МОДОВ"
+    title.position = Vector2(0,24)
+    title.size = Vector2(1280,58)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",38)
+    title.add_theme_color_override("font_color",Color("#f4f7ff"))
+    shade.add_child(title)
+    var summary := Label.new()
+    summary.text = "Модов: %d   •   Скинов: %d   •   Арен: %d   •   Карточек: %d" % [mod_loader.loaded_mod_names.size(),mod_loader.skins.size(),mod_loader.maps.size(),mod_loader.upgrades.size()]
+    summary.position = Vector2(80,88)
+    summary.size = Vector2(1120,30)
+    summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    summary.add_theme_font_size_override("font_size",17)
+    summary.add_theme_color_override("font_color",Color("#b9e36c"))
+    shade.add_child(summary)
+    var help := Label.new()
+    help.text = "Вставь JSON мода из буфера обмена. Он сохранится внутри игры на телефоне."
+    help.position = Vector2(100,125)
+    help.size = Vector2(1080,34)
+    help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    help.add_theme_font_size_override("font_size",15)
+    help.add_theme_color_override("font_color",Color("#a7b1c2"))
+    shade.add_child(help)
+    mod_json_input = TextEdit.new()
+    mod_json_input.position = Vector2(120,170)
+    mod_json_input.size = Vector2(1040,365)
+    mod_json_input.text = '{"name":"Мой мод","skins":[{"name":"Мятный","color":"#39d6c5"}],"maps":[{"name":"Моя арена","platforms":[{"x":300,"y":550,"w":180,"h":22},{"x":950,"y":550,"w":180,"h":22}]}],"upgrades":[]}'
+    mod_json_input.add_theme_font_size_override("font_size",16)
+    mod_json_input.add_theme_color_override("font_color",Color("#e9eef8"))
+    mod_json_input.add_theme_color_override("background_color",Color("#202938"))
+    mod_json_input.add_theme_color_override("caret_color",Color("#d9ef70"))
+    shade.add_child(mod_json_input)
+    var status := Label.new()
+    status.text = mod_status_message
+    status.position = Vector2(100,545)
+    status.size = Vector2(1080,30)
+    status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    status.add_theme_font_size_override("font_size",14)
+    status.add_theme_color_override("font_color",Color("#d9ef70"))
+    shade.add_child(status)
+    var import_button := _add_button("ИМПОРТИРОВАТЬ",Vector2(260,590),Vector2(260,58),shade)
+    import_button.add_theme_stylebox_override("normal",_menu_button_style(Color("#596b32"),Color("#d9ef70")))
+    import_button.add_theme_color_override("font_color",Color("#ffffff"))
+    import_button.pressed.connect(_import_mod_from_text)
+    var reload_button_ui := _add_button("ОБНОВИТЬ",Vector2(520,590),Vector2(220,58),shade)
+    reload_button_ui.pressed.connect(_reload_mods)
+    var back := _add_button("НАЗАД",Vector2(760,590),Vector2(220,58),shade)
+    back.pressed.connect(_show_main_menu)
+    var footer := Label.new()
+    footer.text = "ПОДДЕРЖИВАЮТСЯ СКИНЫ, АРЕНЫ И КАРТОЧКИ С ГОТОВЫМИ ЭФФЕКТАМИ"
+    footer.position = Vector2(0,675)
+    footer.size = Vector2(1280,24)
+    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    footer.add_theme_font_size_override("font_size",12)
+    footer.add_theme_color_override("font_color",Color("#626875"))
+    shade.add_child(footer)
+
+func _import_mod_from_text() -> void:
+    if not is_instance_valid(mod_json_input):
+        return
+    var parsed: Variant = JSON.parse_string(mod_json_input.text)
+    if typeof(parsed) != TYPE_DICTIONARY:
+        mod_status_message = "Ошибка: проверь JSON — скобки, кавычки и запятые."
+        _open_mods()
+        return
+    if not parsed.has("name"):
+        mod_status_message = "Ошибка: у мода должно быть поле name."
+        _open_mods()
+        return
+    var directory := DirAccess.open("user://")
+    if directory == null:
+        mod_status_message = "Не удалось открыть папку данных игры."
+        _open_mods()
+        return
+    var make_error := directory.make_dir_recursive("mods/quick_import")
+    if make_error != OK and make_error != ERR_ALREADY_EXISTS:
+        mod_status_message = "Не удалось создать папку для мода."
+        _open_mods()
+        return
+    var file := FileAccess.open("user://mods/quick_import/mod.json",FileAccess.WRITE)
+    if file == null:
+        mod_status_message = "Не удалось сохранить mod.json."
+        _open_mods()
+        return
+    file.store_string(mod_json_input.text)
+    file.close()
+    mod_status_message = "Мод сохранён. Проверяю его содержимое..."
+    _reload_mods()
 
 func _reload_mods() -> void:
     if mod_loader == null:
