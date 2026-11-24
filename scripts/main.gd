@@ -466,6 +466,8 @@ func _finish_round(player_won: bool) -> void:
     if phase != "fight":
         return
     phase = "upgrade"
+    player.set_physics_process(false)
+    rival.set_physics_process(false)
     if player_won:
         score_player += 1
     else:
