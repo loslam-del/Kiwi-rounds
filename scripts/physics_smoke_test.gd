@@ -127,6 +127,22 @@ func _run_physics_checks() -> void:
         _fail("training stopped at the match score limit")
         return
 
+    game.set("training_tab", "cards")
+    game.call("_open_training_cards")
+    await process_frame
+    if game.get("overlay") == null:
+        _fail("training card selection panel did not open")
+        return
+    game.call("_resume_game")
+
+    game.set("training_tab", "maps")
+    game.call("_open_training_cards")
+    await process_frame
+    if game.get("overlay") == null:
+        _fail("training arena selection panel did not open")
+        return
+    game.call("_resume_game")
+
     game.set("game_mode", "bot")
     game.call("_open_training_cards")
     if player.is_physics_processing() or rival.is_physics_processing():
