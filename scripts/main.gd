@@ -213,7 +213,17 @@ func _draw() -> void:
         draw_line(Vector2(gx+sway,70),Vector2(gx-sway*0.5,680),Color(0.38,0.72,0.82,0.025),1.0)
     for i in range(6):
         var gy := 520.0 + float(i) * 28.0
-        draw_line(Vector2(0,gy),Vector2(1280,gy),Color(0.45,0.72,0.84,0.035),1.0)
+        draw_line(Vector2(0,gy),Vector2(1280,gy),Color(arena_accent,0.075),1.0)
+    # Neon arena treatment: brighter perspective grid, moving scan beams and
+    # soft accent rails make every map feel like a compact cyber arena.
+    for i in range(15):
+        var gx := float(i) * 96.0 + 24.0
+        draw_line(Vector2(gx,470.0),Vector2(640.0 + (gx - 640.0) * 2.15,700.0),Color(arena_accent,0.075),1.2)
+    var scan_x := fposmod(background_time * 150.0, 1500.0) - 110.0
+    draw_line(Vector2(scan_x,470.0),Vector2(scan_x + 260.0,700.0),Color(arena_accent,0.20),2.0,true)
+    draw_line(Vector2(0.0,468.0),Vector2(1280.0,468.0),Color(arena_accent,0.13),2.0,true)
+    draw_line(Vector2(0.0,696.0),Vector2(1280.0,696.0),Color(arena_accent,0.18),3.0,true)
+    draw_circle(Vector2(640.0,470.0),220.0,Color(arena_accent,0.018))
     for i in range(8):
         var orbit := 92.0 + float(i) * 22.0
         var phase_offset := background_time * (0.16 if i % 2 == 0 else -0.12)
