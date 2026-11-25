@@ -620,7 +620,6 @@ func _make_ui() -> void:
     aim_joystick.position = Vector2(1136,575)
     aim_joystick.size = Vector2(116,116)
     aim_joystick.value_changed.connect(player.set_aim)
-    aim_joystick.tapped.connect(player.shoot_once)
     game_controls.add_child(aim_joystick)
     jump_button = ACTION_BUTTON_SCRIPT.new()
     jump_button.caption = "ПРЫЖОК"
@@ -682,7 +681,7 @@ func _request_reload() -> void:
 func _apply_control_layout() -> void:
     if not is_instance_valid(movement_joystick) or not is_instance_valid(aim_joystick):
         return
-    # Two-thumb layout: left thumb moves, right thumb aims and fires once per touch.
+    # Two-thumb layout: left thumb moves; right thumb aims and taps a separate single-shot button.
     if controls_mirrored:
         movement_joystick.position = Vector2(1090,526)
         aim_joystick.position = Vector2(22,526)
@@ -699,9 +698,9 @@ func _apply_control_layout() -> void:
         ammo_label.position = Vector2(930,618)
     movement_joystick.size = Vector2(168,168)
     aim_joystick.size = Vector2(168,168)
-    # A tap on the aim stick fires once; holding it never auto-fires.
+    # Dedicated fire button: exactly one shot per press, no automatic fire.
     fire_button.size = Vector2(132,58)
-    fire_button.visible = false
+    fire_button.visible = true
     reload_button.size = Vector2(138,52)
     jump_button.size = Vector2(138,62)
     ammo_label.size = Vector2(152,26)
