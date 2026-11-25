@@ -3,6 +3,7 @@ class_name VirtualJoystick
 
 signal value_changed(value: Vector2)
 signal released
+signal tapped
 
 @export var deadzone := 0.12
 @export var knob_limit := 72.0
@@ -31,6 +32,7 @@ func _gui_input(event: InputEvent) -> void:
         if event.pressed and active_index == -1:
             active_index = event.index
             _set_from_position(event.position)
+            tapped.emit()
             accept_event()
         elif not event.pressed and event.index == active_index:
             active_index = -1
