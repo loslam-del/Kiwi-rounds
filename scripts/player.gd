@@ -327,14 +327,19 @@ func _think_bot(delta: float) -> void:
         move_input = 0.0
         return
 
-    var delta_x := target.global_position.x - global_position.x
-    var distance_x := absf(delta_x)
-    if distance_x > 235.0:
-        move_input = signf(delta_x)
-    elif distance_x < 115.0:
-        move_input = -signf(delta_x)
+    if menu_preview_mode:
+        # Keep menu sparring visibly active with a steady back-and-forth patrol.
+        var patrol_phase := sin(float(Time.get_ticks_msec()) * 0.0016 + global_position.x * 0.012)
+        move_input = 1.0 if patrol_phase >= 0.0 else -1.0
     else:
-        move_input = 0.0
+        var delta_x := target.global_position.x - global_position.x
+        var distance_x := absf(delta_x)
+        if distance_x > 235.0:
+            move_input = signf(delta_x)
+        elif distance_x < 115.0:
+            move_input = -signf(delta_x)
+        else:
+            move_input = 0.0
     var direct_vector := target.global_position - global_position
     var travel_time := absf(direct_vector.x) / maxf(projectile_speed, 1.0)
     var predicted_target: Vector2 = target.global_position + target.velocity * minf(travel_time, 0.32)
@@ -556,9 +561,8 @@ func _draw() -> void:
         var green_light := Color("#78a76a")
         # Keep the original ROUNDS fighter body and limbs; only add Kiwi's hairstyle and cap.
         # The body itself uses a natural human skin tone set by the menu preview.
-        draw_circle(center + Vector2(0,-29), 25.0, hair_shadow)
-        draw_circle(center + Vector2(0,-29), 22.5, hair)
-        draw_arc(center + Vector2(0,-29), 23.0, PI*1.05, PI*1.95, 36, hair_light, 1.6, true)
+        # No large rear hair dome: keep the silhouette close to the regular ROUNDS head.
+        draw_arc(center + Vector2(0,-27), 18.0, PI*1.08, PI*1.92, 32, hair_shadow, 4.0, true)
         draw_colored_polygon(PackedVector2Array([
             center+Vector2(-23,-25),center+Vector2(-22,-39),
             center+Vector2(-14,-50),center+Vector2(-2,-54),
@@ -615,19 +619,19 @@ func _draw() -> void:
         draw_line(center+Vector2(17,-23),center+Vector2(15,20),hair_light,1.8,true)
         # Kiwi's recognizable green cap, clearly separated from the hair.
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-24,-43),center+Vector2(-19,-60),
-            center+Vector2(-6,-69),center+Vector2(10,-68),
-            center+Vector2(23,-57),center+Vector2(26,-42),
-            center+Vector2(14,-47),center+Vector2(0,-50),center+Vector2(-14,-46)
+            center+Vector2(-23,-40),center+Vector2(-18,-50),
+            center+Vector2(-5,-56),center+Vector2(9,-55),
+            center+Vector2(21,-49),center+Vector2(24,-39),
+            center+Vector2(13,-43),center+Vector2(0,-46),center+Vector2(-13,-43)
         ]),green_dark)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-19,-47),center+Vector2(-14,-58),
-            center+Vector2(-4,-65),center+Vector2(9,-64),
-            center+Vector2(19,-54),center+Vector2(21,-45),
-            center+Vector2(8,-51),center+Vector2(-7,-50)
+            center+Vector2(-18,-43),center+Vector2(-13,-51),
+            center+Vector2(-3,-54),center+Vector2(8,-53),
+            center+Vector2(17,-48),center+Vector2(19,-41),
+            center+Vector2(7,-46),center+Vector2(-7,-46)
         ]),green)
-        draw_line(center+Vector2(-17,-44),center+Vector2(18,-43),green_light,3.0,true)
-        draw_circle(center+Vector2(17,-47),3.0,green_light)
+        draw_line(center+Vector2(-16,-40),center+Vector2(17,-39),green_light,2.5,true)
+        draw_circle(center+Vector2(16,-43),2.5,green_light)
 
     if hit_flash > 0.0:
         draw_circle(center, 23.0, Color(1.0,0.45,0.34,hit_flash*0.24))
