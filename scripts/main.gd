@@ -781,7 +781,7 @@ func _process(delta: float) -> void:
     _online_sync_tick(delta)
     background_time += delta
     if is_instance_valid(menu_record_disc):
-        menu_record_disc.rotation = background_time * 0.85
+        menu_record_disc.rotation = background_time * 1.15
     if is_instance_valid(menu_record_needle):
         menu_record_needle.rotation = -0.72
     for i in range(music_visualizer_bars.size()):
@@ -904,8 +904,8 @@ func _show_main_menu() -> void:
     var banner := TextureRect.new()
     banner.name = "KiwiNeonBanner"
     banner.texture = load("res://assets/1795552443370.jpg") as Texture2D
-    banner.position = Vector2(320, 18)
-    banner.size = Vector2(640, 340)
+    banner.position = Vector2(400, 34)
+    banner.size = Vector2(480, 270)
     banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
     banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
     banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -976,7 +976,7 @@ func _create_menu_record(parent: Control) -> void:
 
     var record := Panel.new()
     record.name = "MenuVinylRecord"
-    record.position = Vector2(1030, 292)
+    record.position = Vector2(1032, 312)
     record.size = Vector2(116, 116)
     record.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var outer := StyleBoxFlat.new()
@@ -998,7 +998,7 @@ func _create_menu_record(parent: Control) -> void:
     ring_style.set_corner_radius_all(36)
     ring.add_theme_stylebox_override("panel", ring_style)
     record.add_child(ring)
-    menu_record_disc = ring
+    menu_record_disc = record
 
     for i in range(3):
         var groove := Panel.new()
@@ -1088,7 +1088,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     stage.add_child(horizon)
 
     var ground := StaticBody2D.new()
-    ground.position = Vector2(640, 690)
+    ground.position = Vector2(640, 678)
     ground.collision_layer = 2
     var ground_shape := CollisionShape2D.new()
     var ground_rect := RectangleShape2D.new()
@@ -1096,7 +1096,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     ground_shape.shape = ground_rect
     ground.add_child(ground_shape)
     stage.add_child(ground)
-    _add_menu_preview_platform(stage, Vector2(640, 650), Vector2(1280, 18), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")), false)
+    _add_menu_preview_platform(stage, Vector2(640, 638), Vector2(1280, 18), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")), false)
 
     for wall_x in [18.0, 1262.0]:
         var wall := StaticBody2D.new()
@@ -1128,7 +1128,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_a.menu_preview_mode = true
     bot_a.body_color = Color("#e8bd9c")
     bot_a.skin_style = "kiwi_human"
-    bot_a.position = Vector2(360, 585)
+    bot_a.position = Vector2(360, 598)
     bot_a.bot_accuracy = 0.86
     bot_a.move_speed = 430.0
     bot_a.pulse_force = 610.0
@@ -1145,7 +1145,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_b.is_bot = true
     bot_b.menu_preview_mode = true
     bot_b.body_color = Color("#ff6fae")
-    bot_b.position = Vector2(920, 585)
+    bot_b.position = Vector2(920, 598)
     bot_b.bot_accuracy = 0.86
     bot_b.move_speed = 430.0
     bot_b.pulse_force = 610.0
