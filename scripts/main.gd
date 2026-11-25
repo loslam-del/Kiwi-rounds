@@ -226,7 +226,7 @@ func _draw() -> void:
         draw_rect(Rect2(0,0,1280,720),Color(impact_flash_color, impact_flash * 0.13))
     if boot_loading:
         draw_rect(Rect2(0,0,1280,720),Color(0.03,0.04,0.06,0.82))
-        draw_string(ThemeDB.fallback_font,Vector2(0,295),"KIWI ROUNDS",HORIZONTAL_ALIGNMENT_CENTER,1280,54,Color("#f2f2f2"))
+        draw_string(ThemeDB.fallback_font,Vector2(0,300),"KIWI ROUNDS",HORIZONTAL_ALIGNMENT_CENTER,1280,68,Color("#f2f2f2"))
         draw_string(ThemeDB.fallback_font,Vector2(0,345),"ЗАПУСК ИГРЫ",HORIZONTAL_ALIGNMENT_CENTER,1280,18,Color("#aab4c4"))
         var center := Vector2(640,430)
         draw_arc(center,27.0,boot_angle,boot_angle+4.4,48,Color("#d9ef70"),6.0,true)
@@ -952,10 +952,10 @@ func _create_menu_banner(parent: Control) -> void:
     banner.name = "KiwiNeonBanner"
     banner.texture = load("res://assets/1795552443370.jpg") as Texture2D
     banner.set_anchors_preset(Control.PRESET_CENTER)
-    banner.offset_left = -150.0
-    banner.offset_top = -315.0
-    banner.offset_right = 150.0
-    banner.offset_bottom = -146.0
+    banner.offset_left = -180.0
+    banner.offset_top = -325.0
+    banner.offset_right = 180.0
+    banner.offset_bottom = -122.0
     banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
     banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
     banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
