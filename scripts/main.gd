@@ -902,8 +902,8 @@ func _show_main_menu() -> void:
     var banner := TextureRect.new()
     banner.name = "KiwiNeonBanner"
     banner.texture = load("res://assets/1795552443370.jpg") as Texture2D
-    banner.position = Vector2(300, 22)
-    banner.size = Vector2(680, 382)
+    banner.position = Vector2(204, 0)
+    banner.size = Vector2(720, 405)
     banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
     banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
     banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
