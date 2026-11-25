@@ -912,8 +912,8 @@ func _show_main_menu() -> void:
     var banner := TextureRect.new()
     banner.name = "KiwiNeonBanner"
     banner.texture = load("res://assets/1795552443370.jpg") as Texture2D
-    banner.position = Vector2(360, 18)
-    banner.size = Vector2(560, 313)
+    banner.position = Vector2(250, 12)
+    banner.size = Vector2(700, 392)
     banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
     banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
     banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -963,8 +963,8 @@ func _create_menu_record(parent: Control) -> void:
     # Compact Yandex Music-inspired player with a centered, steady vinyl.
     var dock := Panel.new()
     dock.name = "MusicPlayerDock"
-    dock.position = Vector2(930, 252)
-    dock.size = Vector2(320, 310)
+    dock.position = Vector2(24, 250)
+    dock.size = Vector2(300, 300)
     dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var dock_style := StyleBoxFlat.new()
     dock_style.bg_color = Color("#0b1422", 0.94)
@@ -978,8 +978,8 @@ func _create_menu_record(parent: Control) -> void:
 
     var caption := Label.new()
     caption.text = "СЕЙЧАС ИГРАЕТ"
-    caption.position = Vector2(18, 10)
-    caption.size = Vector2(284, 20)
+    caption.position = Vector2(14, 10)
+    caption.size = Vector2(272, 20)
     caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     caption.add_theme_font_size_override("font_size", 11)
     caption.add_theme_color_override("font_color", Color("#91a7bb"))
@@ -988,7 +988,7 @@ func _create_menu_record(parent: Control) -> void:
     # Explicit center pivot prevents the previous top-left orbiting rotation.
     var record := Panel.new()
     record.name = "MenuVinylRecord"
-    record.position = Vector2(86, 36)
+    record.position = Vector2(76, 34)
     record.size = Vector2(148, 148)
     record.pivot_offset = record.size * 0.5
     record.rotation = 0.0
@@ -1037,7 +1037,7 @@ func _create_menu_record(parent: Control) -> void:
     label_disc.add_child(label_dot)
 
     var visualizer := HBoxContainer.new()
-    visualizer.position = Vector2(36, 197)
+    visualizer.position = Vector2(26, 190)
     visualizer.size = Vector2(248, 24)
     visualizer.alignment = BoxContainer.ALIGNMENT_CENTER
     visualizer.add_theme_constant_override("separation", 5)
@@ -1055,8 +1055,8 @@ func _create_menu_record(parent: Control) -> void:
         music_visualizer_bars.append(bar)
 
     music_track_button = Button.new()
-    music_track_button.position = Vector2(18, 236)
-    music_track_button.size = Vector2(284, 54)
+    music_track_button.position = Vector2(14, 228)
+    music_track_button.size = Vector2(272, 54)
     music_track_button.text = "♫  Загрузка музыки..."
     music_track_button.tooltip_text = "Нажми, чтобы переключить трек"
     music_track_button.add_theme_font_size_override("font_size", 12)
