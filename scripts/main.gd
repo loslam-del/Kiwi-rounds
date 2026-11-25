@@ -908,21 +908,8 @@ func _show_main_menu() -> void:
     _create_menu_bot_preview(shade)
     _create_menu_record(shade)
 
-    # Original Kiwi neon artwork, with its dark background keyed out.
-    var banner := TextureRect.new()
-    banner.name = "KiwiNeonBanner"
-    banner.texture = load("res://assets/1795552443370.jpg") as Texture2D
-    banner.position = Vector2(470, 54)
-    banner.size = Vector2(340, 190)
-    banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-    banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-    banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    var key_shader := Shader.new()
-    key_shader.code = "shader_type canvas_item;\nvoid fragment() { vec4 c = texture(TEXTURE, UV) * COLOR; float v = max(max(c.r, c.g), c.b); float a = smoothstep(0.012, 0.075, v); COLOR = vec4(c.rgb, c.a * a); }"
-    var key_material := ShaderMaterial.new()
-    key_material.shader = key_shader
-    banner.material = key_material
-    shade.add_child(banner)
+    # Recreate the banner as a centered, fixed-size control.
+    _create_menu_banner(shade)
 
     # Lower menu dock keeps the logo and arena visible.
     var menu_panel := Panel.new()
@@ -958,6 +945,28 @@ func _show_main_menu() -> void:
     mods.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
     mods.add_theme_color_override("font_color", Color("#e8f6ff"))
     mods.pressed.connect(_open_mods)
+
+
+func _create_menu_banner(parent: Control) -> void:
+    var banner := TextureRect.new()
+    banner.name = "KiwiNeonBanner"
+    banner.texture = load("res://assets/1795552443370.jpg") as Texture2D
+    banner.set_anchors_preset(Control.PRESET_CENTER)
+    banner.offset_left = -150.0
+    banner.offset_top = -315.0
+    banner.offset_right = 150.0
+    banner.offset_bottom = -146.0
+    banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+    banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    banner.z_index = 2
+
+    var key_shader := Shader.new()
+    key_shader.code = "shader_type canvas_item;\\nvoid fragment() { vec4 c = texture(TEXTURE, UV) * COLOR; float v = max(max(c.r, c.g), c.b); float a = smoothstep(0.012, 0.075, v); COLOR = vec4(c.rgb, c.a * a); }"
+    var key_material := ShaderMaterial.new()
+    key_material.shader = key_shader
+    banner.material = key_material
+    parent.add_child(banner)
 
 func _create_menu_record(parent: Control) -> void:
     # Compact Yandex Music-inspired player with a centered, steady vinyl.
