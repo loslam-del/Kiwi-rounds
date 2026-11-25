@@ -152,8 +152,8 @@ func _resolve_impact(body: Node2D, normal: Vector2) -> void:
         body.velocity.y -= 150.0
         body.velocity.x = clampf(body.velocity.x,-1150.0,1150.0)
         body.velocity.y = clampf(body.velocity.y,-1250.0,1250.0)
-        body.hitstun_timer = 0.14
-        body.hit_flash = 0.18
+        body.hitstun_timer = maxf(body.hitstun_timer, 0.34)
+        body.hit_flash = 0.26
         body.got_hit.emit(direction, body)
     _spawn_impact_particles()
     queue_free()
@@ -170,6 +170,7 @@ func _draw() -> void:
     draw_colored_polygon(core,tint.lightened(0.08))
     draw_line(Vector2(-7,0),Vector2(10,0),Color(1.0,1.0,1.0,0.9),2.4,true)
     draw_circle(Vector2(10,0),3.2,Color.WHITE)
+    draw_arc(Vector2(-4.0,0.0),17.0,PI*0.68,PI*1.32,20,Color(tint.lightened(0.55),0.72),1.4,true)
     if weapon_level >= 1:
         draw_arc(Vector2.ZERO,13.0,0.0,TAU,24,Color(tint.lightened(0.4),0.85),1.8,true)
     if weapon_level >= 2:
