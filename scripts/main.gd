@@ -942,40 +942,73 @@ func _show_main_menu() -> void:
     # Recreate the banner as a centered, fixed-size control.
     _create_menu_banner(shade)
 
-    # Lower menu dock keeps the logo and arena visible.
+    # Premium neon command dock: clear hierarchy, more breathing room and
+    # compact secondary actions, while keeping the banner unobstructed.
     var menu_panel := Panel.new()
-    menu_panel.position = Vector2(350, 430)
-    menu_panel.size = Vector2(580, 264)
+    menu_panel.name = "MainMenuCommandDock"
+    menu_panel.position = Vector2(300, 410)
+    menu_panel.size = Vector2(680, 294)
     var menu_style := StyleBoxFlat.new()
-    menu_style.bg_color = Color("#091321", 0.78)
-    menu_style.border_color = Color("#36e6df", 0.82)
+    menu_style.bg_color = Color("#07111f", 0.91)
+    menu_style.border_color = Color("#36e6df", 0.92)
     menu_style.set_border_width_all(2)
-    menu_style.set_corner_radius_all(22)
-    menu_style.shadow_color = Color("#36e6df", 0.22)
-    menu_style.shadow_size = 22
+    menu_style.set_corner_radius_all(28)
+    menu_style.shadow_color = Color("#36e6df", 0.30)
+    menu_style.shadow_size = 30
+    menu_style.shadow_offset = Vector2(0, 7)
+    menu_style.content_margin_left = 22.0
+    menu_style.content_margin_right = 22.0
     menu_panel.add_theme_stylebox_override("panel", menu_style)
     shade.add_child(menu_panel)
 
-    var play := _add_button("▶   ИГРАТЬ", Vector2(385, 452), Vector2(510, 48), shade)
-    play.add_theme_font_size_override("font_size", 23)
-    play.add_theme_stylebox_override("normal", _menu_button_style(Color("#36e6df"), Color("#b5fff4")))
-    play.add_theme_color_override("font_color", Color("#07151d"))
+    var menu_kicker := Label.new()
+    menu_kicker.text = "KIWI ROUNDS  /  COMBAT SYSTEM"
+    menu_kicker.position = Vector2(330, 420)
+    menu_kicker.size = Vector2(620, 18)
+    menu_kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    menu_kicker.add_theme_font_size_override("font_size", 10)
+    menu_kicker.add_theme_color_override("font_color", Color("#8aa7bb"))
+    menu_kicker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    shade.add_child(menu_kicker)
+
+    var play := _add_button("▶     НАЧАТЬ СРАЖЕНИЕ", Vector2(340, 448), Vector2(600, 58), shade)
+    play.add_theme_font_size_override("font_size", 22)
+    play.add_theme_stylebox_override("normal", _menu_button_style(Color("#36e6df"), Color("#c0fff5")))
+    play.add_theme_stylebox_override("hover", _menu_button_style(Color("#73fff0"), Color.WHITE))
+    play.add_theme_stylebox_override("pressed", _menu_button_style(Color("#1caaa9"), Color("#eaffff")))
+    play.add_theme_color_override("font_color", Color("#06151e"))
     play.pressed.connect(_show_mode_menu)
 
-    var skins := _add_button("✦   СКИНЫ", Vector2(385, 510), Vector2(245, 48), shade)
+    var skins := _add_button("✦   СКИНЫ", Vector2(340, 520), Vector2(292, 50), shade)
+    skins.add_theme_font_size_override("font_size", 15)
     skins.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
+    skins.add_theme_stylebox_override("hover", _menu_button_style(Color("#263d60"), Color("#b69cff")))
     skins.add_theme_color_override("font_color", Color("#e8f6ff"))
     skins.pressed.connect(_open_skins)
 
-    var settings := _add_button("⚙   НАСТРОЙКИ", Vector2(650, 510), Vector2(245, 48), shade)
+    var settings := _add_button("⚙   НАСТРОЙКИ", Vector2(648, 520), Vector2(292, 50), shade)
+    settings.add_theme_font_size_override("font_size", 15)
     settings.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#36e6df")))
+    settings.add_theme_stylebox_override("hover", _menu_button_style(Color("#263d60"), Color("#8afff4")))
     settings.add_theme_color_override("font_color", Color("#e8f6ff"))
     settings.pressed.connect(_show_settings)
 
-    var mods := _add_button("▣   МОДЫ", Vector2(385, 568), Vector2(510, 48), shade)
-    mods.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
+    var mods := _add_button("▣   ЦЕНТР МОДИФИКАЦИЙ", Vector2(340, 580), Vector2(600, 44), shade)
+    mods.add_theme_font_size_override("font_size", 14)
+    mods.add_theme_stylebox_override("normal", _menu_button_style(Color("#111e31"), Color("#8b67ff")))
+    mods.add_theme_stylebox_override("hover", _menu_button_style(Color("#273052"), Color("#b69cff")))
     mods.add_theme_color_override("font_color", Color("#e8f6ff"))
     mods.pressed.connect(_open_mods)
+
+    var footer := Label.new()
+    footer.text = "ЛОКАЛЬНАЯ АРЕНА  •  ВЫБИРАЙ РЕЖИМ И ВЫХОДИ НА БОЙ"
+    footer.position = Vector2(330, 665)
+    footer.size = Vector2(620, 18)
+    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    footer.add_theme_font_size_override("font_size", 9)
+    footer.add_theme_color_override("font_color", Color("#7890a6"))
+    footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    shade.add_child(footer)
 
 
 func _create_menu_banner(parent: Control) -> void:
