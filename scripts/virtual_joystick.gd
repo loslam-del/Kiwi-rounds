@@ -5,9 +5,9 @@ signal value_changed(value: Vector2)
 signal released
 
 @export var deadzone := 0.12
-@export var knob_limit := 52.0
-@export var base_color := Color(0.20, 0.32, 0.48, 0.55)
-@export var knob_color := Color(0.72, 0.86, 1.0, 0.82)
+@export var knob_limit := 72.0
+@export var base_color := Color(0.05, 0.24, 0.34, 0.72)
+@export var knob_color := Color(0.43, 0.96, 0.91, 0.94)
 
 var value := Vector2.ZERO
 var active_index := -1
@@ -71,15 +71,16 @@ func _draw() -> void:
     var center := size * 0.5
     var radius := minf(size.x, size.y) * 0.46
     # Compact twin-ring joystick with a clear directional thumb pad.
-    draw_circle(center + Vector2(0,3), radius, Color(0.025,0.055,0.09,0.50))
-    draw_circle(center, radius, Color(0.12,0.22,0.34,0.66))
-    draw_arc(center, radius, 0.0, TAU, 64, Color(0.55,0.72,0.91,0.72), 2.2, true)
-    draw_arc(center, radius * 0.70, 0.0, TAU, 48, Color(0.62,0.78,0.95,0.16), 1.0, true)
+    draw_circle(center, radius * 1.10, Color(0.10,0.92,0.88,0.055))
+    draw_circle(center + Vector2(0,4), radius, Color(0.015,0.035,0.065,0.72))
+    draw_circle(center, radius, base_color)
+    draw_arc(center, radius, 0.0, TAU, 72, Color(0.22,0.96,0.91,0.92), 3.0, true)
+    draw_arc(center, radius * 0.70, 0.0, TAU, 56, Color(0.60,0.98,0.90,0.26), 1.6, true)
     for angle in [0.0, PI*0.5, PI, PI*1.5]:
         var a := Vector2(cos(angle),sin(angle))
-        draw_line(center + a * (radius*0.76), center + a * (radius*0.88), Color(0.76,0.88,1.0,0.32), 1.4, true)
+        draw_line(center + a * (radius*0.76), center + a * (radius*0.88), Color(0.58,1.0,0.92,0.52), 1.4, true)
     var knob_center := center + value * knob_limit
-    draw_circle(knob_center + Vector2(0,2), radius * 0.29, Color(0.02,0.05,0.09,0.45))
+    draw_circle(knob_center + Vector2(0,2), radius * 0.29, Color(0.01,0.04,0.07,0.58))
     draw_circle(knob_center, radius * 0.27, Color(0.62,0.78,0.94,0.92))
-    draw_arc(knob_center, radius * 0.27, 0.0, TAU, 40, Color(0.91,0.97,1.0,0.85), 1.5, true)
+    draw_arc(knob_center, radius * 0.27, 0.0, TAU, 40, Color(0.82,1.0,0.96,0.96), 1.5, true)
     draw_circle(knob_center + Vector2(-radius*0.07,-radius*0.08), radius*0.075, Color(1,1,1,0.30))
