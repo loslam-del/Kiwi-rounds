@@ -1033,11 +1033,11 @@ func _create_menu_record(parent: Control) -> void:
         music_visualizer_bars.append(bar)
 
     music_track_button = Button.new()
-    music_track_button.position = Vector2(965, 202)
-    music_track_button.size = Vector2(260, 42)
+    music_track_button.position = Vector2(885, 202)
+    music_track_button.size = Vector2(340, 42)
     music_track_button.text = "♫  Загрузка музыки..."
     music_track_button.tooltip_text = "Нажми, чтобы переключить трек"
-    music_track_button.add_theme_font_size_override("font_size", 13)
+    music_track_button.add_theme_font_size_override("font_size", 11)
     music_track_button.add_theme_color_override("font_color", Color("#eaf2fb"))
     music_track_button.add_theme_stylebox_override("normal", _menu_button_style(Color("#172536"), Color("#526779")))
     music_track_button.add_theme_stylebox_override("hover", _menu_button_style(Color("#20394c"), Color("#36e6df")))
@@ -1117,7 +1117,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     var bot_a: ArenaPlayer = PLAYER_SCRIPT.new()
     bot_a.name = "MenuBotKiwi"
     bot_a.is_bot = true
-    bot_a.menu_preview_mode = false
+    bot_a.menu_preview_mode = true
     bot_a.body_color = Color("#e8bd9c")
     bot_a.skin_style = "kiwi_human"
     bot_a.position = Vector2(360, 585)
@@ -1135,7 +1135,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     var bot_b: ArenaPlayer = PLAYER_SCRIPT.new()
     bot_b.name = "MenuBotPink"
     bot_b.is_bot = true
-    bot_b.menu_preview_mode = false
+    bot_b.menu_preview_mode = true
     bot_b.body_color = Color("#ff6fae")
     bot_b.position = Vector2(920, 585)
     bot_b.bot_accuracy = 0.86
