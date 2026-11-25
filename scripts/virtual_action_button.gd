@@ -12,6 +12,7 @@ signal pressed
 var active_touch := -1
 var mouse_active := false
 var label_node: Label
+var visual_clock := 0.0
 
 func _ready() -> void:
     mouse_filter = Control.MOUSE_FILTER_STOP
@@ -25,6 +26,10 @@ func _ready() -> void:
     label_node.add_theme_font_size_override("font_size", 14)
     label_node.add_theme_color_override("font_color", Color.WHITE)
     add_child(label_node)
+    queue_redraw()
+
+func _process(delta: float) -> void:
+    visual_clock += delta
     queue_redraw()
 
 func _gui_input(event: InputEvent) -> void:
@@ -70,7 +75,14 @@ func _event_inside(viewport_position: Vector2) -> bool:
 func _draw() -> void:
     var active := active_touch != -1 or mouse_active
     var rect := Rect2(Vector2.ZERO, size)
+    var pulse := 0.5 + 0.5 * sin(visual_clock * 3.0)
+    var glow_alpha := 0.10 + pulse * 0.08
+    draw_rect(rect.grow(5.0), Color(accent_color, glow_alpha if not active else 0.28), false, 3.0)
     draw_style_box(_make_style(Color("#3d638e") if active else fill_color), rect)
+    if active:
+        draw_rect(rect.grow(-4.0), Color(1.0, 1.0, 1.0, 0.08), false, 2.0)
+    else:
+        draw_line(Vector2(14.0, 5.0), Vector2(size.x - 14.0, 5.0), Color(accent_color, 0.24 + pulse * 0.22), 2.0, true)
 
 func _make_style(color: Color) -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
