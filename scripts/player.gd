@@ -330,9 +330,9 @@ func _think_bot(delta: float) -> void:
     var delta_x := target.global_position.x - global_position.x
     var distance_x := absf(delta_x)
     if menu_preview_mode:
-        # Keep menu sparring visibly active with a steady back-and-forth patrol.
-        var patrol_phase := sin(float(Time.get_ticks_msec()) * 0.0016 + global_position.x * 0.012)
-        move_input = 1.0 if patrol_phase >= 0.0 else -1.0
+        # Menu fighters deliberately approach, then create space and approach again.
+        # This avoids the old position-dependent sine that could cancel their movement.
+        move_input = signf(delta_x) if distance_x > 210.0 else -signf(delta_x)
     else:
         if distance_x > 235.0:
             move_input = signf(delta_x)
@@ -630,6 +630,13 @@ func _draw() -> void:
             center+Vector2(17,-48),center+Vector2(19,-41),
             center+Vector2(7,-46),center+Vector2(-7,-46)
         ]),green)
+        # Two small hair buns sit beside the cap instead of floating high above it.
+        draw_circle(center + Vector2(-22.0, -43.0), 8.0, hair_shadow)
+        draw_circle(center + Vector2(-22.0, -43.0), 6.0, hair)
+        draw_arc(center + Vector2(-22.0, -43.0), 5.5, PI * 1.1, PI * 1.8, 16, hair_light, 1.4, true)
+        draw_circle(center + Vector2(22.0, -43.0), 8.0, hair_shadow)
+        draw_circle(center + Vector2(22.0, -43.0), 6.0, hair)
+        draw_arc(center + Vector2(22.0, -43.0), 5.5, PI * 1.1, PI * 1.8, 16, hair_light, 1.4, true)
         draw_line(center+Vector2(-16,-40),center+Vector2(17,-39),green_light,2.5,true)
         draw_circle(center+Vector2(16,-43),2.5,green_light)
 
