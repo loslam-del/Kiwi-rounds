@@ -127,6 +127,7 @@ var music_display_names: Array[String] = [
 ]
 var music_last_index := -1
 var menu_record_needle: Control
+var menu_record_disc: Control
 var music_track_button: Button
 var music_visualizer_bars: Array[ColorRect] = []
 var online_player_id := ""
@@ -214,8 +215,6 @@ func _draw() -> void:
         var orbit := 92.0 + float(i) * 22.0
         var phase_offset := background_time * (0.16 if i % 2 == 0 else -0.12)
         draw_arc(Vector2(640,435),orbit,phase_offset,phase_offset+PI*0.62,48,Color(0.42,0.82,0.78,0.045),1.2,true)
-    if phase == "menu":
-        _draw_menu_record()
     # Soft arena halos and a faint central light column.
     draw_circle(Vector2(640,450),250.0,Color(0.28,0.62,0.68,0.025))
     draw_arc(Vector2(640,470),430,PI,TAU,80,Color(0.38,0.65,0.82,0.12),2.0,true)
@@ -781,8 +780,10 @@ func _process(delta: float) -> void:
     _poll_online_socket()
     _online_sync_tick(delta)
     background_time += delta
+    if is_instance_valid(menu_record_disc):
+        menu_record_disc.rotation = background_time * 0.85
     if is_instance_valid(menu_record_needle):
-        menu_record_needle.rotation = background_time * 2.8
+        menu_record_needle.rotation = -0.72
     for i in range(music_visualizer_bars.size()):
         var bar := music_visualizer_bars[i]
         if is_instance_valid(bar):
@@ -997,6 +998,7 @@ func _create_menu_record(parent: Control) -> void:
     ring_style.set_corner_radius_all(36)
     ring.add_theme_stylebox_override("panel", ring_style)
     record.add_child(ring)
+    menu_record_disc = ring
 
     for i in range(3):
         var groove := Panel.new()
