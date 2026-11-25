@@ -522,6 +522,8 @@ func _make_ui() -> void:
     hud.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     hud.add_theme_font_size_override("font_size",22)
     hud.add_theme_color_override("font_color",Color("#f4f7ff"))
+    hud.add_theme_constant_override("outline_size", 3)
+    hud.add_theme_color_override("font_outline_color", Color("#07111c", 0.96))
     ui.add_child(hud)
     player_health_bar = _create_health_bar(ui, Vector2(24, 68), Color("#55dfb0"))
     rival_health_bar = _create_health_bar(ui, Vector2(956, 68), Color("#ff7c86"))
@@ -586,10 +588,16 @@ func _create_health_bar(parent: Control, at: Vector2, fill_color: Color) -> Prog
     bar.max_value = 100
     bar.show_percentage = false
     var bg := StyleBoxFlat.new()
-    bg.bg_color = Color("#111c2a", 0.94)
+    bg.bg_color = Color("#081321", 0.96)
+    bg.border_color = Color("#7894a8", 0.42)
+    bg.set_border_width_all(1)
     bg.set_corner_radius_all(8)
+    bg.shadow_color = Color("#000000", 0.35)
+    bg.shadow_size = 5
     var fill := StyleBoxFlat.new()
     fill.bg_color = fill_color
+    fill.border_color = fill_color.lightened(0.28)
+    fill.set_border_width_all(1)
     fill.set_corner_radius_all(8)
     bar.add_theme_stylebox_override("background", bg)
     bar.add_theme_stylebox_override("fill", fill)
@@ -603,6 +611,8 @@ func _create_health_label(parent: Control, at: Vector2, caption: String) -> Labe
     label.text = caption
     label.add_theme_font_size_override("font_size", 14)
     label.add_theme_color_override("font_color", Color("#eaf2fb"))
+    label.add_theme_constant_override("outline_size", 2)
+    label.add_theme_color_override("font_outline_color", Color("#07111c", 0.96))
     parent.add_child(label)
     return label
 
