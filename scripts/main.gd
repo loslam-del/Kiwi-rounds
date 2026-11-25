@@ -914,13 +914,13 @@ func _show_main_menu() -> void:
     var banner := TextureRect.new()
     banner.name = "KiwiNeonBanner"
     banner.texture = load("res://assets/1795552443370.jpg") as Texture2D
-    banner.position = Vector2(400, 34)
-    banner.size = Vector2(480, 270)
+    banner.position = Vector2(360, 18)
+    banner.size = Vector2(560, 313)
     banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
     banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
     banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var key_shader := Shader.new()
-    key_shader.code = "shader_type canvas_item;\nvoid fragment() { vec4 c = texture(TEXTURE, UV) * COLOR; float v = max(max(c.r, c.g), c.b); float a = smoothstep(0.008, 0.09, v); COLOR = vec4(c.rgb, c.a * a); }"
+    key_shader.code = "shader_type canvas_item;\nvoid fragment() { vec4 c = texture(TEXTURE, UV) * COLOR; float v = max(max(c.r, c.g), c.b); float a = smoothstep(0.012, 0.075, v); COLOR = vec4(c.rgb, c.a * a); }"
     var key_material := ShaderMaterial.new()
     key_material.shader = key_shader
     banner.material = key_material
