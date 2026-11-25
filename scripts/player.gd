@@ -181,7 +181,7 @@ func _physics_process(delta: float) -> void:
             velocity = Vector2.ZERO
             queue_redraw()
             return
-    animation_time += delta * (8.5 if absf(velocity.x) > 35.0 and is_on_floor() else 2.2)
+    animation_time += delta * (13.0 if absf(velocity.x) > 35.0 and is_on_floor() else 2.2)
     pulse_cooldown = maxf(0.0, pulse_cooldown - delta)
     recoil_kick = move_toward(recoil_kick, 0.0, delta * 38.0)
     muzzle_flash = maxf(0.0, muzzle_flash - delta)
@@ -282,11 +282,14 @@ func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
     var arm_front_target := 0.92 + walk_drive * 0.30 - jump_drive * 0.16
     var elbow_back_target := -0.78 + walk_drive * 0.16
     var elbow_front_target := 0.78 - walk_drive * 0.16
+    # Alternating planted-step gait: legs swing in opposite directions and
+    # the knee bends on the recovery half of each step, so feet visibly lift.
     var gait := sin(animation_time)
-    var leg_back_target := -walk_drive * 0.82 + (gait * 0.42 if moving else 0.0) + jump_drive * 0.22
-    var leg_front_target := walk_drive * 0.82 - (gait * 0.42 if moving else 0.0) + jump_drive * 0.22
-    var knee_back_target := (0.88 if moving and gait > 0.0 else -0.12) + absf(jump_drive) * 0.28
-    var knee_front_target := (0.88 if moving and gait <= 0.0 else -0.12) + absf(jump_drive) * 0.28
+    var gait_cos := cos(animation_time)
+    var leg_back_target := (-walk_drive * 0.38 + gait * 0.72 * absf(walk_drive) if moving else -walk_drive * 0.16) + jump_drive * 0.22
+    var leg_front_target := (-walk_drive * 0.38 - gait * 0.72 * absf(walk_drive) if moving else -walk_drive * 0.16) + jump_drive * 0.22
+    var knee_back_target := (0.08 + maxf(0.0, gait_cos) * 0.78 if moving else -0.08) + absf(jump_drive) * 0.28
+    var knee_front_target := (0.08 + maxf(0.0, -gait_cos) * 0.78 if moving else -0.08) + absf(jump_drive) * 0.28
 
     var spring_k := 58.0
     var damping_rate := 13.5
@@ -303,10 +306,10 @@ func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
     arm_front_angle = clampf(arm_front_angle + arm_front_angular_velocity * delta, -1.65, 1.65)
     elbow_back_angle = clampf(elbow_back_angle + elbow_back_angular_velocity * delta, -1.5, 1.5)
     elbow_front_angle = clampf(elbow_front_angle + elbow_front_angular_velocity * delta, -1.5, 1.5)
-    leg_back_angle = clampf(leg_back_angle + leg_back_angular_velocity * delta, -0.9, 0.9)
-    leg_front_angle = clampf(leg_front_angle + leg_front_angular_velocity * delta, -0.9, 0.9)
-    knee_back_angle = clampf(knee_back_angle + knee_back_angular_velocity * delta, -0.35, 0.95)
-    knee_front_angle = clampf(knee_front_angle + knee_front_angular_velocity * delta, -0.35, 0.95)
+    leg_back_angle = clampf(leg_back_angle + leg_back_angular_velocity * delta, -1.15, 1.15)
+    leg_front_angle = clampf(leg_front_angle + leg_front_angular_velocity * delta, -1.15, 1.15)
+    knee_back_angle = clampf(knee_back_angle + knee_back_angular_velocity * delta, -0.25, 1.15)
+    knee_front_angle = clampf(knee_front_angle + knee_front_angular_velocity * delta, -0.25, 1.15)
 
 
 func _weapon_hand_local() -> Vector2:
