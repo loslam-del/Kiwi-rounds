@@ -1081,7 +1081,7 @@ func _show_main_menu() -> void:
 
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color("#10192b")
+    shade.color = Color("#18263e")
     shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
     shade.modulate.a = 0.0
     ui.add_child(shade)
@@ -1101,8 +1101,8 @@ func _show_main_menu() -> void:
     top.position = Vector2(26,20)
     top.size = Vector2(900,72)
     var top_style := StyleBoxFlat.new()
-    top_style.bg_color = Color("#101d31",0.94)
-    top_style.border_color = Color("#70e9df",0.85)
+    top_style.bg_color = Color("#263653",0.94)
+    top_style.border_color = Color("#f2bfd0",0.90)
     top_style.set_border_width_all(2)
     top_style.set_corner_radius_all(20)
     top.add_theme_stylebox_override("panel",top_style)
@@ -1113,7 +1113,7 @@ func _show_main_menu() -> void:
     logo.position = Vector2(52,30)
     logo.size = Vector2(300,48)
     logo.add_theme_font_size_override("font_size",34)
-    logo.add_theme_color_override("font_color",Color("#f5fbff"))
+    logo.add_theme_color_override("font_color",Color("#fff0e8"))
     shade.add_child(logo)
 
     var season := Label.new()
@@ -1121,15 +1121,15 @@ func _show_main_menu() -> void:
     season.position = Vector2(360,39)
     season.size = Vector2(260,30)
     season.add_theme_font_size_override("font_size",15)
-    season.add_theme_color_override("font_color",Color("#83eee0"))
+    season.add_theme_color_override("font_color",Color("#f6c3d5"))
     shade.add_child(season)
 
     var play_panel := Panel.new()
     play_panel.position = Vector2(300,470)
     play_panel.size = Vector2(600,205)
     var play_style := StyleBoxFlat.new()
-    play_style.bg_color = Color("#111e32",0.95)
-    play_style.border_color = Color("#e6c85b",0.9)
+    play_style.bg_color = Color("#35435f",0.96)
+    play_style.border_color = Color("#f4bfd0",0.95)
     play_style.set_border_width_all(2)
     play_style.set_corner_radius_all(26)
     play_style.shadow_color = Color("#000000",0.5)
@@ -1143,19 +1143,19 @@ func _show_main_menu() -> void:
     callout.size = Vector2(560,28)
     callout.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     callout.add_theme_font_size_override("font_size",15)
-    callout.add_theme_color_override("font_color",Color("#f6d96c"))
+    callout.add_theme_color_override("font_color",Color("#ffe0a6"))
     shade.add_child(callout)
 
     var play := _add_button("ИГРАТЬ",Vector2(350,518),Vector2(500,72),shade)
     play.add_theme_font_size_override("font_size",30)
-    play.add_theme_stylebox_override("normal",_menu_button_style(Color("#f4ce58"),Color("#fff1a6")))
-    play.add_theme_stylebox_override("hover",_menu_button_style(Color("#ffe27a"),Color.WHITE))
-    play.add_theme_color_override("font_color",Color("#20283a"))
+    play.add_theme_stylebox_override("normal",_menu_button_style(Color("#f4b8cc"),Color("#ffe5ed")))
+    play.add_theme_stylebox_override("hover",_menu_button_style(Color("#ffd7e2"),Color.WHITE))
+    play.add_theme_color_override("font_color",Color("#28334d"))
     play.pressed.connect(_show_mode_menu)
 
     var cards := _add_button("КАРТОЧКИ",Vector2(350,605),Vector2(240,48),shade)
     cards.add_theme_font_size_override("font_size",17)
-    cards.add_theme_stylebox_override("normal",_menu_button_style(Color("#263b5c"),Color("#8c9dff")))
+    cards.add_theme_stylebox_override("normal",_menu_button_style(Color("#40506e"),Color("#b9c9ed")))
     cards.add_theme_color_override("font_color",Color.WHITE)
     cards.pressed.connect(_open_training_cards)
 
@@ -1170,7 +1170,7 @@ func _show_main_menu() -> void:
     news_panel.size = Vector2(300,450)
     var news_style := StyleBoxFlat.new()
     news_style.bg_color = Color("#101d31",0.94)
-    news_style.border_color = Color("#7d9dff",0.88)
+    news_style.border_color = Color("#f0bdd0",0.88)
     news_style.set_border_width_all(2)
     news_style.set_corner_radius_all(22)
     news_panel.add_theme_stylebox_override("panel",news_style)
@@ -1182,13 +1182,13 @@ func _show_main_menu() -> void:
     news_title.size = Vector2(256,42)
     news_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     news_title.add_theme_font_size_override("font_size",25)
-    news_title.add_theme_color_override("font_color",Color("#f5d66b"))
+    news_title.add_theme_color_override("font_color",Color("#ffe0aa"))
     shade.add_child(news_title)
 
     var news_items := [
         ["01  •  НОВЫЙ СЕЗОН","Арена открыта! Собирай карточки и готовься к новым боям."],
         ["02  •  МАГАЗИН","В коллекции уже 50 оригинальных обликов Kiwi Rounds."],
-        ["03  •  ОБНОВЛЕНИЕ","Неоновые арены, эффекты попаданий и мобильное управление."]
+        ["03  •  ОБНОВЛЕНИЕ","Аниме-арены, воздушные эффекты и мобильное управление."]
     ]
     var news_y := 270.0
     for item in news_items:
@@ -1196,8 +1196,8 @@ func _show_main_menu() -> void:
         card.position = Vector2(970,news_y)
         card.size = Vector2(260,100)
         var card_style := StyleBoxFlat.new()
-        card_style.bg_color = Color("#1b2b45",0.96)
-        card_style.border_color = Color("#5e789e",0.65)
+        card_style.bg_color = Color("#354561",0.96)
+        card_style.border_color = Color("#a8b9d6",0.55)
         card_style.set_border_width_all(1)
         card_style.set_corner_radius_all(14)
         card.add_theme_stylebox_override("panel",card_style)
@@ -1207,7 +1207,7 @@ func _show_main_menu() -> void:
         heading.position = Vector2(985,news_y+9)
         heading.size = Vector2(230,24)
         heading.add_theme_font_size_override("font_size",13)
-        heading.add_theme_color_override("font_color",Color("#8debe2"))
+        heading.add_theme_color_override("font_color",Color("#f4c4d6"))
         shade.add_child(heading)
         var body := Label.new()
         body.text = item[1]
@@ -1215,13 +1215,13 @@ func _show_main_menu() -> void:
         body.size = Vector2(230,58)
         body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
         body.add_theme_font_size_override("font_size",12)
-        body.add_theme_color_override("font_color",Color("#e2eaf5"))
+        body.add_theme_color_override("font_color",Color("#f4eaf0"))
         shade.add_child(body)
         news_y += 112.0
 
     var settings := _add_button("⚙",Vector2(850,30),Vector2(58,52),shade)
     settings.add_theme_font_size_override("font_size",24)
-    settings.add_theme_stylebox_override("normal",_menu_button_style(Color("#1b2b45"),Color("#72e9df")))
+    settings.add_theme_stylebox_override("normal",_menu_button_style(Color("#1b2b45"),Color("#f2bfd0")))
     settings.pressed.connect(_show_settings)
 
     var footer := Label.new()
@@ -1479,7 +1479,7 @@ func _close_music_player() -> void:
     music_modal_disc = null
 
 func _create_menu_bot_preview(parent: Control) -> void:
-    # Static cinematic menu illustration: no autonomous match running behind the UI.
+    # Painted anime landscape backdrop. Character nodes and their appearance are untouched.
     var backdrop := Control.new()
     backdrop.name = "MenuBattleBackdrop"
     backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1488,57 +1488,73 @@ func _create_menu_bot_preview(parent: Control) -> void:
     parent.move_child(backdrop, 0)
 
     var sky := ColorRect.new()
-    sky.position = Vector2.ZERO
-    sky.size = Vector2(1280, 720)
-    sky.color = Color("#101b2c")
+    sky.size = Vector2(1280,720)
+    sky.color = Color("#283b5b")
     sky.mouse_filter = Control.MOUSE_FILTER_IGNORE
     backdrop.add_child(sky)
 
-    var glow := ColorRect.new()
-    glow.position = Vector2(260, 110)
-    glow.size = Vector2(760, 420)
-    glow.color = Color(0.10, 0.48, 0.58, 0.12)
-    glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    backdrop.add_child(glow)
+    var sunset := ColorRect.new()
+    sunset.position = Vector2(0,170)
+    sunset.size = Vector2(1280,360)
+    sunset.color = Color("#77516f")
+    sunset.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    backdrop.add_child(sunset)
 
-    # Distant skyline and perspective floor create depth without clutter.
-    for i in range(12):
-        var x := float(i) * 112.0 - 20.0
-        var h := 90.0 + float((i * 47) % 125)
-        var tower := ColorRect.new()
-        tower.position = Vector2(x, 430.0 - h)
-        tower.size = Vector2(58.0, h)
-        tower.color = Color("#1a3045", 0.62)
-        tower.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        backdrop.add_child(tower)
-        var lit_edge := ColorRect.new()
-        lit_edge.position = Vector2(x + 5.0, 430.0 - h + 12.0)
-        lit_edge.size = Vector2(2.0, h - 20.0)
-        lit_edge.color = Color("#4bd8d0", 0.18)
-        lit_edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        backdrop.add_child(lit_edge)
+    var sun := ColorRect.new()
+    sun.position = Vector2(515,165)
+    sun.size = Vector2(250,250)
+    sun.color = Color("#f4b7c8")
+    sun.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    backdrop.add_child(sun)
 
-    var horizon := ColorRect.new()
-    horizon.position = Vector2(0, 428)
-    horizon.size = Vector2(1280, 2)
-    horizon.color = Color("#5ce5dc", 0.30)
-    horizon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    backdrop.add_child(horizon)
+    for layer in range(3):
+        var mountain := Polygon2D.new()
+        var base_y := 445.0 + float(layer) * 55.0
+        mountain.polygon = PackedVector2Array([
+            Vector2(0,base_y),Vector2(145,base_y-105-float(layer)*12),
+            Vector2(310,base_y-30),Vector2(490,base_y-145),
+            Vector2(680,base_y-20),Vector2(865,base_y-125),
+            Vector2(1050,base_y-35),Vector2(1190,base_y-110),
+            Vector2(1280,base_y-55),Vector2(1280,720),Vector2(0,720)
+        ])
+        mountain.color = [Color("#40506b"),Color("#34435f"),Color("#27344f")][layer]
+        backdrop.add_child(mountain)
 
-    for i in range(9):
-        var x := 640.0 + float(i - 4) * 115.0
-        var grid_line := Line2D.new()
-        grid_line.points = PackedVector2Array([Vector2(640, 430), Vector2(x + float(i - 4) * 95.0, 700)])
-        grid_line.width = 1.5
-        grid_line.default_color = Color("#54c9d1", 0.12)
-        backdrop.add_child(grid_line)
-    for i in range(5):
-        var y := 470.0 + float(i) * 48.0
-        var grid_line := Line2D.new()
-        grid_line.points = PackedVector2Array([Vector2(0, y), Vector2(1280, y)])
-        grid_line.width = 1.0
-        grid_line.default_color = Color("#54c9d1", 0.075)
-        backdrop.add_child(grid_line)
+    # Sakura branches at the edges frame the fight and keep the center clear.
+    for side in [-1,1]:
+        var root := Vector2(0.0 if side < 0 else 1280.0, 245.0)
+        var branch := Line2D.new()
+        branch.points = PackedVector2Array([
+            root,root+Vector2(62.0 if side < 0 else -62.0,-52.0),
+            root+Vector2(125.0 if side < 0 else -125.0,-94.0),
+            root+Vector2(205.0 if side < 0 else -205.0,-138.0)
+        ])
+        branch.width = 9.0
+        branch.default_color = Color("#49384f",0.9)
+        branch.antialiased = true
+        backdrop.add_child(branch)
+        for blossom in range(18):
+            var bx := float((blossom * 37) % 205)
+            var by := float((blossom * 23) % 130)
+            var petal := ColorRect.new()
+            petal.position = Vector2(bx if side < 0 else 1280.0-bx-7.0, 115.0+by)
+            petal.size = Vector2(8,5)
+            petal.color = Color("#ffd3df",0.76)
+            petal.rotation = float(blossom % 4) * 0.45
+            petal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+            backdrop.add_child(petal)
+
+    for cloud in range(5):
+        var cloud_line := Line2D.new()
+        var cx := float(cloud) * 285.0 - 20.0
+        var cy := 145.0 + float((cloud * 31) % 95)
+        cloud_line.points = PackedVector2Array([
+            Vector2(cx,cy),Vector2(cx+55,cy-5),Vector2(cx+105,cy+1),Vector2(cx+165,cy-4)
+        ])
+        cloud_line.width = 4.0
+        cloud_line.default_color = Color("#f2d5e4",0.24)
+        cloud_line.antialiased = true
+        backdrop.add_child(cloud_line)
 
     _add_menu_battle_scene(backdrop)
 
