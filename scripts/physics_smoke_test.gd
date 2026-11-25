@@ -214,30 +214,20 @@ func _run_physics_checks() -> void:
         _fail("touch button accepted a release outside its bounds")
         return
 
-    # Menu preview must run two independent AI fighters, not static decorations.
+    # Menu preview is a static illustrated scene: no autonomous match runs behind the UI.
     game.call("_show_main_menu")
     await process_frame
     var menu_overlay := game.get("overlay") as Control
     if menu_overlay == null:
         _fail("main menu overlay did not open")
         return
-    var menu_bot_a := menu_overlay.find_child("MenuBotKiwi", true, false) as CharacterBody2D
-    var menu_bot_b := menu_overlay.find_child("MenuBotPink", true, false) as CharacterBody2D
-    if menu_bot_a == null or menu_bot_b == null:
-        _fail("menu sparring fighters were not created")
+    var menu_character_1 := menu_overlay.find_child("MenuCharacter1UnderFire", true, false) as CharacterBody2D
+    var menu_character_3 := menu_overlay.find_child("MenuCharacter3Hiding", true, false) as CharacterBody2D
+    if menu_character_1 == null or menu_character_3 == null:
+        _fail("menu illustration characters were not created")
         return
-    if not menu_bot_a.is_physics_processing() or not menu_bot_b.is_physics_processing():
-        _fail("menu sparring fighters are not processing physics")
-        return
-    # Headless CI can validate that both preview fighters exist and have
-    # physics enabled, but it cannot reliably assert visual movement: menu
-    # overlays and frame scheduling differ from a rendered mobile session.
-    # Runtime movement/respawn are exercised in the actual menu on device.
-    if menu_bot_a.get("menu_spawn_position") == null or menu_bot_b.get("menu_spawn_position") == null:
-        _fail("menu AI spawn configuration is missing")
-        return
-    if not menu_bot_a.is_processing() or not menu_bot_b.is_processing():
-        _fail("menu AI fighters are not processing")
+    if menu_character_1.is_physics_processing() or menu_character_3.is_physics_processing():
+        _fail("menu illustration unexpectedly runs a background match")
         return
 
     await create_timer(0.35).timeout
