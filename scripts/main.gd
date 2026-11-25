@@ -1573,7 +1573,6 @@ func _create_menu_bot_preview(parent: Control) -> void:
         grid_line.points = PackedVector2Array([Vector2(640, 430), Vector2(x + float(i - 4) * 95.0, 700)])
         grid_line.width = 1.5
         grid_line.default_color = Color("#54c9d1", 0.12)
-        grid_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
         backdrop.add_child(grid_line)
     for i in range(5):
         var y := 470.0 + float(i) * 48.0
@@ -1581,7 +1580,6 @@ func _create_menu_bot_preview(parent: Control) -> void:
         grid_line.points = PackedVector2Array([Vector2(0, y), Vector2(1280, y)])
         grid_line.width = 1.0
         grid_line.default_color = Color("#54c9d1", 0.075)
-        grid_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
         backdrop.add_child(grid_line)
 
     _add_menu_battle_scene(backdrop)
