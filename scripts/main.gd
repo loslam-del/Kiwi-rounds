@@ -1183,16 +1183,51 @@ func _open_music_player() -> void:
     sub.add_theme_font_size_override("font_size", 10)
     sub.add_theme_color_override("font_color", Color("#71879a"))
     panel.add_child(sub)
+    var visualizer := Control.new()
+    visualizer.position = Vector2(62, 306)
+    visualizer.size = Vector2(376, 48)
+    visualizer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    panel.add_child(visualizer)
+    for i in range(30):
+        var bar := ColorRect.new()
+        bar.position = Vector2(float(i) * 12.0, 20.0)
+        bar.size = Vector2(5.0, 18.0)
+        bar.color = Color("#36e6df") if i % 3 != 0 else Color("#8b67ff")
+        bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        visualizer.add_child(bar)
+        music_visualizer_bars.append(bar)
+
+    var pause := Button.new()
+    pause.text = "Ⅱ  ПАУЗА"
+    pause.position = Vector2(52, 376)
+    pause.size = Vector2(174, 54)
+    pause.add_theme_font_size_override("font_size", 14)
+    pause.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
+    pause.add_theme_stylebox_override("hover", _menu_button_style(Color("#263d60"), Color("#b69cff")))
+    pause.add_theme_color_override("font_color", Color("#f0f5ff"))
+    pause.pressed.connect(func():
+        if is_instance_valid(music_player):
+            if not music_player.playing:
+                music_player.play()
+                music_player.stream_paused = false
+            else:
+                music_player.stream_paused = not music_player.stream_paused
+            pause.text = "▶  ПРОДОЛЖИТЬ" if music_player.stream_paused else "Ⅱ  ПАУЗА"
+    )
+    panel.add_child(pause)
+
     var skip := Button.new()
-    skip.text = "⏭  СЛЕДУЮЩИЙ ТРЕК"
-    skip.position = Vector2(112, 376)
-    skip.size = Vector2(276, 54)
-    skip.add_theme_font_size_override("font_size", 16)
+    skip.text = "⏭  СЛЕДУЮЩИЙ"
+    skip.position = Vector2(238, 376)
+    skip.size = Vector2(210, 54)
+    skip.add_theme_font_size_override("font_size", 14)
     skip.add_theme_stylebox_override("normal", _menu_button_style(Color("#36e6df"), Color("#b5fff4")))
+    skip.add_theme_stylebox_override("hover", _menu_button_style(Color("#73fff0"), Color.WHITE))
     skip.add_theme_color_override("font_color", Color("#07151d"))
     skip.pressed.connect(func():
         _play_next_music()
         title.text = _current_music_title()
+        pause.text = "Ⅱ  ПАУЗА"
     )
     panel.add_child(skip)
     var footer := Label.new()
