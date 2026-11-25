@@ -327,13 +327,13 @@ func _think_bot(delta: float) -> void:
         move_input = 0.0
         return
 
+    var delta_x := target.global_position.x - global_position.x
+    var distance_x := absf(delta_x)
     if menu_preview_mode:
         # Keep menu sparring visibly active with a steady back-and-forth patrol.
         var patrol_phase := sin(float(Time.get_ticks_msec()) * 0.0016 + global_position.x * 0.012)
         move_input = 1.0 if patrol_phase >= 0.0 else -1.0
     else:
-        var delta_x := target.global_position.x - global_position.x
-        var distance_x := absf(delta_x)
         if distance_x > 235.0:
             move_input = signf(delta_x)
         elif distance_x < 115.0:
