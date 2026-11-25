@@ -214,6 +214,35 @@ func _run_physics_checks() -> void:
         _fail("touch button accepted a release outside its bounds")
         return
 
+    # Menu preview must run two independent AI fighters, not static decorations.
+    game.call("_show_main_menu")
+    await process_frame
+    var menu_overlay := game.get("overlay") as Control
+    if menu_overlay == null:
+        _fail("main menu overlay did not open")
+        return
+    var menu_bot_a := menu_overlay.find_child("MenuBotKiwi", true, false) as CharacterBody2D
+    var menu_bot_b := menu_overlay.find_child("MenuBotPink", true, false) as CharacterBody2D
+    if menu_bot_a == null or menu_bot_b == null:
+        _fail("menu sparring fighters were not created")
+        return
+    if not menu_bot_a.is_physics_processing() or not menu_bot_b.is_physics_processing():
+        _fail("menu sparring fighters are not processing physics")
+        return
+    var menu_start_a: Vector2 = menu_bot_a.global_position
+    var menu_start_b: Vector2 = menu_bot_b.global_position
+    for _i in range(24):
+        await physics_frame
+    if menu_bot_a.global_position.distance_to(menu_start_a) < 4.0 and menu_bot_b.global_position.distance_to(menu_start_b) < 4.0:
+        _fail("menu AI fighters did not move")
+        return
+    menu_bot_a.set("health", 0)
+    for _i in range(65):
+        await physics_frame
+    if int(menu_bot_a.get("health")) <= 0 or not menu_bot_a.visible:
+        _fail("menu AI fighter did not respawn after being defeated")
+        return
+
     await create_timer(0.35).timeout
-    print("PHYSICS TEST PASSED: movement, jump, firing, bot reload, projectile hit")
+    print("PHYSICS TEST PASSED: movement, jump, firing, bot reload, menu AI, respawn and projectile hit")
     quit(0)
