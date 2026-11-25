@@ -1521,123 +1521,175 @@ func _close_music_player() -> void:
     music_modal_disc = null
 
 func _create_menu_bot_preview(parent: Control) -> void:
-    # Full-screen background sparring match, independent from the real match state.
-    var stage := Node2D.new()
-    stage.name = "MenuBotPreview"
-    stage.position = Vector2.ZERO
-    stage.process_mode = Node.PROCESS_MODE_ALWAYS
-    parent.add_child(stage)
+    # Static cinematic menu illustration: no autonomous match running behind the UI.
+    var backdrop := Control.new()
+    backdrop.name = "MenuBattleBackdrop"
+    backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    parent.add_child(backdrop)
+    parent.move_child(backdrop, 0)
 
-    var map_data: Dictionary = all_maps.pick_random() if not all_maps.is_empty() else DEFAULT_MAPS[0]
-    var bg := ColorRect.new()
-    bg.position = Vector2.ZERO
-    bg.size = Vector2(1280, 720)
-    bg.color = Color.from_string(str(map_data.get("bg_bottom", "#101a2a")), Color("#101a2a"))
-    bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    parent.add_child(bg)
-    parent.move_child(bg, 0)
-    parent.move_child(stage, 1)
+    var sky := ColorRect.new()
+    sky.position = Vector2.ZERO
+    sky.size = Vector2(1280, 720)
+    sky.color = Color("#101b2c")
+    sky.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    backdrop.add_child(sky)
 
-    # Soft horizon and floor lighting make the whole viewport feel like an arena.
-    var horizon := Polygon2D.new()
-    horizon.polygon = PackedVector2Array([Vector2(0,0),Vector2(1280,0),Vector2(1280,520),Vector2(0,520)])
-    horizon.color = Color.from_string(str(map_data.get("bg_top", "#172234")), Color("#172234"))
-    stage.add_child(horizon)
+    var glow := ColorRect.new()
+    glow.position = Vector2(260, 110)
+    glow.size = Vector2(760, 420)
+    glow.color = Color(0.10, 0.48, 0.58, 0.12)
+    glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    backdrop.add_child(glow)
 
-    var ground := StaticBody2D.new()
-    ground.position = Vector2(640, 678)
-    ground.collision_layer = 2
-    var ground_shape := CollisionShape2D.new()
-    var ground_rect := RectangleShape2D.new()
-    ground_rect.size = Vector2(1280, 80)
-    ground_shape.shape = ground_rect
-    ground.add_child(ground_shape)
-    stage.add_child(ground)
-    _add_menu_preview_platform(stage, Vector2(640, 638), Vector2(1280, 18), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")), false)
+    # Distant skyline and perspective floor create depth without clutter.
+    for i in range(12):
+        var x := float(i) * 112.0 - 20.0
+        var h := 90.0 + float((i * 47) % 125)
+        var tower := ColorRect.new()
+        tower.position = Vector2(x, 430.0 - h)
+        tower.size = Vector2(58.0, h)
+        tower.color = Color("#1a3045", 0.62)
+        tower.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        backdrop.add_child(tower)
+        var lit_edge := ColorRect.new()
+        lit_edge.position = Vector2(x + 5.0, 430.0 - h + 12.0)
+        lit_edge.size = Vector2(2.0, h - 20.0)
+        lit_edge.color = Color("#4bd8d0", 0.18)
+        lit_edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        backdrop.add_child(lit_edge)
 
-    for wall_x in [18.0, 1262.0]:
-        var wall := StaticBody2D.new()
-        wall.position = Vector2(wall_x, 360)
-        wall.collision_layer = 2
-        var wall_shape := CollisionShape2D.new()
-        var wall_rect := RectangleShape2D.new()
-        wall_rect.size = Vector2(36, 720)
-        wall_shape.shape = wall_rect
-        wall.add_child(wall_shape)
-        stage.add_child(wall)
+    var horizon := ColorRect.new()
+    horizon.position = Vector2(0, 428)
+    horizon.size = Vector2(1280, 2)
+    horizon.color = Color("#5ce5dc", 0.30)
+    horizon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    backdrop.add_child(horizon)
 
-    var platform_data: Array = map_data.get("platforms", [])
-    var used_platforms := 0
-    for item in platform_data:
-        if typeof(item) != TYPE_DICTIONARY:
-            continue
-        var px := clampf(float(item.get("x", 640)), 130.0, 1150.0)
-        var py := clampf(float(item.get("y", 500)), 310.0, 605.0)
-        var pw := clampf(float(item.get("w", 170)), 110.0, 290.0)
-        _add_menu_preview_platform(stage, Vector2(px, py), Vector2(pw, 16), Color.from_string(str(map_data.get("accent", "#36e6df")), Color("#36e6df")), true)
-        used_platforms += 1
-        if used_platforms >= 6:
-            break
+    for i in range(9):
+        var x := 640.0 + float(i - 4) * 115.0
+        var grid_line := Line2D.new()
+        grid_line.points = PackedVector2Array([Vector2(640, 430), Vector2(x + float(i - 4) * 95.0, 700)])
+        grid_line.width = 1.5
+        grid_line.default_color = Color("#54c9d1", 0.12)
+        grid_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        backdrop.add_child(grid_line)
+    for i in range(5):
+        var y := 470.0 + float(i) * 48.0
+        var grid_line := Line2D.new()
+        grid_line.points = PackedVector2Array([Vector2(0, y), Vector2(1280, y)])
+        grid_line.width = 1.0
+        grid_line.default_color = Color("#54c9d1", 0.075)
+        grid_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        backdrop.add_child(grid_line)
 
-    var bot_a: ArenaPlayer = PLAYER_SCRIPT.new()
-    bot_a.name = "MenuBotKiwi"
-    bot_a.is_bot = true
-    bot_a.menu_preview_mode = true
-    bot_a.body_color = Color("#e8bd9c")
-    bot_a.skin_style = "kiwi_human"
-    bot_a.position = Vector2(360, 577)
-    bot_a.menu_spawn_position = bot_a.position
-    bot_a.menu_strafe_phase = 0.35
-    bot_a.bot_accuracy = 0.82
-    bot_a.move_speed = 430.0
-    bot_a.pulse_force = 610.0
-    bot_a.pulse_interval = 0.56
-    bot_a.magazine_size = 8
-    bot_a.ammo = 8
-    bot_a.reload_duration = 1.1
-    bot_a.bot_think = 0.04
-    stage.add_child(bot_a)
-    bot_a.process_mode = Node.PROCESS_MODE_ALWAYS
-    bot_a.set_physics_process(true)
-    bot_a.set_process(true)
+    _add_menu_battle_scene(backdrop)
 
-    var bot_b: ArenaPlayer = PLAYER_SCRIPT.new()
-    bot_b.name = "MenuBotPink"
-    bot_b.is_bot = true
-    bot_b.menu_preview_mode = true
-    bot_b.body_color = Color("#79d85d")
-    bot_b.skin_style = "kiwi"
-    bot_b.position = Vector2(920, 577)
-    bot_b.menu_spawn_position = bot_b.position
-    bot_b.menu_strafe_phase = 2.65
-    bot_b.bot_accuracy = 0.82
-    bot_b.move_speed = 430.0
-    bot_b.pulse_force = 610.0
-    bot_b.pulse_interval = 0.56
-    bot_b.magazine_size = 8
-    bot_b.ammo = 8
-    bot_b.reload_duration = 1.1
-    bot_b.bot_think = 0.04
-    stage.add_child(bot_b)
-    bot_b.process_mode = Node.PROCESS_MODE_ALWAYS
-    bot_b.set_physics_process(true)
-    bot_b.set_process(true)
-    bot_a.target = bot_b
-    bot_b.target = bot_a
-    bot_a.pulse_requested.connect(_spawn_menu_preview_pulse.bind(stage))
-    bot_b.pulse_requested.connect(_spawn_menu_preview_pulse.bind(stage))
+func _add_menu_battle_scene(parent: Control) -> void:
+    # Character 1 is under fire; character 3 keeps low behind cover farther back.
+    # A third fighter fires from the foreground. All poses are frozen for a clean poster-like scene.
+    var far_cover := Polygon2D.new()
+    far_cover.polygon = PackedVector2Array([
+        Vector2(705, 380), Vector2(865, 380), Vector2(850, 495), Vector2(690, 495)
+    ])
+    far_cover.color = Color("#263d52", 0.94)
+    parent.add_child(far_cover)
 
-    # Each menu visit gets a different small set of combat upgrades.
-    var preview_upgrade_pool: Array = []
-    for upgrade in all_upgrades:
-        var effect := str(upgrade.get("effect", upgrade.get("id", "")))
-        if effect in ["homing", "ricochet", "heavy", "rapid", "magazine", "piercing", "kiwi_charm"]:
-            preview_upgrade_pool.append(upgrade)
-    preview_upgrade_pool.shuffle()
-    if preview_upgrade_pool.size() > 0:
-        bot_a.apply_upgrade(str(preview_upgrade_pool[0].get("effect", preview_upgrade_pool[0].get("id", ""))))
-    if preview_upgrade_pool.size() > 1:
-        bot_b.apply_upgrade(str(preview_upgrade_pool[1].get("effect", preview_upgrade_pool[1].get("id", ""))))
+    var far_cover_edge := Line2D.new()
+    far_cover_edge.points = PackedVector2Array([Vector2(705,380),Vector2(865,380),Vector2(850,495),Vector2(690,495),Vector2(705,380)])
+    far_cover_edge.width = 3.0
+    far_cover_edge.default_color = Color("#6fe7dc", 0.48)
+    far_cover_edge.antialiased = true
+    parent.add_child(far_cover_edge)
+
+    var character_3: ArenaPlayer = PLAYER_SCRIPT.new()
+    character_3.name = "MenuCharacter3Hiding"
+    character_3.body_color = Color("#79d85d")
+    character_3.skin_style = "kiwi"
+    character_3.position = Vector2(780, 435)
+    character_3.facing = -1.0
+    character_3.aim_input = Vector2(-1, -0.15)
+    character_3.scale = Vector2(0.66, 0.66)
+    character_3.set_physics_process(false)
+    character_3.set_process(false)
+    parent.add_child(character_3)
+
+    var near_cover_shadow := Polygon2D.new()
+    near_cover_shadow.polygon = PackedVector2Array([
+        Vector2(250, 560), Vector2(535, 560), Vector2(565, 690), Vector2(220, 690)
+    ])
+    near_cover_shadow.color = Color("#070d18", 0.72)
+    parent.add_child(near_cover_shadow)
+
+    var near_cover := Polygon2D.new()
+    near_cover.polygon = PackedVector2Array([
+        Vector2(255, 520), Vector2(525, 520), Vector2(550, 675), Vector2(235, 675)
+    ])
+    near_cover.color = Color("#30495e", 0.98)
+    parent.add_child(near_cover)
+
+    var near_cover_top := Polygon2D.new()
+    near_cover_top.polygon = PackedVector2Array([
+        Vector2(255,520), Vector2(525,520), Vector2(535,535), Vector2(250,535)
+    ])
+    near_cover_top.color = Color("#9ab5bd", 0.9)
+    parent.add_child(near_cover_top)
+
+    var character_1: ArenaPlayer = PLAYER_SCRIPT.new()
+    character_1.name = "MenuCharacter1UnderFire"
+    character_1.body_color = Color("#e8bd9c")
+    character_1.skin_style = "kiwi_human"
+    character_1.position = Vector2(410, 535)
+    character_1.facing = 1.0
+    character_1.aim_input = Vector2(0.85, -0.2)
+    character_1.scale = Vector2(0.92, 0.92)
+    character_1.set_physics_process(false)
+    character_1.set_process(false)
+    parent.add_child(character_1)
+
+    var shooter: ArenaPlayer = PLAYER_SCRIPT.new()
+    shooter.name = "MenuForegroundShooter"
+    shooter.body_color = Color("#ff786f")
+    shooter.skin_style = "kiwi"
+    shooter.position = Vector2(1015, 545)
+    shooter.facing = -1.0
+    shooter.aim_input = Vector2(-0.88, -0.30)
+    shooter.scale = Vector2(1.18, 1.18)
+    shooter.set_physics_process(false)
+    shooter.set_process(false)
+    parent.add_child(shooter)
+
+    # Layered projectile trail points toward character 1, with a soft muzzle flash.
+    var trail_glow := Line2D.new()
+    trail_glow.points = PackedVector2Array([Vector2(985, 515), Vector2(820, 505), Vector2(670, 520), Vector2(545, 545)])
+    trail_glow.width = 15.0
+    trail_glow.default_color = Color("#ff9b72", 0.18)
+    trail_glow.antialiased = true
+    parent.add_child(trail_glow)
+
+    var trail := Line2D.new()
+    trail.points = PackedVector2Array([Vector2(985, 515), Vector2(820, 505), Vector2(670, 520), Vector2(545, 545)])
+    trail.width = 3.5
+    trail.default_color = Color("#ffe8a1", 0.82)
+    trail.antialiased = true
+    parent.add_child(trail)
+
+    var muzzle_glow := Polygon2D.new()
+    muzzle_glow.polygon = PackedVector2Array([
+        Vector2(970,495), Vector2(1002,506), Vector2(978,520), Vector2(1010,535),
+        Vector2(970,532), Vector2(954,548), Vector2(958,520), Vector2(940,505)
+    ])
+    muzzle_glow.color = Color("#ffd978", 0.72)
+    parent.add_child(muzzle_glow)
+
+    # Foreground silhouette frames the action and reinforces the perspective.
+    var foreground := Polygon2D.new()
+    foreground.polygon = PackedVector2Array([
+        Vector2(0, 660), Vector2(1280, 660), Vector2(1280, 720), Vector2(0, 720)
+    ])
+    foreground.color = Color("#080f1b", 0.34)
+    parent.add_child(foreground)
 
 func _add_menu_preview_platform(stage: Node2D, at: Vector2, dimensions: Vector2, accent: Color, collide: bool = true) -> void:
     var body := StaticBody2D.new()
