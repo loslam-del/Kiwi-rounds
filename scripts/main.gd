@@ -910,46 +910,21 @@ func _show_main_menu() -> void:
     _create_menu_bot_preview(shade)
     _create_menu_record(shade)
 
-    # Clean native title replaces the oversized source banner and stays centered on every screen.
-    var logo_shadow := Label.new()
-    logo_shadow.text = "KIWI ROUNDS"
-    logo_shadow.position = Vector2(0, 66)
-    logo_shadow.size = Vector2(1280, 82)
-    logo_shadow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    logo_shadow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    logo_shadow.add_theme_font_size_override("font_size", 66)
-    logo_shadow.add_theme_color_override("font_color", Color("#07111c", 0.95))
-    logo_shadow.add_theme_constant_override("outline_size", 12)
-    logo_shadow.add_theme_color_override("font_outline_color", Color("#07111c", 0.95))
-    shade.add_child(logo_shadow)
-
-    var logo := Label.new()
-    logo.text = "KIWI ROUNDS"
-    logo.position = Vector2(0, 60)
-    logo.size = Vector2(1280, 82)
-    logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    logo.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    logo.add_theme_font_size_override("font_size", 64)
-    logo.add_theme_color_override("font_color", Color("#eafcff"))
-    logo.add_theme_constant_override("outline_size", 2)
-    logo.add_theme_color_override("font_outline_color", Color("#36e6df"))
-    shade.add_child(logo)
-
-    var subtitle := Label.new()
-    subtitle.text = "DUEL • ADAPT • WIN"
-    subtitle.position = Vector2(0, 143)
-    subtitle.size = Vector2(1280, 28)
-    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    subtitle.add_theme_font_size_override("font_size", 15)
-    subtitle.add_theme_color_override("font_color", Color("#9cb9c9"))
-    shade.add_child(subtitle)
-
-    var title_line := ColorRect.new()
-    title_line.position = Vector2(520, 181)
-    title_line.size = Vector2(240, 3)
-    title_line.color = Color("#36e6df", 0.82)
-    title_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    shade.add_child(title_line)
+    # Original Kiwi neon artwork, with its dark background keyed out.
+    var banner := TextureRect.new()
+    banner.name = "KiwiNeonBanner"
+    banner.texture = load("res://assets/1795552443370.jpg") as Texture2D
+    banner.position = Vector2(400, 34)
+    banner.size = Vector2(480, 270)
+    banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+    banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var key_shader := Shader.new()
+    key_shader.code = "shader_type canvas_item;\nvoid fragment() { vec4 c = texture(TEXTURE, UV) * COLOR; float v = max(max(c.r, c.g), c.b); float a = smoothstep(0.008, 0.09, v); COLOR = vec4(c.rgb, c.a * a); }"
+    var key_material := ShaderMaterial.new()
+    key_material.shader = key_shader
+    banner.material = key_material
+    shade.add_child(banner)
 
     # Lower menu dock keeps the logo and arena visible.
     var menu_panel := Panel.new()
