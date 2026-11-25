@@ -1128,7 +1128,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_a.menu_preview_mode = true
     bot_a.body_color = Color("#e8bd9c")
     bot_a.skin_style = "kiwi_human"
-    bot_a.position = Vector2(360, 598)
+    bot_a.position = Vector2(360, 577)
     bot_a.bot_accuracy = 0.86
     bot_a.move_speed = 430.0
     bot_a.pulse_force = 610.0
@@ -1138,6 +1138,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_a.reload_duration = 1.1
     bot_a.bot_think = 0.04
     stage.add_child(bot_a)
+    bot_a.process_mode = Node.PROCESS_MODE_ALWAYS
     bot_a.set_physics_process(true)
 
     var bot_b: ArenaPlayer = PLAYER_SCRIPT.new()
@@ -1145,7 +1146,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_b.is_bot = true
     bot_b.menu_preview_mode = true
     bot_b.body_color = Color("#ff6fae")
-    bot_b.position = Vector2(920, 598)
+    bot_b.position = Vector2(920, 577)
     bot_b.bot_accuracy = 0.86
     bot_b.move_speed = 430.0
     bot_b.pulse_force = 610.0
@@ -1155,6 +1156,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_b.reload_duration = 1.1
     bot_b.bot_think = 0.04
     stage.add_child(bot_b)
+    bot_b.process_mode = Node.PROCESS_MODE_ALWAYS
     bot_b.set_physics_process(true)
     bot_a.target = bot_b
     bot_b.target = bot_a
