@@ -389,6 +389,37 @@ func _add_platform(at: Vector2, dimensions: Vector2) -> void:
     visual.polygon = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(-dimensions.x/2,dimensions.y/2)])
     visual.color = arena_platform_color
     body.add_child(visual)
+    # Layered bevels and small illuminated insets give platforms a machined
+    # arcade-hardware look without changing their collision geometry.
+    var top_face := Polygon2D.new()
+    top_face.polygon = PackedVector2Array([
+        Vector2(-dimensions.x * 0.5 + 3.0, -dimensions.y * 0.5 + 3.0),
+        Vector2(dimensions.x * 0.5 - 3.0, -dimensions.y * 0.5 + 3.0),
+        Vector2(dimensions.x * 0.5 - 8.0, -dimensions.y * 0.5 + dimensions.y * 0.42),
+        Vector2(-dimensions.x * 0.5 + 8.0, -dimensions.y * 0.5 + dimensions.y * 0.42)
+    ])
+    top_face.color = Color(arena_accent.lightened(0.35), 0.10)
+    body.add_child(top_face)
+    var side_bevel := Line2D.new()
+    side_bevel.points = PackedVector2Array([
+        Vector2(-dimensions.x * 0.5 + 2.0, dimensions.y * 0.5 - 2.0),
+        Vector2(dimensions.x * 0.5 - 2.0, dimensions.y * 0.5 - 2.0)
+    ])
+    side_bevel.width = 1.4
+    side_bevel.default_color = Color("#d9faff", 0.16)
+    side_bevel.antialiased = true
+    body.add_child(side_bevel)
+    var inset_count := clampi(int(dimensions.x / 62.0), 1, 8)
+    for inset_index in range(inset_count):
+        var inset_x := -dimensions.x * 0.5 + 18.0 + float(inset_index) * ((dimensions.x - 36.0) / float(maxi(1, inset_count - 1)))
+        var inset := Line2D.new()
+        inset.points = PackedVector2Array([
+            Vector2(inset_x, -dimensions.y * 0.5 + 5.0),
+            Vector2(inset_x + 7.0, -dimensions.y * 0.5 + 5.0)
+        ])
+        inset.width = 2.0
+        inset.default_color = Color(arena_accent.lightened(0.45), 0.48)
+        body.add_child(inset)
     var lower_glow := Polygon2D.new()
     lower_glow.polygon = PackedVector2Array([Vector2(-dimensions.x/2,dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2+5),Vector2(-dimensions.x/2,dimensions.y/2+5)])
     lower_glow.color = Color(arena_accent.darkened(0.18),0.55)
