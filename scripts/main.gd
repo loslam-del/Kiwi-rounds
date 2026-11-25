@@ -232,6 +232,20 @@ func _draw() -> void:
     draw_circle(Vector2(640,450),250.0,Color(0.28,0.62,0.68,0.025))
     draw_arc(Vector2(640,470),430,PI,TAU,80,Color(0.38,0.65,0.82,0.12),2.0,true)
     draw_arc(Vector2(640,470),520,PI,TAU,80,Color(0.38,0.55,0.77,0.06),2.0,true)
+    # Floating particles and energy ribbons keep all map themes visually related.
+    for i in range(34):
+        var seed_x := float((i * 197 + 83) % 1260) + 10.0
+        var seed_y := float((i * 113 + 47) % 620) + 24.0
+        var px := fposmod(seed_x + background_time * (9.0 + float(i % 5) * 3.0), 1280.0)
+        var py := seed_y + sin(background_time * 0.7 + float(i) * 1.4) * 13.0
+        var shimmer := 0.12 + (sin(background_time * 2.4 + float(i)) + 1.0) * 0.10
+        draw_circle(Vector2(px, py), 1.2 + float(i % 3) * 0.45, Color(arena_accent, shimmer))
+    for i in range(4):
+        var ribbon_y := 150.0 + float(i) * 105.0 + sin(background_time * 0.55 + float(i)) * 14.0
+        var ribbon_x := fposmod(background_time * (34.0 + float(i) * 11.0) + float(i) * 310.0, 1500.0) - 110.0
+        draw_line(Vector2(ribbon_x, ribbon_y), Vector2(ribbon_x + 120.0, ribbon_y - 20.0), Color(arena_accent, 0.10), 1.5, true)
+    var pulse_alpha := 0.10 + (sin(background_time * 1.8) + 1.0) * 0.035
+    draw_arc(Vector2(640.0, 468.0), 300.0 + sin(background_time * 0.8) * 8.0, PI, TAU, 96, Color(arena_accent, pulse_alpha), 2.0, true)
     draw_rect(Rect2(0,0,1280,5),arena_accent)
     draw_rect(Rect2(0,700,1280,20),Color("#0b111b"))
     draw_line(Vector2(0,700),Vector2(1280,700),arena_accent.darkened(0.15),2.0)
