@@ -500,12 +500,32 @@ func _get_skins() -> Array[Dictionary]:
         all_upgrades.append_array(mod_loader.upgrades)
         mods_loaded = true
     var skins: Array[Dictionary] = [
-        {"name":"Бирюзовый","color":"#39d6c5"},
-        {"name":"Лазурный","color":"#4b9cff"},
-        {"name":"Фиолетовый","color":"#b47cff"},
-        {"name":"Золотой","color":"#ffc857"},
-        {"name":"Розовый","color":"#ff78b7"},
-        {"id":"kiwi_araga","name":"Киви Арага","color":"#e9c5a8","style":"kiwi_human"}
+        {"id":"kiwi_araga","name":"Киви Арага","color":"#e9c5a8","style":"kiwi_human"},
+        {"id":"kiwi_mascot","name":"Киви-маскот","color":"#75d65a","style":"kiwi"},
+        {"name":"Неон","color":"#39d6c5"},{"name":"Лазурь","color":"#4b9cff"},
+        {"name":"Аметист","color":"#b47cff"},{"name":"Золото","color":"#ffc857"},
+        {"name":"Пульс","color":"#ff78b7"},{"name":"Коралловый","color":"#ff765e"},
+        {"name":"Лайм","color":"#a8e650"},{"name":"Ледяной","color":"#a7eaff"},
+        {"name":"Рубин","color":"#d93658"},{"name":"Сапфир","color":"#315edb"},
+        {"name":"Мята","color":"#7fffd4"},{"name":"Манго","color":"#ffad42"},
+        {"name":"Космос","color":"#6250a8"},{"name":"Графит","color":"#65717d"},
+        {"name":"Снег","color":"#e7f2f5"},{"name":"Обсидиан","color":"#343a50"},
+        {"name":"Клубника","color":"#ef476f"},{"name":"Черника","color":"#5965bd"},
+        {"name":"Арбуз","color":"#4fbd79"},{"name":"Лава","color":"#f15a24"},
+        {"name":"Полярная звезда","color":"#d2f3ff"},{"name":"Радиант","color":"#f4df6b"},
+        {"name":"Токсик","color":"#8bd448"},{"name":"Электрик","color":"#42c9ff"},
+        {"name":"Закат","color":"#ff8066"},{"name":"Рассвет","color":"#ffb8d2"},
+        {"name":"Виноград","color":"#7446a8"},{"name":"Кибер","color":"#e34cff"},
+        {"name":"Аквамарин","color":"#38c8b5"},{"name":"Медный","color":"#bd704b"},
+        {"name":"Стальной","color":"#8da3b8"},{"name":"Песочный","color":"#d8b77b"},
+        {"name":"Лепесток","color":"#f18bb7"},{"name":"Лесной","color":"#347653"},
+        {"name":"Грозовой","color":"#586b9b"},{"name":"Мороз","color":"#76c9e8"},
+        {"name":"Плазма","color":"#b94cff"},{"name":"Импульс","color":"#f3ed58"},
+        {"name":"Спектр","color":"#ee6bce"},{"name":"Туман","color":"#9aa8b8"},
+        {"name":"Дракон","color":"#b63838"},{"name":"Призрак","color":"#c7d4e5"},
+        {"name":"Пиксель","color":"#58d4a0"},{"name":"Ретро","color":"#e6a15c"},
+        {"name":"Галактика","color":"#7b65d8"},{"name":"Хром","color":"#b8c5ce"},
+        {"name":"Вулкан","color":"#e64b32"},{"name":"Северное сияние","color":"#56d8bd"}
     ]
     skins.append_array(mod_loader.skins)
     return skins
@@ -1103,88 +1123,158 @@ func _show_main_menu() -> void:
 
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color(0, 0, 0, 0)
+    shade.color = Color("#10192b")
     shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
     shade.modulate.a = 0.0
     ui.add_child(shade)
     overlay = shade
 
-    # Full-screen live arena is created first, so all menu controls render above it.
+    # Main menu stage uses only the game's own Kiwi characters.
     _create_menu_bot_preview(shade)
     _create_menu_record(shade)
 
-    # Recreate the banner as a centered, fixed-size control.
-    _create_menu_banner(shade)
+    var tint := ColorRect.new()
+    tint.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    tint.color = Color(0.025,0.045,0.085,0.48)
+    tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    shade.add_child(tint)
 
-    # Premium neon command dock: clear hierarchy, more breathing room and
-    # compact secondary actions, while keeping the banner unobstructed.
-    var menu_panel := Panel.new()
-    menu_panel.name = "MainMenuCommandDock"
-    menu_panel.position = Vector2(300, 410)
-    menu_panel.size = Vector2(680, 294)
-    var menu_style := StyleBoxFlat.new()
-    menu_style.bg_color = Color("#07111f", 0.91)
-    menu_style.border_color = Color("#36e6df", 0.92)
-    menu_style.set_border_width_all(2)
-    menu_style.set_corner_radius_all(28)
-    menu_style.shadow_color = Color("#36e6df", 0.30)
-    menu_style.shadow_size = 30
-    menu_style.shadow_offset = Vector2(0, 7)
-    menu_style.content_margin_left = 22.0
-    menu_style.content_margin_right = 22.0
-    menu_panel.add_theme_stylebox_override("panel", menu_style)
-    shade.add_child(menu_panel)
+    var top := Panel.new()
+    top.position = Vector2(26,20)
+    top.size = Vector2(900,72)
+    var top_style := StyleBoxFlat.new()
+    top_style.bg_color = Color("#101d31",0.94)
+    top_style.border_color = Color("#70e9df",0.85)
+    top_style.set_border_width_all(2)
+    top_style.set_corner_radius_all(20)
+    top.add_theme_stylebox_override("panel",top_style)
+    shade.add_child(top)
 
-    var menu_kicker := Label.new()
-    menu_kicker.text = "KIWI ROUNDS  /  COMBAT SYSTEM"
-    menu_kicker.position = Vector2(330, 420)
-    menu_kicker.size = Vector2(620, 18)
-    menu_kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    menu_kicker.add_theme_font_size_override("font_size", 10)
-    menu_kicker.add_theme_color_override("font_color", Color("#8aa7bb"))
-    menu_kicker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    shade.add_child(menu_kicker)
+    var logo := Label.new()
+    logo.text = "KIWI  ROUNDS"
+    logo.position = Vector2(52,30)
+    logo.size = Vector2(300,48)
+    logo.add_theme_font_size_override("font_size",34)
+    logo.add_theme_color_override("font_color",Color("#f5fbff"))
+    shade.add_child(logo)
 
-    var play := _add_button("▶     НАЧАТЬ СРАЖЕНИЕ", Vector2(340, 448), Vector2(600, 58), shade)
-    play.add_theme_font_size_override("font_size", 22)
-    play.add_theme_stylebox_override("normal", _menu_button_style(Color("#36e6df"), Color("#c0fff5")))
-    play.add_theme_stylebox_override("hover", _menu_button_style(Color("#73fff0"), Color.WHITE))
-    play.add_theme_stylebox_override("pressed", _menu_button_style(Color("#1caaa9"), Color("#eaffff")))
-    play.add_theme_color_override("font_color", Color("#06151e"))
+    var season := Label.new()
+    season.text = "АРЕНА • СЕЗОН 01"
+    season.position = Vector2(360,39)
+    season.size = Vector2(260,30)
+    season.add_theme_font_size_override("font_size",15)
+    season.add_theme_color_override("font_color",Color("#83eee0"))
+    shade.add_child(season)
+
+    var play_panel := Panel.new()
+    play_panel.position = Vector2(300,470)
+    play_panel.size = Vector2(600,205)
+    var play_style := StyleBoxFlat.new()
+    play_style.bg_color = Color("#111e32",0.95)
+    play_style.border_color = Color("#e6c85b",0.9)
+    play_style.set_border_width_all(2)
+    play_style.set_corner_radius_all(26)
+    play_style.shadow_color = Color("#000000",0.5)
+    play_style.shadow_size = 24
+    play_panel.add_theme_stylebox_override("panel",play_style)
+    shade.add_child(play_panel)
+
+    var callout := Label.new()
+    callout.text = "ГОТОВ К СЛЕДУЮЩЕМУ РАУНДУ?"
+    callout.position = Vector2(320,480)
+    callout.size = Vector2(560,28)
+    callout.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    callout.add_theme_font_size_override("font_size",15)
+    callout.add_theme_color_override("font_color",Color("#f6d96c"))
+    shade.add_child(callout)
+
+    var play := _add_button("ИГРАТЬ",Vector2(350,518),Vector2(500,72),shade)
+    play.add_theme_font_size_override("font_size",30)
+    play.add_theme_stylebox_override("normal",_menu_button_style(Color("#f4ce58"),Color("#fff1a6")))
+    play.add_theme_stylebox_override("hover",_menu_button_style(Color("#ffe27a"),Color.WHITE))
+    play.add_theme_color_override("font_color",Color("#20283a"))
     play.pressed.connect(_show_mode_menu)
 
-    var skins := _add_button("✦   СКИНЫ", Vector2(340, 520), Vector2(292, 50), shade)
-    skins.add_theme_font_size_override("font_size", 15)
-    skins.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
-    skins.add_theme_stylebox_override("hover", _menu_button_style(Color("#263d60"), Color("#b69cff")))
-    skins.add_theme_color_override("font_color", Color("#e8f6ff"))
-    skins.pressed.connect(_open_skins)
+    var cards := _add_button("КАРТОЧКИ",Vector2(350,605),Vector2(240,48),shade)
+    cards.add_theme_font_size_override("font_size",17)
+    cards.add_theme_stylebox_override("normal",_menu_button_style(Color("#263b5c"),Color("#8c9dff")))
+    cards.add_theme_color_override("font_color",Color.WHITE)
+    cards.pressed.connect(_open_training_cards)
 
-    var settings := _add_button("⚙   НАСТРОЙКИ", Vector2(648, 520), Vector2(292, 50), shade)
-    settings.add_theme_font_size_override("font_size", 15)
-    settings.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#36e6df")))
-    settings.add_theme_stylebox_override("hover", _menu_button_style(Color("#263d60"), Color("#8afff4")))
-    settings.add_theme_color_override("font_color", Color("#e8f6ff"))
+    var shop := _add_button("МАГАЗИН СКИНОВ",Vector2(610,605),Vector2(240,48),shade)
+    shop.add_theme_font_size_override("font_size",16)
+    shop.add_theme_stylebox_override("normal",_menu_button_style(Color("#263b5c"),Color("#f4ce58")))
+    shop.add_theme_color_override("font_color",Color.WHITE)
+    shop.pressed.connect(_open_skins)
+
+    var news_panel := Panel.new()
+    news_panel.position = Vector2(950,190)
+    news_panel.size = Vector2(300,450)
+    var news_style := StyleBoxFlat.new()
+    news_style.bg_color = Color("#101d31",0.94)
+    news_style.border_color = Color("#7d9dff",0.88)
+    news_style.set_border_width_all(2)
+    news_style.set_corner_radius_all(22)
+    news_panel.add_theme_stylebox_override("panel",news_style)
+    shade.add_child(news_panel)
+
+    var news_title := Label.new()
+    news_title.text = "НОВОСТИ"
+    news_title.position = Vector2(972,210)
+    news_title.size = Vector2(256,42)
+    news_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    news_title.add_theme_font_size_override("font_size",25)
+    news_title.add_theme_color_override("font_color",Color("#f5d66b"))
+    shade.add_child(news_title)
+
+    var news_items := [
+        ["01  •  НОВЫЙ СЕЗОН","Арена открыта! Собирай карточки и готовься к новым боям."],
+        ["02  •  МАГАЗИН","В коллекции уже 50 оригинальных обликов Kiwi Rounds."],
+        ["03  •  ОБНОВЛЕНИЕ","Неоновые арены, эффекты попаданий и мобильное управление."]
+    ]
+    var news_y := 270.0
+    for item in news_items:
+        var card := Panel.new()
+        card.position = Vector2(970,news_y)
+        card.size = Vector2(260,100)
+        var card_style := StyleBoxFlat.new()
+        card_style.bg_color = Color("#1b2b45",0.96)
+        card_style.border_color = Color("#5e789e",0.65)
+        card_style.set_border_width_all(1)
+        card_style.set_corner_radius_all(14)
+        card.add_theme_stylebox_override("panel",card_style)
+        shade.add_child(card)
+        var heading := Label.new()
+        heading.text = item[0]
+        heading.position = Vector2(985,news_y+9)
+        heading.size = Vector2(230,24)
+        heading.add_theme_font_size_override("font_size",13)
+        heading.add_theme_color_override("font_color",Color("#8debe2"))
+        shade.add_child(heading)
+        var body := Label.new()
+        body.text = item[1]
+        body.position = Vector2(985,news_y+34)
+        body.size = Vector2(230,58)
+        body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        body.add_theme_font_size_override("font_size",12)
+        body.add_theme_color_override("font_color",Color("#e2eaf5"))
+        shade.add_child(body)
+        news_y += 112.0
+
+    var settings := _add_button("⚙",Vector2(850,30),Vector2(58,52),shade)
+    settings.add_theme_font_size_override("font_size",24)
+    settings.add_theme_stylebox_override("normal",_menu_button_style(Color("#1b2b45"),Color("#72e9df")))
     settings.pressed.connect(_show_settings)
 
-    var mods := _add_button("▣   ЦЕНТР МОДИФИКАЦИЙ", Vector2(340, 580), Vector2(600, 44), shade)
-    mods.add_theme_font_size_override("font_size", 14)
-    mods.add_theme_stylebox_override("normal", _menu_button_style(Color("#111e31"), Color("#8b67ff")))
-    mods.add_theme_stylebox_override("hover", _menu_button_style(Color("#273052"), Color("#b69cff")))
-    mods.add_theme_color_override("font_color", Color("#e8f6ff"))
-    mods.pressed.connect(_open_mods)
-
     var footer := Label.new()
-    footer.text = "ЛОКАЛЬНАЯ АРЕНА  •  ВЫБИРАЙ РЕЖИМ И ВЫХОДИ НА БОЙ"
-    footer.position = Vector2(330, 665)
-    footer.size = Vector2(620, 18)
+    footer.text = "KIWI ROUNDS  •  ВЫБИРАЙ КАРТЫ, СОБИРАЙ ОБЛИКИ, ПОБЕЖДАЙ"
+    footer.position = Vector2(300,685)
+    footer.size = Vector2(600,20)
     footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    footer.add_theme_font_size_override("font_size", 9)
-    footer.add_theme_color_override("font_color", Color("#7890a6"))
-    footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    footer.add_theme_font_size_override("font_size",10)
+    footer.add_theme_color_override("font_color",Color("#9db2c9"))
     shade.add_child(footer)
     _animate_overlay_in(shade)
-
 
 func _animate_overlay_in(target: Control) -> void:
     if not is_instance_valid(target):
@@ -1515,7 +1605,8 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_b.name = "MenuBotPink"
     bot_b.is_bot = true
     bot_b.menu_preview_mode = true
-    bot_b.body_color = Color("#ff6fae")
+    bot_b.body_color = Color("#79d85d")
+    bot_b.skin_style = "kiwi"
     bot_b.position = Vector2(920, 577)
     bot_b.menu_spawn_position = bot_b.position
     bot_b.menu_strafe_phase = 2.65
@@ -2304,7 +2395,7 @@ func _open_skins() -> void:
     _add_menu_ornaments(shade)
 
     var title := Label.new()
-    title.text = "ВЫБОР БОЙЦА"
+    title.text = "МАГАЗИН ОБЛИКОВ"
     title.position = Vector2(0, 28)
     title.size = Vector2(1280, 54)
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -2352,7 +2443,7 @@ func _open_skins() -> void:
     preview_area.add_child(fighter)
 
     var name_label := Label.new()
-    name_label.text = str(skin.get("name", skin.get("id", "MOD"))).to_upper()
+    name_label.text = str(skin.get("name", skin.get("id", "MOD"))).to_upper() + "  •  ОБЛИК " + str(skin_index + 1)
     name_label.position = Vector2(300, 490)
     name_label.size = Vector2(680, 48)
     name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
