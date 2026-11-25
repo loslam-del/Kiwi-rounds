@@ -1586,6 +1586,8 @@ func _add_menu_battle_scene(parent: Control) -> void:
     character_3.set_physics_process(false)
     character_3.set_process(false)
     parent.add_child(character_3)
+    character_3.set_physics_process(false)
+    character_3.set_process(false)
 
     var near_cover_shadow := Polygon2D.new()
     near_cover_shadow.polygon = PackedVector2Array([
@@ -1619,6 +1621,8 @@ func _add_menu_battle_scene(parent: Control) -> void:
     character_1.set_physics_process(false)
     character_1.set_process(false)
     parent.add_child(character_1)
+    character_1.set_physics_process(false)
+    character_1.set_process(false)
 
     var shooter: ArenaPlayer = PLAYER_SCRIPT.new()
     shooter.name = "MenuForegroundShooter"
@@ -1631,6 +1635,8 @@ func _add_menu_battle_scene(parent: Control) -> void:
     shooter.set_physics_process(false)
     shooter.set_process(false)
     parent.add_child(shooter)
+    shooter.set_physics_process(false)
+    shooter.set_process(false)
 
     # Layered projectile trail points toward character 1, with a soft muzzle flash.
     var trail_glow := Line2D.new()
