@@ -200,62 +200,32 @@ func _boot_game() -> void:
     queue_redraw()
 
 func _draw() -> void:
-    draw_rect(Rect2(0,0,1280,720),arena_bg_bottom.darkened(0.08))
-    draw_rect(Rect2(0,0,1280,470),arena_bg_top)
-    draw_rect(Rect2(0,470,1280,250),arena_bg_bottom)
-    _draw_arena_backdrop()
+    # Anime-inspired painted arena: layered twilight sky, distant silhouettes,
+    # drifting petals and cinematic speed accents. Character rendering is untouched.
+    draw_rect(Rect2(0,0,1280,720),Color("#17243d"))
+    var sky_top := Color("#172943")
+    var sky_low := Color("#704b75")
+    for band in range(12):
+        var t := float(band) / 11.0
+        var band_color := sky_top.lerp(sky_low,t)
+        draw_rect(Rect2(0, float(band) * 42.0, 1280, 44), band_color)
+    _draw_anime_arena_backdrop()
+    for i in range(18):
+        var x := float((i * 197 + 61) % 1280)
+        var y := fposmod(float((i * 113 + 37) % 700) + background_time * (8.0 + float(i % 4) * 3.0), 720.0)
+        var sway := sin(background_time * 0.7 + float(i)) * 14.0
+        var petal := Vector2(x + sway, y)
+        draw_set_transform(petal, background_time * (0.25 + float(i % 3) * 0.08), Vector2.ONE)
+        draw_colored_polygon(PackedVector2Array([Vector2(-4,0),Vector2(0,-2),Vector2(5,0),Vector2(0,3)]), Color("#ffd5e4", 0.22 + float(i % 4) * 0.06))
+        draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+    # Thin hand-painted action streaks around the arena edges.
     for i in range(7):
-        var y := 80.0 + float(i)*74.0
-        draw_line(Vector2(0,y),Vector2(1280,y),Color(0.35,0.47,0.62,0.07),1.0)
-    for i in range(25):
-        var x := float((i*173+61)%1280)
-        var base_y := float((i*97+43)%650)
-        var y := fposmod(base_y + sin(background_time * 0.7 + float(i)) * 5.0, 660.0)
-        var twinkle := 0.12 + (sin(background_time * 2.0 + float(i) * 1.7) + 1.0) * 0.09
-        draw_circle(Vector2(x,y),1.5 if i%3==0 else 1.0,Color(0.72,0.88,1.0,twinkle))
-    # Architectural light columns and a subtle animated arena grid.
-    for i in range(13):
-        var gx := 54.0 + float(i) * 98.0
-        var sway := sin(background_time * 0.42 + float(i) * 0.7) * 10.0
-        draw_line(Vector2(gx+sway,70),Vector2(gx-sway*0.5,680),Color(0.38,0.72,0.82,0.025),1.0)
-    for i in range(6):
-        var gy := 520.0 + float(i) * 28.0
-        draw_line(Vector2(0,gy),Vector2(1280,gy),Color(arena_accent,0.075),1.0)
-    # Neon arena treatment: brighter perspective grid, moving scan beams and
-    # soft accent rails make every map feel like a compact cyber arena.
-    for i in range(15):
-        var gx := float(i) * 96.0 + 24.0
-        draw_line(Vector2(gx,470.0),Vector2(640.0 + (gx - 640.0) * 2.15,700.0),Color(arena_accent,0.075),1.2)
-    var scan_x := fposmod(background_time * 150.0, 1500.0) - 110.0
-    draw_line(Vector2(scan_x,470.0),Vector2(scan_x + 260.0,700.0),Color(arena_accent,0.20),2.0,true)
-    draw_line(Vector2(0.0,468.0),Vector2(1280.0,468.0),Color(arena_accent,0.13),2.0,true)
-    draw_line(Vector2(0.0,696.0),Vector2(1280.0,696.0),Color(arena_accent,0.18),3.0,true)
-    draw_circle(Vector2(640.0,470.0),220.0,Color(arena_accent,0.018))
-    for i in range(8):
-        var orbit := 92.0 + float(i) * 22.0
-        var phase_offset := background_time * (0.16 if i % 2 == 0 else -0.12)
-        draw_arc(Vector2(640,435),orbit,phase_offset,phase_offset+PI*0.62,48,Color(0.42,0.82,0.78,0.045),1.2,true)
-    # Soft arena halos and a faint central light column.
-    draw_circle(Vector2(640,450),250.0,Color(0.28,0.62,0.68,0.025))
-    draw_arc(Vector2(640,470),430,PI,TAU,80,Color(0.38,0.65,0.82,0.12),2.0,true)
-    draw_arc(Vector2(640,470),520,PI,TAU,80,Color(0.38,0.55,0.77,0.06),2.0,true)
-    # Floating particles and energy ribbons keep all map themes visually related.
-    for i in range(34):
-        var seed_x := float((i * 197 + 83) % 1260) + 10.0
-        var seed_y := float((i * 113 + 47) % 620) + 24.0
-        var px := fposmod(seed_x + background_time * (9.0 + float(i % 5) * 3.0), 1280.0)
-        var py := seed_y + sin(background_time * 0.7 + float(i) * 1.4) * 13.0
-        var shimmer := 0.12 + (sin(background_time * 2.4 + float(i)) + 1.0) * 0.10
-        draw_circle(Vector2(px, py), 1.2 + float(i % 3) * 0.45, Color(arena_accent, shimmer))
-    for i in range(4):
-        var ribbon_y := 150.0 + float(i) * 105.0 + sin(background_time * 0.55 + float(i)) * 14.0
-        var ribbon_x := fposmod(background_time * (34.0 + float(i) * 11.0) + float(i) * 310.0, 1500.0) - 110.0
-        draw_line(Vector2(ribbon_x, ribbon_y), Vector2(ribbon_x + 120.0, ribbon_y - 20.0), Color(arena_accent, 0.10), 1.5, true)
-    var pulse_alpha := 0.10 + (sin(background_time * 1.8) + 1.0) * 0.035
-    draw_arc(Vector2(640.0, 468.0), 300.0 + sin(background_time * 0.8) * 8.0, PI, TAU, 96, Color(arena_accent, pulse_alpha), 2.0, true)
-    draw_rect(Rect2(0,0,1280,5),arena_accent)
-    draw_rect(Rect2(0,700,1280,20),Color("#0b111b"))
-    draw_line(Vector2(0,700),Vector2(1280,700),arena_accent.darkened(0.15),2.0)
+        var y := 115.0 + float(i) * 78.0
+        var drift := sin(background_time * 0.8 + float(i)) * 22.0
+        draw_line(Vector2(0,y+drift),Vector2(120.0 + float(i%3)*36.0,y-18.0+drift),Color("#f7b7d2",0.10),2.0,true)
+        draw_line(Vector2(1280,y-drift),Vector2(1160.0-float(i%3)*36.0,y+18.0-drift),Color("#a8dcff",0.09),2.0,true)
+    draw_rect(Rect2(0,700,1280,20),Color("#17233a"))
+    draw_line(Vector2(0,700),Vector2(1280,700),Color("#f2b8d0",0.55),2.0,true)
     if impact_flash > 0.0:
         draw_rect(Rect2(0,0,1280,720),Color(impact_flash_color, impact_flash * 0.13))
     if boot_loading:
@@ -263,11 +233,55 @@ func _draw() -> void:
         draw_string(ThemeDB.fallback_font,Vector2(0,300),"KIWI ROUNDS",HORIZONTAL_ALIGNMENT_CENTER,1280,68,Color("#f2f2f2"))
         draw_string(ThemeDB.fallback_font,Vector2(0,345),"ЗАПУСК ИГРЫ",HORIZONTAL_ALIGNMENT_CENTER,1280,18,Color("#aab4c4"))
         var center := Vector2(640,430)
-        draw_arc(center,27.0,boot_angle,boot_angle+4.4,48,Color("#d9ef70"),6.0,true)
+        draw_arc(center,27.0,boot_angle,boot_angle+4.4,48,Color("#f4b7d0"),6.0,true)
         draw_circle(center+Vector2(cos(boot_angle)*27.0,sin(boot_angle)*27.0),5.0,Color.WHITE)
         draw_string(ThemeDB.fallback_font,Vector2(0,500),boot_stage,HORIZONTAL_ALIGNMENT_CENTER,1280,18,Color("#aaaaaa"))
         draw_string(ThemeDB.fallback_font,Vector2(0,675),"Пожалуйста, подожди",HORIZONTAL_ALIGNMENT_CENTER,1280,15,Color("#777f8e"))
         return
+
+func _draw_anime_arena_backdrop() -> void:
+    # Distant mountains and layered Japanese-inspired skyline silhouettes.
+    for layer in range(3):
+        var base_y := 480.0 + float(layer) * 44.0
+        var points := PackedVector2Array([Vector2(0,base_y)])
+        for i in range(9):
+            var x := float(i) * 160.0
+            var peak := base_y - 65.0 - float((i * 43 + layer * 29) % 120)
+            points.append(Vector2(x + 80.0,peak))
+            points.append(Vector2(x + 160.0,base_y))
+        points.append(Vector2(1280,720))
+        points.append(Vector2(0,720))
+        draw_colored_polygon(points, [Color("#273c58",0.50),Color("#31415e",0.58),Color("#26364f",0.82)][layer])
+    # A soft sunset disc behind the action.
+    var sun_center := Vector2(640.0,300.0)
+    draw_circle(sun_center,112.0,Color("#ffb8c9",0.045))
+    draw_circle(sun_center,86.0,Color("#ffc4cb",0.10))
+    draw_circle(sun_center,70.0,Color("#f6b6c8",0.20))
+    for i in range(5):
+        var cloud_x := fposmod(float(i) * 295.0 + background_time * (5.0 + float(i % 2) * 3.0), 1500.0) - 100.0
+        var cloud_y := 130.0 + float((i * 47) % 155)
+        draw_line(Vector2(cloud_x,cloud_y),Vector2(cloud_x+90.0,cloud_y-5.0),Color("#e4c6df",0.16),3.0,true)
+        draw_line(Vector2(cloud_x+22.0,cloud_y+9.0),Vector2(cloud_x+122.0,cloud_y+4.0),Color("#f5d6e5",0.10),2.0,true)
+    # Distant sakura branches frame the arena without covering the fighters.
+    for side in [-1,1]:
+        var root := Vector2(0.0 if side < 0 else 1280.0, 250.0)
+        var tip := Vector2(190.0 if side < 0 else 1090.0, 105.0)
+        draw_line(root,tip,Color("#3a304d",0.72),9.0,true)
+        for twig in range(4):
+            var start := root.lerp(tip,0.35 + float(twig) * 0.14)
+            var finish := start + Vector2(35.0 if side < 0 else -35.0,-32.0 - float(twig%2)*18.0)
+            draw_line(start,finish,Color("#59415f",0.70),4.0,true)
+            for blossom in range(3):
+                var p := finish + Vector2(float(blossom-1)*11.0,-float(blossom%2)*8.0)
+                draw_circle(p,4.0,Color("#ffc8dc",0.30))
+    # Warm arena horizon and restrained floor perspective.
+    draw_line(Vector2(0,490),Vector2(1280,490),Color("#f4c0d3",0.22),2.0,true)
+    for i in range(13):
+        var x := float(i) * 106.0
+        draw_line(Vector2(640,490),Vector2(x,700),Color("#a8c9e8",0.075),1.2,true)
+    for i in range(5):
+        var y := 525.0 + float(i) * 35.0
+        draw_line(Vector2(0,y),Vector2(1280,y),Color("#d9c0df",0.055),1.0,true)
 
 func _make_arena(index: int) -> void:
     for old_platform in platform_nodes:
@@ -312,63 +326,7 @@ func _draw_menu_record() -> void:
     draw_circle(center, 3.0, Color("#101923"))
 
 func _draw_arena_backdrop() -> void:
-    var soft_accent := Color(arena_accent, 0.10)
-    match arena_theme:
-        "factory":
-            for i in range(8):
-                var x := 70.0 + float(i) * 165.0
-                var height := 110.0 + float((i * 47) % 170)
-                draw_rect(Rect2(x, 470.0 - height, 54.0, height), Color(arena_accent, 0.035))
-                draw_line(Vector2(x + 8.0, 470.0 - height), Vector2(x + 46.0, 470.0 - height), soft_accent, 3.0)
-        "sky":
-            for i in range(5):
-                var x := 120.0 + float(i) * 255.0 + sin(background_time * 0.22 + float(i)) * 18.0
-                var y := 145.0 + float((i * 61) % 150)
-                draw_circle(Vector2(x, y), 38.0, Color(0.76, 0.88, 1.0, 0.035))
-                draw_circle(Vector2(x + 30.0, y + 8.0), 26.0, Color(0.76, 0.88, 1.0, 0.03))
-        "jungle":
-            for i in range(9):
-                var x := float(i) * 165.0 + 20.0
-                var sway := sin(background_time * 0.5 + float(i)) * 8.0
-                draw_colored_polygon(PackedVector2Array([Vector2(x - 42.0, 490.0), Vector2(x + sway, 180.0 + float(i % 3) * 38.0), Vector2(x + 42.0, 490.0)]), Color(arena_accent, 0.045))
-                draw_line(Vector2(x + sway, 230.0), Vector2(x + sway, 500.0), Color(arena_accent, 0.07), 3.0)
-        "rift":
-            for i in range(7):
-                var radius := 90.0 + float(i) * 48.0
-                var phase_offset := background_time * (0.18 if i % 2 == 0 else -0.14)
-                draw_arc(Vector2(640.0, 390.0), radius, phase_offset, phase_offset + PI * 1.35, 48, Color(arena_accent, 0.075), 2.0, true)
-        "ice":
-            for i in range(8):
-                var x := 60.0 + float(i) * 170.0
-                var height := 100.0 + float((i * 53) % 145)
-                draw_colored_polygon(PackedVector2Array([Vector2(x - 34.0, 470.0), Vector2(x, 470.0 - height), Vector2(x + 34.0, 470.0)]), Color(arena_accent, 0.035))
-                draw_line(Vector2(x, 470.0 - height + 12.0), Vector2(x, 470.0), Color(0.82, 0.95, 1.0, 0.08), 1.5)
-        "sunset":
-            for i in range(5):
-                var radius := 70.0 + float(i) * 25.0
-                draw_arc(Vector2(1000.0, 250.0), radius, PI, TAU, 48, Color(arena_accent, 0.08), 2.0, true)
-        "crystal":
-            for i in range(10):
-                var x := 55.0 + float(i) * 130.0
-                var y := 155.0 + float((i * 37) % 180)
-                draw_colored_polygon(PackedVector2Array([Vector2(x, y - 34.0), Vector2(x + 12.0, y), Vector2(x, y + 34.0), Vector2(x - 12.0, y)]), Color(arena_accent, 0.09))
-        "volcano":
-            for i in range(6):
-                var x := 90.0 + float(i) * 225.0
-                var peak := 320.0 + float((i * 31) % 100)
-                draw_colored_polygon(PackedVector2Array([Vector2(x - 100.0, 500.0), Vector2(x, peak), Vector2(x + 100.0, 500.0)]), Color("#160f18", 0.32))
-                draw_line(Vector2(x - 8.0, peak + 20.0), Vector2(x + 8.0, peak + 20.0), Color(arena_accent, 0.22), 3.0)
-        "harbor":
-            for i in range(7):
-                var x := 70.0 + float(i) * 190.0
-                draw_line(Vector2(x, 170.0), Vector2(x, 480.0), Color(arena_accent, 0.055), 3.0)
-                draw_line(Vector2(x - 28.0, 210.0), Vector2(x + 28.0, 210.0), Color(arena_accent, 0.07), 2.0)
-        _:
-            for i in range(7):
-                var x := 90.0 + float(i) * 185.0
-                var height := 80.0 + float((i * 41) % 130)
-                draw_rect(Rect2(x, 470.0 - height, 42.0, height), Color(arena_accent, 0.025))
-
+    _draw_anime_arena_backdrop()
 
 func _add_side_wall(x: float) -> void:
     var wall := StaticBody2D.new()
