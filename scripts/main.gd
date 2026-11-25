@@ -962,7 +962,7 @@ func _create_menu_banner(parent: Control) -> void:
     banner.z_index = 2
 
     var key_shader := Shader.new()
-    key_shader.code = "shader_type canvas_item;\\nvoid fragment() { vec4 c = texture(TEXTURE, UV) * COLOR; float v = max(max(c.r, c.g), c.b); float a = smoothstep(0.012, 0.075, v); COLOR = vec4(c.rgb, c.a * a); }"
+    key_shader.code = "shader_type canvas_item;\nvoid fragment() { vec4 c = texture(TEXTURE, UV) * COLOR; float v = max(max(c.r, c.g), c.b); float a = smoothstep(0.012, 0.075, v); COLOR = vec4(c.rgb, c.a * a); }"
     var key_material := ShaderMaterial.new()
     key_material.shader = key_shader
     banner.material = key_material
