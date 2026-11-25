@@ -548,7 +548,7 @@ func _draw() -> void:
     var hip_front := Vector2(6.5, 8.0)
     # Shorten the visible leg reach while grounded so shoes sit on top of
     # the capsule's floor contact instead of dipping through thin platforms.
-    var leg_len := 19.5 if is_on_floor() else 23.0
+    var leg_len := 22.5 if is_on_floor() else 27.0
     var knee_back := hip_back + Vector2(sin(leg_back_angle) * leg_len, cos(leg_back_angle) * leg_len)
     var knee_front := hip_front + Vector2(sin(leg_front_angle) * leg_len, cos(leg_front_angle) * leg_len)
     var foot_back_angle := leg_back_angle + knee_back_angle
@@ -556,14 +556,15 @@ func _draw() -> void:
     var foot_back := knee_back + Vector2(sin(foot_back_angle) * leg_len, cos(foot_back_angle) * leg_len)
     var foot_front := knee_front + Vector2(sin(foot_front_angle) * leg_len, cos(foot_front_angle) * leg_len)
     if is_on_floor():
-        foot_back.y = minf(foot_back.y, 60.5)
-        foot_front.y = minf(foot_front.y, 60.5)
-    draw_line(hip_back, knee_back, outline, 10.0, true)
-    draw_line(hip_back, knee_back, dark, 6.0, true)
-    draw_line(knee_back, foot_back, outline, 9.0, true)
-    draw_line(knee_back, foot_back, dark, 5.5, true)
-    draw_line(foot_back + Vector2(-5,0), foot_back + Vector2(7,0), outline, 7.0, true)
-    draw_line(foot_back + Vector2(-4,0), foot_back + Vector2(6,0), dark, 4.0, true)
+        foot_back.y = minf(foot_back.y, 63.0)
+        foot_front.y = minf(foot_front.y, 63.0)
+    draw_line(hip_back, knee_back, outline, 11.5, true)
+    draw_line(hip_back, knee_back, dark, 7.0, true)
+    draw_circle(knee_back, 4.2, dark)
+    draw_line(knee_back, foot_back, outline, 10.5, true)
+    draw_line(knee_back, foot_back, dark, 6.5, true)
+    draw_line(foot_back + Vector2(-6,0), foot_back + Vector2(8,0), outline, 8.0, true)
+    draw_line(foot_back + Vector2(-5,0), foot_back + Vector2(7,0), dark, 4.8, true)
 
     var shoulder_back := Vector2(-12.0, -7.0)
     var shoulder_front := Vector2(12.0, -7.0)
@@ -584,13 +585,13 @@ func _draw() -> void:
         draw_line(center + Vector2(-2.5,5.0), center + Vector2(2.5,5.0), Color("#102536"), 1.5, true)
 
     # Near-side leg is in front of the torso, with a visible knee and foot.
-    draw_line(hip_front, knee_front, outline, 10.0, true)
-    draw_line(hip_front, knee_front, light, 6.0, true)
+    draw_line(hip_front, knee_front, outline, 11.5, true)
+    draw_line(hip_front, knee_front, light, 7.0, true)
     draw_circle(knee_front, 3.8, body_color.lightened(0.05))
-    draw_line(knee_front, foot_front, outline, 9.0, true)
-    draw_line(knee_front, foot_front, body_color, 5.4, true)
-    draw_line(foot_front + Vector2(-5,0), foot_front + Vector2(8,0), outline, 7.0, true)
-    draw_line(foot_front + Vector2(-4,0), foot_front + Vector2(7,0), light, 4.0, true)
+    draw_line(knee_front, foot_front, outline, 10.5, true)
+    draw_line(knee_front, foot_front, body_color, 6.5, true)
+    draw_line(foot_front + Vector2(-6,0), foot_front + Vector2(9,0), outline, 8.0, true)
+    draw_line(foot_front + Vector2(-5,0), foot_front + Vector2(8,0), light, 4.8, true)
     draw_circle(hip_front, 4.0, light)
 
     if kiwi_aura:
@@ -857,16 +858,19 @@ func _draw_two_hand_blaster(center: Vector2) -> void:
     support_hand.y = maxf(support_hand.y, center.y + 3.0)
     var shoulder_a := Vector2(-12.0, 3.0)
     var shoulder_b := Vector2(12.0, 3.0)
-    var elbow_a := shoulder_a.lerp(grip_hand, 0.52) + side * 3.5
-    var elbow_b := shoulder_b.lerp(support_hand, 0.52) - side * 3.5
+    # Elbows are spring-driven joints: they flex independently when running,
+    # aiming, recoiling and being hit, while hands remain connected to the blaster.
+    var elbow_a := shoulder_a.lerp(grip_hand, 0.50) + Vector2(sin(arm_back_angle) * 7.0, cos(elbow_back_angle) * 5.0) + side * 2.0
+    var elbow_b := shoulder_b.lerp(support_hand, 0.50) + Vector2(sin(arm_front_angle) * 7.0, cos(elbow_front_angle) * 5.0) - side * 2.0
     var arm_outline := Color("#142333")
     var arm_color := body_color.lightened(0.12)
     for arm_points in [[shoulder_a, elbow_a, grip_hand], [shoulder_b, elbow_b, support_hand]]:
-        draw_line(arm_points[0], arm_points[1], arm_outline, 8.5, true)
-        draw_line(arm_points[0], arm_points[1], arm_color, 5.2, true)
-        draw_line(arm_points[1], arm_points[2], arm_outline, 7.5, true)
-        draw_line(arm_points[1], arm_points[2], arm_color, 4.8, true)
-        draw_circle(arm_points[1], 3.2, arm_color)
+        draw_line(arm_points[0], arm_points[1], arm_outline, 9.0, true)
+        draw_line(arm_points[0], arm_points[1], arm_color, 5.8, true)
+        draw_line(arm_points[1], arm_points[2], arm_outline, 8.0, true)
+        draw_line(arm_points[1], arm_points[2], arm_color, 5.2, true)
+        draw_circle(arm_points[1], 4.0, arm_outline)
+        draw_circle(arm_points[1], 2.8, arm_color)
         draw_circle(arm_points[2], 3.6, Color("#e9c9aa"))
     draw_circle(shoulder_a, 3.8, arm_color)
     draw_circle(shoulder_b, 3.8, arm_color)
