@@ -107,12 +107,22 @@ var online_room_name_input: LineEdit
 var online_password_input: LineEdit
 var music_player: AudioStreamPlayer
 var music_tracks: Array[String] = [
-    "res://music/Moetwee, Differentwrld - Help Me (hitmo.net).mp3",
-    "res://music/dabbackwood - заново [mp3uk.net] (1).mp3",
-    "res://music/onda-andar-type-london (1).mp3",
+    "res://music/влад пиво, ЯРЧЕ СОЛНЦА, besoboy - Пообещай (hitmo.net).mp3",
     "res://music/rabzyyx - im so crazy for you [mp3uk.net].mp3",
-    "res://music/zxcursed_x_shadowraze_-_metamorphosis_3_x_chronospher_(mp3.pm).mp3",
-    "res://music/влад пиво, ЯРЧЕ СОЛНЦА, besoboy - Пообещай (hitmo.net).mp3"
+    "res://music/dabbackwood - заново [mp3uk.net] (1).mp3",
+    "res://music/akkiemi_-_truth_yandere_(mp3.pm).aac",
+    "res://music/Moetwee, Differentwrld - Help Me (hitmo.net).mp3",
+    "res://music/onda-andar-type-london (1).mp3",
+    "res://music/zxcursed_x_shadowraze_-_metamorphosis_3_x_chronospher_(mp3.pm).mp3"
+]
+var music_display_names: Array[String] = [
+    "Пообещай — besoboy, влад пиво, ЯРЧЕ СОЛНЦА",
+    "I'm so crazy for youuu — Rebzyyx",
+    "заново (slowed) — dabbackwood",
+    "truth yandere^^ — akkiemi",
+    "help me — differentwrld, moetwee",
+    "type london — onda andar",
+    "METAMORPHOSIS 3 — zxcursed, Sadfriendd, INTERWORLD"
 ]
 var music_last_index := -1
 var menu_record_needle: Control
@@ -657,6 +667,9 @@ func _play_music_index(index: int) -> void:
     var stream := load(music_tracks[music_last_index]) as AudioStream
     if stream == null:
         push_warning("Не удалось загрузить музыку: " + music_tracks[music_last_index])
+        if music_last_index == 3:
+            # AAC import is not available on every Godot Android export; skip it gracefully.
+            _play_music_index((music_last_index + 1) % music_tracks.size())
         return
     music_player.stream = stream
     music_player.play()
@@ -665,7 +678,7 @@ func _play_music_index(index: int) -> void:
 func _update_music_track_button() -> void:
     if not is_instance_valid(music_track_button) or music_last_index < 0 or music_last_index >= music_tracks.size():
         return
-    var track_name := music_tracks[music_last_index].get_file().get_basename()
+    var track_name := music_display_names[music_last_index] if music_last_index < music_display_names.size() else "Трек"
     music_track_button.text = "♫  " + track_name + "   ›"
     music_track_button.tooltip_text = "Нажми, чтобы переключить трек"
 
