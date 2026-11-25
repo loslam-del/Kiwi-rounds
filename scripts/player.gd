@@ -554,93 +554,99 @@ func _draw() -> void:
         draw_set_transform(Vector2.ZERO,0.0,Vector2(facing,1.0))
 
     if skin_style == "kiwi_human":
-        var hair := Color("#b8ae9e")
+        var hair := Color("#c9c0b2")
         var hair_light := Color("#f4eddf")
         var hair_shadow := Color("#81796f")
         var green := Color("#477b4c")
         var green_dark := Color("#294c38")
         var green_light := Color("#78a76a")
-        # Keep the original ROUNDS fighter body and limbs; only add Kiwi's hairstyle and cap.
-        # The body itself uses a natural human skin tone set by the menu preview.
-        # No large rear hair dome: keep the silhouette close to the regular ROUNDS head.
-        draw_arc(center + Vector2(0,-27), 18.0, PI*1.08, PI*1.92, 32, hair_shadow, 4.0, true)
+        # Hair is anchored to the round head: the lower edge overlaps the head
+        # slightly so it never looks like a floating wig.
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-23,-25),center+Vector2(-22,-39),
-            center+Vector2(-14,-50),center+Vector2(-2,-54),
-            center+Vector2(12,-50),center+Vector2(22,-39),
-            center+Vector2(23,-25),center+Vector2(14,-30),
-            center+Vector2(7,-32),center+Vector2(1,-27),
-            center+Vector2(-6,-32),center+Vector2(-14,-28)
+            center+Vector2(-18,-11), center+Vector2(-19,-24),
+            center+Vector2(-14,-35), center+Vector2(-6,-41),
+            center+Vector2(5,-42), center+Vector2(15,-35),
+            center+Vector2(19,-24), center+Vector2(17,-10),
+            center+Vector2(10,-16), center+Vector2(4,-12),
+            center+Vector2(-3,-18), center+Vector2(-10,-12)
         ]),hair_shadow)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-20,-27),center+Vector2(-19,-39),
-            center+Vector2(-12,-47),center+Vector2(-1,-51),
-            center+Vector2(11,-47),center+Vector2(19,-38),
-            center+Vector2(20,-27),center+Vector2(12,-31),
-            center+Vector2(6,-34),center+Vector2(0,-29),
-            center+Vector2(-7,-33),center+Vector2(-13,-29)
+            center+Vector2(-16,-12), center+Vector2(-17,-24),
+            center+Vector2(-12,-33), center+Vector2(-5,-38),
+            center+Vector2(5,-39), center+Vector2(13,-33),
+            center+Vector2(17,-23), center+Vector2(15,-12),
+            center+Vector2(9,-17), center+Vector2(3,-14),
+            center+Vector2(-3,-19), center+Vector2(-9,-14)
         ]),hair)
+        # Soft highlights give the fringe visible layers beneath the cap.
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-16,-42),center+Vector2(-8,-49),
-            center+Vector2(-3,-48),center+Vector2(-8,-35),
-            center+Vector2(-15,-31)
+            center+Vector2(-14,-28), center+Vector2(-8,-36),
+            center+Vector2(-3,-36), center+Vector2(-7,-24),
+            center+Vector2(-13,-19)
         ]),hair_light)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(3,-49),center+Vector2(12,-45),
-            center+Vector2(18,-37),center+Vector2(11,-35),
-            center+Vector2(5,-39)
+            center+Vector2(2,-37), center+Vector2(9,-34),
+            center+Vector2(14,-26), center+Vector2(8,-22),
+            center+Vector2(3,-28)
         ]),hair_light)
-        # Long side locks fall past the shoulders and sway with the running animation.
-        var hair_sway := sin(animation_time * 0.8) * (2.0 if moving else 0.7)
+        # Long side locks follow the head contour and fall beside the body.
+        var hair_sway := sin(animation_time * 0.8) * (1.6 if moving else 0.4)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-21,-29), center+Vector2(-25,-13),
-            center+Vector2(-25,39), center+Vector2(-18,44),
-            center+Vector2(-12,34), center+Vector2(-15,4),
-            center+Vector2(-14,-18)
+            center+Vector2(-16,-21), center+Vector2(-23,-12),
+            center+Vector2(-24,14), center+Vector2(-20,34),
+            center+Vector2(-14,39), center+Vector2(-12,27),
+            center+Vector2(-14,5), center+Vector2(-11,-13)
         ]),hair_shadow)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-19,-28), center+Vector2(-22,-12),
-            center+Vector2(-22,34), center+Vector2(-17,38),
-            center+Vector2(-14,29), center+Vector2(-17,2),
-            center+Vector2(-16,-18)
+            center+Vector2(-15,-20), center+Vector2(-20,-11),
+            center+Vector2(-21,13), center+Vector2(-18,31),
+            center+Vector2(-14,34), center+Vector2(-13,25),
+            center+Vector2(-15,4), center+Vector2(-12,-12)
         ]),hair)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(20,-29), center+Vector2(24,-12),
-            center+Vector2(24,39), center+Vector2(17,44),
-            center+Vector2(11,34), center+Vector2(14,4),
-            center+Vector2(13,-18)
+            center+Vector2(16,-21), center+Vector2(23,-12),
+            center+Vector2(24,14), center+Vector2(20,34),
+            center+Vector2(14,39), center+Vector2(12,27),
+            center+Vector2(14,5), center+Vector2(11,-13)
         ]),hair_shadow)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(18,-28), center+Vector2(21,-12),
-            center+Vector2(21,34), center+Vector2(16,38),
-            center+Vector2(13,29), center+Vector2(16,2),
-            center+Vector2(15,-18)
+            center+Vector2(15,-20), center+Vector2(20,-11),
+            center+Vector2(21,13), center+Vector2(18,31),
+            center+Vector2(14,34), center+Vector2(13,25),
+            center+Vector2(15,4), center+Vector2(12,-12)
         ]),hair)
-        draw_line(center+Vector2(-18,-23),center+Vector2(-16,20),hair_light,1.8,true)
-        draw_line(center+Vector2(17,-23),center+Vector2(15,20),hair_light,1.8,true)
-        # Kiwi's recognizable green cap, clearly separated from the hair.
+        draw_line(center+Vector2(-17,-14),center+Vector2(-15,25),hair_light,1.5,true)
+        draw_line(center+Vector2(16,-14),center+Vector2(14,25),hair_light,1.5,true)
+
+        # Two side buns are attached to the hair silhouette, level with the temples.
+        draw_circle(center+Vector2(-20,-27),8.2,hair_shadow)
+        draw_circle(center+Vector2(-20,-27),6.4,hair)
+        draw_arc(center+Vector2(-20,-28),5.0,PI*1.1,PI*1.8,16,hair_light,1.4,true)
+        draw_circle(center+Vector2(20,-27),8.2,hair_shadow)
+        draw_circle(center+Vector2(20,-27),6.4,hair)
+        draw_arc(center+Vector2(20,-28),5.0,PI*1.1,PI*1.8,16,hair_light,1.4,true)
+
+        # Cap sits on the crown and overlaps the hairline; brim follows head curvature.
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-23,-40),center+Vector2(-18,-50),
-            center+Vector2(-5,-56),center+Vector2(9,-55),
-            center+Vector2(21,-49),center+Vector2(24,-39),
-            center+Vector2(13,-43),center+Vector2(0,-46),center+Vector2(-13,-43)
+            center+Vector2(-19,-29),center+Vector2(-16,-40),
+            center+Vector2(-8,-47),center+Vector2(4,-48),
+            center+Vector2(15,-42),center+Vector2(20,-31),
+            center+Vector2(14,-28),center+Vector2(5,-31),
+            center+Vector2(-5,-31),center+Vector2(-14,-28)
         ]),green_dark)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-18,-43),center+Vector2(-13,-51),
-            center+Vector2(-3,-54),center+Vector2(8,-53),
-            center+Vector2(17,-48),center+Vector2(19,-41),
-            center+Vector2(7,-46),center+Vector2(-7,-46)
+            center+Vector2(-16,-30),center+Vector2(-13,-39),
+            center+Vector2(-7,-44),center+Vector2(4,-45),
+            center+Vector2(12,-40),center+Vector2(16,-31),
+            center+Vector2(10,-30),center+Vector2(3,-33),
+            center+Vector2(-5,-33),center+Vector2(-12,-30)
         ]),green)
-        # Two small hair buns sit beside the cap instead of floating high above it.
-        draw_circle(center + Vector2(-22.0, -43.0), 8.0, hair_shadow)
-        draw_circle(center + Vector2(-22.0, -43.0), 6.0, hair)
-        draw_arc(center + Vector2(-22.0, -43.0), 5.5, PI * 1.1, PI * 1.8, 16, hair_light, 1.4, true)
-        draw_circle(center + Vector2(22.0, -43.0), 8.0, hair_shadow)
-        draw_circle(center + Vector2(22.0, -43.0), 6.0, hair)
-        draw_arc(center + Vector2(22.0, -43.0), 5.5, PI * 1.1, PI * 1.8, 16, hair_light, 1.4, true)
-        draw_line(center+Vector2(-16,-40),center+Vector2(17,-39),green_light,2.5,true)
-        draw_circle(center+Vector2(16,-43),2.5,green_light)
-
+        # Curved lower band and small front badge make the cap read clearly.
+        draw_line(center+Vector2(-18,-29),center+Vector2(-9,-32),green_light,2.0,true)
+        draw_line(center+Vector2(-9,-32),center+Vector2(2,-33),green_light,2.0,true)
+        draw_line(center+Vector2(2,-33),center+Vector2(15,-30),green_dark,2.0,true)
+        draw_circle(center+Vector2(8,-38),2.4,green_light)
+        draw_line(center+Vector2(-7,-42),center+Vector2(3,-45),Color("#a0c98a"),1.5,true)
     if hit_flash > 0.0:
         draw_circle(center, 23.0, Color(1.0,0.45,0.34,hit_flash*0.24))
         draw_arc(center, 23.0, 0.0, TAU, 48, Color(1.0,0.82,0.72,hit_flash*0.8), 2.0, true)
