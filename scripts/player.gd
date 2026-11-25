@@ -181,7 +181,12 @@ func _physics_process(delta: float) -> void:
             velocity = Vector2.ZERO
             queue_redraw()
             return
-    animation_time += delta * (13.0 if absf(velocity.x) > 35.0 and is_on_floor() else 2.2)
+    # Walk-cycle phase follows distance travelled, not a fixed timer: faster movement
+    # produces faster, grounded steps and stopping immediately settles the gait.
+    if is_on_floor() and absf(velocity.x) > 18.0:
+        animation_time += delta * (absf(velocity.x) / 22.0)
+    else:
+        animation_time += delta * 2.2
     pulse_cooldown = maxf(0.0, pulse_cooldown - delta)
     recoil_kick = move_toward(recoil_kick, 0.0, delta * 38.0)
     muzzle_flash = maxf(0.0, muzzle_flash - delta)
@@ -282,14 +287,15 @@ func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
     var arm_front_target := 0.92 + walk_drive * 0.30 - jump_drive * 0.16
     var elbow_back_target := -0.78 + walk_drive * 0.16
     var elbow_front_target := 0.78 - walk_drive * 0.16
-    # Alternating planted-step gait: legs swing in opposite directions and
-    # the knee bends on the recovery half of each step, so feet visibly lift.
+    # Real alternating gait: one leg reaches forward while the other pushes
+    # backward. The recovering leg folds at the knee and lifts clear of the floor.
     var gait := sin(animation_time)
     var gait_cos := cos(animation_time)
-    var leg_back_target := (-walk_drive * 0.38 + gait * 0.72 * absf(walk_drive) if moving else -walk_drive * 0.16) + jump_drive * 0.22
-    var leg_front_target := (-walk_drive * 0.38 - gait * 0.72 * absf(walk_drive) if moving else -walk_drive * 0.16) + jump_drive * 0.22
-    var knee_back_target := (0.08 + maxf(0.0, gait_cos) * 0.78 if moving else -0.08) + absf(jump_drive) * 0.28
-    var knee_front_target := (0.08 + maxf(0.0, -gait_cos) * 0.78 if moving else -0.08) + absf(jump_drive) * 0.28
+    var stride_strength := absf(walk_drive)
+    var leg_back_target := (gait * 0.92 * stride_strength if moving else -walk_drive * 0.10) + jump_drive * 0.22
+    var leg_front_target := (-gait * 0.92 * stride_strength if moving else -walk_drive * 0.10) + jump_drive * 0.22
+    var knee_back_target := (0.02 + maxf(0.0, gait_cos) * 0.95 if moving else -0.08) + absf(jump_drive) * 0.28
+    var knee_front_target := (0.02 + maxf(0.0, -gait_cos) * 0.95 if moving else -0.08) + absf(jump_drive) * 0.28
 
     var spring_k := 58.0
     var damping_rate := 13.5
@@ -720,11 +726,11 @@ func _draw_kiwi_ball() -> void:
     var hair_dark := Color("#8f887e")
 
     # Short animated legs are attached directly under the sphere.
-    var stride := sin(animation_time) if is_on_floor() and absf(velocity.x) > 35.0 else 0.0
     var hip_back := center + Vector2(-9.0, 15.0)
     var hip_front := center + Vector2(9.0, 15.0)
-    var back_angle := leg_back_angle + stride * 0.62
-    var front_angle := leg_front_angle - stride * 0.62
+    # Use the same simulated hip/knee joints as the humanoid fighters.
+    var back_angle := leg_back_angle
+    var front_angle := leg_front_angle
     var knee_back := hip_back + Vector2(sin(back_angle) * 13.0, cos(back_angle) * 13.0)
     var knee_front := hip_front + Vector2(sin(front_angle) * 13.0, cos(front_angle) * 13.0)
     var foot_back := knee_back + Vector2(sin(back_angle + knee_back_angle) * 12.0, cos(back_angle + knee_back_angle) * 12.0)
