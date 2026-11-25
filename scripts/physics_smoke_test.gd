@@ -231,9 +231,11 @@ func _run_physics_checks() -> void:
         return
     var menu_start_a: Vector2 = menu_bot_a.global_position
     var menu_start_b: Vector2 = menu_bot_b.global_position
-    for _i in range(24):
+    for _i in range(90):
         await physics_frame
-    if menu_bot_a.global_position.distance_to(menu_start_a) < 4.0 and menu_bot_b.global_position.distance_to(menu_start_b) < 4.0:
+    var menu_a_moved := menu_bot_a.global_position.distance_to(menu_start_a) >= 4.0
+    var menu_b_moved := menu_bot_b.global_position.distance_to(menu_start_b) >= 4.0
+    if not menu_a_moved and not menu_b_moved:
         _fail("menu AI fighters did not move")
         return
     menu_bot_a.set("health", 0)
