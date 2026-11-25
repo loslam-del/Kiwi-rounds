@@ -33,6 +33,12 @@ jobs:
           ls -la "$ANDROID_HOME/build-tools"
           ls -la "$ANDROID_HOME/platforms"
 
+      - name: Convert Yandere AAC track to Android-compatible MP3
+        run: |
+          apt-get update
+          apt-get install -y ffmpeg
+          ffmpeg -y -i "music/akkiemi_-_truth_yandere_(mp3.pm).aac" -codec:a libmp3lame -q:a 2 "music/akkiemi_-_truth_yandere.mp3"
+
       - name: Import and validate project
         run: godot --headless --editor --path . --quit
 
