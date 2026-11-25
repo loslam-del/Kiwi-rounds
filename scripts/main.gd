@@ -566,7 +566,6 @@ func _make_ui() -> void:
     aim_joystick.position = Vector2(1136,575)
     aim_joystick.size = Vector2(116,116)
     aim_joystick.value_changed.connect(player.set_aim)
-    aim_joystick.released.connect(player.shoot_once)
     game_controls.add_child(aim_joystick)
     jump_button = ACTION_BUTTON_SCRIPT.new()
     jump_button.caption = "ПРЫЖОК"
@@ -628,25 +627,28 @@ func _request_reload() -> void:
 func _apply_control_layout() -> void:
     if not is_instance_valid(movement_joystick) or not is_instance_valid(aim_joystick):
         return
+    # Consistent twin-stick layout: movement on the left, aiming on the right.
+    # All combat actions stay grouped around the right thumb.
     if controls_mirrored:
-        movement_joystick.position = Vector2(1090,548)
-        aim_joystick.position = Vector2(34,548)
-        fire_button.position = Vector2(1098,474)
-        reload_button.position = Vector2(930,635)
-        jump_button.position = Vector2(34,474)
-    else:
-        movement_joystick.position = Vector2(34,548)
-        aim_joystick.position = Vector2(1090,548)
-        fire_button.position = Vector2(34,474)
+        movement_joystick.position = Vector2(1100,548)
+        aim_joystick.position = Vector2(36,548)
+        fire_button.position = Vector2(36,462)
         reload_button.position = Vector2(196,635)
-        jump_button.position = Vector2(1098,474)
+        jump_button.position = Vector2(930,548)
+        ammo_label.position = Vector2(930,625)
+    else:
+        movement_joystick.position = Vector2(36,548)
+        aim_joystick.position = Vector2(1100,548)
+        fire_button.position = Vector2(1106,462)
+        reload_button.position = Vector2(930,635)
+        jump_button.position = Vector2(930,548)
+        ammo_label.position = Vector2(930,625)
     movement_joystick.size = Vector2(144,144)
     aim_joystick.size = Vector2(144,144)
-    fire_button.size = Vector2(132,58)
+    fire_button.size = Vector2(132,62)
     reload_button.size = Vector2(138,52)
-    jump_button.size = Vector2(132,58)
-    ammo_label.position = Vector2(160 if not controls_mirrored else 970,592)
-    ammo_label.size = Vector2(152,30)
+    jump_button.size = Vector2(138,62)
+    ammo_label.size = Vector2(152,26)
     menu_button.position = Vector2(18,18)
     cards_button.position = Vector2(150,18)
 
