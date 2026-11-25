@@ -208,7 +208,8 @@ function handleMessage(ws, raw) {
       send(ws, "error", { code: "NEED_TWO_PLAYERS", message: "Для боя нужны ровно два игрока" });
       return;
     }
-    for (const player of room.players.values()) send(player.ws, "match_started", { roomId: room.id, hostId: room.hostId });
+    const roundsToWin = Math.max(1, Math.min(15, Number(message.roundsToWin) || 5));
+    for (const player of room.players.values()) send(player.ws, "match_started", { roomId: room.id, hostId: room.hostId, roundsToWin });
     return;
   }
 
