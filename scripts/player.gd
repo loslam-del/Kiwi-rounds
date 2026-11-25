@@ -602,99 +602,112 @@ func _draw() -> void:
         draw_set_transform(Vector2.ZERO,0.0,Vector2(facing,1.0))
 
     if skin_style == "kiwi_human":
-        var hair := Color("#c9c0b2")
-        var hair_light := Color("#f4eddf")
-        var hair_shadow := Color("#81796f")
-        var green := Color("#477b4c")
-        var green_dark := Color("#294c38")
-        var green_light := Color("#78a76a")
-        # Hair is anchored to the round head: the lower edge overlaps the head
-        # slightly so it never looks like a floating wig.
+        # Match Kiwi's original reference: mint-silver hair, pink-tinted ends,
+        # and the dark green military cap with a red band and gold star.
+        var hair := Color("#b9d9bd")
+        var hair_light := Color("#e9f0d9")
+        var hair_shadow := Color("#668d70")
+        var hair_pink := Color("#d99ab7")
+        var cap_dark := Color("#183c2c")
+        var cap_green := Color("#315b3d")
+        var cap_light := Color("#5d8150")
+        var cap_red := Color("#8e4148")
+        var gold := Color("#e6bd58")
+
+        # Back hair and two soft side locks, kept close to the head silhouette.
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-18,-11), center+Vector2(-19,-24),
-            center+Vector2(-14,-35), center+Vector2(-6,-41),
-            center+Vector2(5,-42), center+Vector2(15,-35),
-            center+Vector2(19,-24), center+Vector2(17,-10),
-            center+Vector2(10,-16), center+Vector2(4,-12),
-            center+Vector2(-3,-18), center+Vector2(-10,-12)
+            center+Vector2(-17,-25), center+Vector2(-23,-15),
+            center+Vector2(-22,5), center+Vector2(-18,22),
+            center+Vector2(-12,27), center+Vector2(-10,10),
+            center+Vector2(-12,-9)
         ]),hair_shadow)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-16,-12), center+Vector2(-17,-24),
-            center+Vector2(-12,-33), center+Vector2(-5,-38),
-            center+Vector2(5,-39), center+Vector2(13,-33),
-            center+Vector2(17,-23), center+Vector2(15,-12),
-            center+Vector2(9,-17), center+Vector2(3,-14),
-            center+Vector2(-3,-19), center+Vector2(-9,-14)
+            center+Vector2(-16,-24), center+Vector2(-20,-14),
+            center+Vector2(-19,5), center+Vector2(-16,19),
+            center+Vector2(-12,22), center+Vector2(-12,7),
+            center+Vector2(-13,-9)
         ]),hair)
-        # Soft highlights give the fringe visible layers beneath the cap.
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-14,-28), center+Vector2(-8,-36),
-            center+Vector2(-3,-36), center+Vector2(-7,-24),
-            center+Vector2(-13,-19)
+            center+Vector2(16,-24), center+Vector2(22,-14),
+            center+Vector2(21,5), center+Vector2(17,22),
+            center+Vector2(11,27), center+Vector2(10,10),
+            center+Vector2(12,-9)
+        ]),hair_shadow)
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(15,-23), center+Vector2(19,-13),
+            center+Vector2(18,5), center+Vector2(15,19),
+            center+Vector2(11,22), center+Vector2(12,7),
+            center+Vector2(13,-9)
+        ]),hair)
+        # Pink tips echo the colored ends visible in the original character art.
+        draw_line(center+Vector2(-16,10),center+Vector2(-13,23),hair_pink,2.0,true)
+        draw_line(center+Vector2(15,9),center+Vector2(12,23),hair_pink,2.0,true)
+
+        # Rounded crown of hair peeks out below the cap.
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(-18,-17), center+Vector2(-17,-29),
+            center+Vector2(-10,-36), center+Vector2(0,-38),
+            center+Vector2(11,-34), center+Vector2(18,-23),
+            center+Vector2(17,-12), center+Vector2(11,-16),
+            center+Vector2(5,-12), center+Vector2(0,-19),
+            center+Vector2(-6,-12), center+Vector2(-12,-17)
+        ]),hair_shadow)
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(-16,-17), center+Vector2(-15,-28),
+            center+Vector2(-9,-34), center+Vector2(0,-36),
+            center+Vector2(10,-32), center+Vector2(15,-22),
+            center+Vector2(15,-13), center+Vector2(10,-17),
+            center+Vector2(5,-14), center+Vector2(0,-21),
+            center+Vector2(-6,-14), center+Vector2(-11,-18)
+        ]),hair)
+        # Distinct layered fringe; individual locks frame the face instead of
+        # forming a single flat helmet-shaped patch.
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(-14,-25), center+Vector2(-8,-32),
+            center+Vector2(-3,-31), center+Vector2(-7,-20),
+            center+Vector2(-13,-15)
         ]),hair_light)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(2,-37), center+Vector2(9,-34),
-            center+Vector2(14,-26), center+Vector2(8,-22),
-            center+Vector2(3,-28)
+            center+Vector2(-5,-32), center+Vector2(2,-34),
+            center+Vector2(4,-25), center+Vector2(0,-17),
+            center+Vector2(-4,-23)
         ]),hair_light)
-        # Long side locks follow the head contour and fall beside the body.
-        var hair_sway := sin(animation_time * 0.8) * (1.6 if moving else 0.4)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-16,-21), center+Vector2(-23,-12),
-            center+Vector2(-24,14), center+Vector2(-20,34),
-            center+Vector2(-14,39), center+Vector2(-12,27),
-            center+Vector2(-14,5), center+Vector2(-11,-13)
-        ]),hair_shadow)
-        draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-15,-20), center+Vector2(-20,-11),
-            center+Vector2(-21,13), center+Vector2(-18,31),
-            center+Vector2(-14,34), center+Vector2(-13,25),
-            center+Vector2(-15,4), center+Vector2(-12,-12)
+            center+Vector2(5,-32), center+Vector2(11,-28),
+            center+Vector2(14,-19), center+Vector2(8,-15),
+            center+Vector2(4,-22)
         ]),hair)
-        draw_colored_polygon(PackedVector2Array([
-            center+Vector2(16,-21), center+Vector2(23,-12),
-            center+Vector2(24,14), center+Vector2(20,34),
-            center+Vector2(14,39), center+Vector2(12,27),
-            center+Vector2(14,5), center+Vector2(11,-13)
-        ]),hair_shadow)
-        draw_colored_polygon(PackedVector2Array([
-            center+Vector2(15,-20), center+Vector2(20,-11),
-            center+Vector2(21,13), center+Vector2(18,31),
-            center+Vector2(14,34), center+Vector2(13,25),
-            center+Vector2(15,4), center+Vector2(12,-12)
-        ]),hair)
-        draw_line(center+Vector2(-17,-14),center+Vector2(-15,25),hair_light,1.5,true)
-        draw_line(center+Vector2(16,-14),center+Vector2(14,25),hair_light,1.5,true)
 
-        # Two side buns are attached to the hair silhouette, level with the temples.
-        draw_circle(center+Vector2(-20,-27),8.2,hair_shadow)
-        draw_circle(center+Vector2(-20,-27),6.4,hair)
-        draw_arc(center+Vector2(-20,-28),5.0,PI*1.1,PI*1.8,16,hair_light,1.4,true)
-        draw_circle(center+Vector2(20,-27),8.2,hair_shadow)
-        draw_circle(center+Vector2(20,-27),6.4,hair)
-        draw_arc(center+Vector2(20,-28),5.0,PI*1.1,PI*1.8,16,hair_light,1.4,true)
-
-        # Cap sits on the crown and overlaps the hairline; brim follows head curvature.
+        # Original-style peaked cap: domed crown, red lower band and short visor.
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-19,-29),center+Vector2(-16,-40),
-            center+Vector2(-8,-47),center+Vector2(4,-48),
-            center+Vector2(15,-42),center+Vector2(20,-31),
-            center+Vector2(14,-28),center+Vector2(5,-31),
-            center+Vector2(-5,-31),center+Vector2(-14,-28)
-        ]),green_dark)
+            center+Vector2(-21,-29), center+Vector2(-18,-43),
+            center+Vector2(-9,-51), center+Vector2(3,-53),
+            center+Vector2(16,-47), center+Vector2(22,-34),
+            center+Vector2(17,-28), center+Vector2(7,-31),
+            center+Vector2(-7,-31)
+        ]),cap_dark)
         draw_colored_polygon(PackedVector2Array([
-            center+Vector2(-16,-30),center+Vector2(-13,-39),
-            center+Vector2(-7,-44),center+Vector2(4,-45),
-            center+Vector2(12,-40),center+Vector2(16,-31),
-            center+Vector2(10,-30),center+Vector2(3,-33),
-            center+Vector2(-5,-33),center+Vector2(-12,-30)
-        ]),green)
-        # Curved lower band and small front badge make the cap read clearly.
-        draw_line(center+Vector2(-18,-29),center+Vector2(-9,-32),green_light,2.0,true)
-        draw_line(center+Vector2(-9,-32),center+Vector2(2,-33),green_light,2.0,true)
-        draw_line(center+Vector2(2,-33),center+Vector2(15,-30),green_dark,2.0,true)
-        draw_circle(center+Vector2(8,-38),2.4,green_light)
-        draw_line(center+Vector2(-7,-42),center+Vector2(3,-45),Color("#a0c98a"),1.5,true)
+            center+Vector2(-17,-31), center+Vector2(-15,-42),
+            center+Vector2(-7,-48), center+Vector2(3,-50),
+            center+Vector2(13,-45), center+Vector2(18,-34),
+            center+Vector2(12,-32), center+Vector2(4,-34),
+            center+Vector2(-6,-34)
+        ]),cap_green)
+        draw_line(center+Vector2(-19,-31),center+Vector2(-8,-34),cap_light,1.8,true)
+        draw_line(center+Vector2(-8,-34),center+Vector2(5,-34),cap_light,1.8,true)
+        draw_line(center+Vector2(5,-34),center+Vector2(18,-31),cap_dark,1.8,true)
+        # Red band and gold piping make the cap recognizable at game scale.
+        draw_line(center+Vector2(-18,-29),center+Vector2(17,-29),cap_red,4.0,true)
+        draw_line(center+Vector2(-17,-31),center+Vector2(16,-31),gold,1.1,true)
+        # Five-point star badge, centered on the front of the cap.
+        draw_colored_polygon(PackedVector2Array([
+            center+Vector2(0,-47), center+Vector2(2.0,-42.5),
+            center+Vector2(6.5,-42.2), center+Vector2(3.0,-39.2),
+            center+Vector2(4.0,-34.8), center+Vector2(0,-37.2),
+            center+Vector2(-4.0,-34.8), center+Vector2(-3.0,-39.2),
+            center+Vector2(-6.5,-42.2), center+Vector2(-2.0,-42.5)
+        ]),gold)
+        draw_line(center+Vector2(-1,-46),center+Vector2(0,-39),Color("#fff0a8"),0.9,true)
     if hit_flash > 0.0:
         draw_circle(center, 23.0, Color(1.0,0.45,0.34,hit_flash*0.24))
         draw_arc(center, 23.0, 0.0, TAU, 48, Color(1.0,0.82,0.72,hit_flash*0.8), 2.0, true)
