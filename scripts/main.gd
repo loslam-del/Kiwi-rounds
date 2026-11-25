@@ -914,16 +914,6 @@ func _show_main_menu() -> void:
     banner.material = key_material
     shade.add_child(banner)
 
-    var alpha_tag := Label.new()
-    alpha_tag.text = "ALPHA  •  EARLY ACCESS BUILD"
-    alpha_tag.position = Vector2(450, 392)
-    alpha_tag.size = Vector2(380, 26)
-    alpha_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    alpha_tag.add_theme_font_size_override("font_size", 15)
-    alpha_tag.add_theme_color_override("font_color", Color("#d9ef70"))
-    alpha_tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    shade.add_child(alpha_tag)
-
     # Lower menu dock keeps the logo and arena visible.
     var menu_panel := Panel.new()
     menu_panel.position = Vector2(350, 430)
@@ -958,15 +948,6 @@ func _show_main_menu() -> void:
     mods.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
     mods.add_theme_color_override("font_color", Color("#e8f6ff"))
     mods.pressed.connect(_open_mods)
-
-    var footer := Label.new()
-    footer.text = "KIWI LABS   •   BUILD. FIGHT. REPEAT."
-    footer.position = Vector2(425, 646)
-    footer.size = Vector2(430, 20)
-    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    footer.add_theme_font_size_override("font_size", 12)
-    footer.add_theme_color_override("font_color", Color("#9bb8c9"))
-    shade.add_child(footer)
 
 func _create_menu_record(parent: Control) -> void:
     var record := Panel.new()
