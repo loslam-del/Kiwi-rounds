@@ -10,6 +10,8 @@ signal released
 @export var knob_color := Color(0.43, 0.96, 0.91, 0.94)
 
 var value := Vector2.ZERO
+var visual_value := Vector2.ZERO
+var visual_clock := 0.0
 var active_index := -1
 var mouse_active := false
 
@@ -17,6 +19,12 @@ func _ready() -> void:
     custom_minimum_size = Vector2(116, 116)
     mouse_filter = Control.MOUSE_FILTER_STOP
     queue_redraw()
+
+func _process(delta: float) -> void:
+    visual_clock += delta
+    visual_value = visual_value.lerp(value, minf(1.0, delta * 18.0))
+    if visual_value.distance_to(value) > 0.002 or value.length() > 0.01:
+        queue_redraw()
 
 func _gui_input(event: InputEvent) -> void:
     if event is InputEventScreenTouch:
@@ -71,7 +79,8 @@ func _draw() -> void:
     var center := size * 0.5
     var radius := minf(size.x, size.y) * 0.46
     # Compact twin-ring joystick with a clear directional thumb pad.
-    draw_circle(center, radius * 1.10, Color(0.10,0.92,0.88,0.055))
+    var breathe := 0.5 + 0.5 * sin(visual_clock * 2.2)
+    draw_circle(center, radius * (1.10 + breathe * 0.035), Color(0.10,0.92,0.88,0.045 + breathe * 0.025))
     draw_circle(center + Vector2(0,4), radius, Color(0.015,0.035,0.065,0.72))
     draw_circle(center, radius, base_color)
     draw_arc(center, radius, 0.0, TAU, 72, Color(0.22,0.96,0.91,0.92), 3.0, true)
@@ -79,7 +88,10 @@ func _draw() -> void:
     for angle in [0.0, PI*0.5, PI, PI*1.5]:
         var a := Vector2(cos(angle),sin(angle))
         draw_line(center + a * (radius*0.76), center + a * (radius*0.88), Color(0.58,1.0,0.92,0.52), 1.4, true)
-    var knob_center := center + value * knob_limit
+    var knob_center := center + visual_value * knob_limit
+    if visual_value.length() > 0.04:
+        draw_line(center, knob_center, Color(0.55,1.0,0.94,0.22), 5.0, true)
+        draw_arc(knob_center, radius * 0.36, 0.0, TAU, 40, Color(0.48,1.0,0.92,0.18 + breathe * 0.12), 2.0, true)
     draw_circle(knob_center + Vector2(0,2), radius * 0.29, Color(0.01,0.04,0.07,0.58))
     draw_circle(knob_center, radius * 0.27, Color(0.62,0.78,0.94,0.92))
     draw_arc(knob_center, radius * 0.27, 0.0, TAU, 40, Color(0.82,1.0,0.96,0.96), 1.5, true)
