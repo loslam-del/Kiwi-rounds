@@ -1,35 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
 <defs>
-  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#263544"/><stop offset="1" stop-color="#10151d"/></linearGradient>
-  <linearGradient id="hair" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#fff4d9"/><stop offset="1" stop-color="#d5c9aa"/></linearGradient>
-  <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffe8d2"/><stop offset="1" stop-color="#e8c4a8"/></linearGradient>
+  <linearGradient id="red" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#ff7770"/><stop offset="1" stop-color="#c92336"/></linearGradient>
 </defs>
-<rect width="512" height="512" rx="112" fill="url(#bg)"/>
-<circle cx="256" cy="256" r="218" fill="#19252c" stroke="#83b95b" stroke-width="12"/>
-<!-- round ROUNDS-style Kiwi avatar -->
-<path d="M137 273c-7-89 41-164 119-171 82-8 137 54 139 140 3 94-47 160-132 166-75 6-119-44-126-135Z" fill="#20232b"/>
-<path d="M148 267c-5-81 39-146 109-152 75-7 125 49 127 128 3 85-42 144-118 150-68 5-112-39-118-126Z" fill="url(#skin)"/>
-<!-- cream hair cap -->
-<path d="M141 260c-10-89 35-159 110-172 72-12 137 37 145 116-24-23-47-34-73-37-37-4-63 11-91 7-35-5-62 19-91 86Z" fill="url(#hair)" stroke="#20232b" stroke-width="12" stroke-linejoin="round"/>
-<path d="M145 257c26-47 51-62 83-59 25 3 43-12 69-14 34-3 63 12 96 39l-2 33c-32-23-59-32-89-28-34 4-54 22-83 18-26-4-49 4-74 27Z" fill="#eee2c7"/>
-<!-- fringe -->
-<path d="M174 225c17-47 42-66 68-65 18 1 26 12 39 16-14 22-25 34-46 39-19 5-37 1-61 10Z" fill="#fff1d4" stroke="#20232b" stroke-width="8" stroke-linejoin="round"/>
-<path d="M263 180c23-22 47-29 71-20-7 24-25 44-53 49-13 2-24-4-33-9Z" fill="#e5d8ba" stroke="#20232b" stroke-width="7" stroke-linejoin="round"/>
-<!-- green hair bow -->
-<path d="M255 107c-33-39-74-30-75 4-1 26 30 35 75 19 45 16 76 7 75-19-1-34-42-43-75-4Z" fill="#8fc65e" stroke="#20232b" stroke-width="10" stroke-linejoin="round"/>
-<circle cx="255" cy="123" r="14" fill="#4c8d45" stroke="#20232b" stroke-width="7"/>
-<!-- eyes -->
-<ellipse cx="211" cy="286" rx="12" ry="18" fill="#20232b"/>
-<ellipse cx="302" cy="286" rx="12" ry="18" fill="#20232b"/>
-<circle cx="215" cy="280" r="4" fill="#fff"/>
-<circle cx="306" cy="280" r="4" fill="#fff"/>
-<path d="M238 333q18 18 39 0" fill="none" stroke="#9d665d" stroke-width="9" stroke-linecap="round"/>
-<ellipse cx="181" cy="319" rx="15" ry="8" fill="#eaa49b" opacity=".55"/>
-<ellipse cx="333" cy="319" rx="15" ry="8" fill="#eaa49b" opacity=".55"/>
-<!-- signature leaf accents -->
-<path d="M365 118c42-42 85-31 81 6-3 26-39 35-81 12-18 20-40 26-58 13 13-24 31-34 58-31Z" fill="#8fc65e" stroke="#20232b" stroke-width="8" stroke-linejoin="round"/>
-<path d="M355 139q27-15 49-35" fill="none" stroke="#4c8d45" stroke-width="6" stroke-linecap="round"/>
-<!-- tiny maid collar / green ribbon -->
-<path d="M206 391l50 31 50-31-17 54h-66Z" fill="#f7f0df" stroke="#20232b" stroke-width="9" stroke-linejoin="round"/>
-<path d="M256 397l-20 19 20 18 20-18Z" fill="#82b95a" stroke="#20232b" stroke-width="7" stroke-linejoin="round"/>
+<rect width="512" height="512" rx="112" fill="#151d2b"/>
+<circle cx="256" cy="256" r="210" fill="#202c3b" stroke="#526779" stroke-width="10"/>
+<circle cx="256" cy="256" r="174" fill="#111923" opacity=".55"/>
+<!-- smiling red arena fighter -->
+<circle cx="256" cy="245" r="142" fill="#142333"/>
+<circle cx="256" cy="235" r="132" fill="url(#red)" stroke="#101923" stroke-width="13"/>
+<path d="M170 198q27-23 55-2" fill="none" stroke="#7d1e2d" stroke-width="13" stroke-linecap="round"/>
+<path d="M286 196q29-22 57 2" fill="none" stroke="#7d1e2d" stroke-width="13" stroke-linecap="round"/>
+<ellipse cx="205" cy="232" rx="15" ry="23" fill="#172333"/>
+<ellipse cx="307" cy="232" rx="15" ry="23" fill="#172333"/>
+<circle cx="210" cy="224" r="5" fill="#fff"/>
+<circle cx="312" cy="224" r="5" fill="#fff"/>
+<path d="M202 284q54 65 108 0" fill="none" stroke="#762333" stroke-width="16" stroke-linecap="round"/>
+<path d="M211 286q45 45 90 0" fill="none" stroke="#fff0e9" stroke-width="8" stroke-linecap="round"/>
+<ellipse cx="157" cy="270" rx="19" ry="10" fill="#ffaaa0" opacity=".7"/>
+<ellipse cx="355" cy="270" rx="19" ry="10" fill="#ffaaa0" opacity=".7"/>
+<path d="M168 133q32-35 73-36" fill="none" stroke="#ffb0a1" stroke-width="12" stroke-linecap="round" opacity=".65"/>
+<circle cx="357" cy="144" r="12" fill="#ffd978"/>
 </svg>
