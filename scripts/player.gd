@@ -332,7 +332,8 @@ func _think_bot(delta: float) -> void:
     if menu_preview_mode:
         # Menu fighters deliberately approach, then create space and approach again.
         # This avoids the old position-dependent sine that could cancel their movement.
-        move_input = signf(delta_x) if distance_x > 210.0 else -signf(delta_x)
+        var patrol := sin(float(Time.get_ticks_msec()) * 0.00135 + (0.0 if name == "MenuBotKiwi" else PI))
+        move_input = patrol
     else:
         if distance_x > 235.0:
             move_input = signf(delta_x)
@@ -507,8 +508,8 @@ func _draw() -> void:
     var foot_back := knee_back + Vector2(sin(foot_back_angle) * leg_len, cos(foot_back_angle) * leg_len)
     var foot_front := knee_front + Vector2(sin(foot_front_angle) * leg_len, cos(foot_front_angle) * leg_len)
     if is_on_floor():
-        foot_back.y = minf(foot_back.y, 43.5)
-        foot_front.y = minf(foot_front.y, 43.5)
+        foot_back.y = minf(foot_back.y, 51.5)
+        foot_front.y = minf(foot_front.y, 51.5)
     draw_line(hip_back, knee_back, outline, 10.0, true)
     draw_line(hip_back, knee_back, dark, 6.0, true)
     draw_line(knee_back, foot_back, outline, 9.0, true)
