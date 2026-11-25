@@ -971,10 +971,10 @@ func _create_menu_banner(parent: Control) -> void:
     banner.name = "KiwiNeonBanner"
     banner.texture = load("res://assets/1795552443370.jpg") as Texture2D
     banner.set_anchors_preset(Control.PRESET_CENTER)
-    banner.offset_left = -180.0
-    banner.offset_top = -325.0
-    banner.offset_right = 180.0
-    banner.offset_bottom = -122.0
+    banner.offset_left = -240.0
+    banner.offset_top = -350.0
+    banner.offset_right = 240.0
+    banner.offset_bottom = -80.0
     banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
     banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
     banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -990,8 +990,8 @@ func _create_menu_banner(parent: Control) -> void:
 func _create_menu_record(parent: Control) -> void:
     var dock := Panel.new()
     dock.name = "MusicPlayerDock"
-    dock.position = Vector2(970, 24)
-    dock.size = Vector2(286, 190)
+    dock.position = Vector2(1032, 20)
+    dock.size = Vector2(228, 132)
     dock.clip_contents = true
     dock.mouse_filter = Control.MOUSE_FILTER_STOP
     var style := StyleBoxFlat.new()
@@ -1009,17 +1009,17 @@ func _create_menu_record(parent: Control) -> void:
     parent.add_child(dock)
     var caption := Label.new()
     caption.text = "NOW PLAYING"
-    caption.position = Vector2(12, 8)
-    caption.size = Vector2(262, 18)
+    caption.position = Vector2(8, 5)
+    caption.size = Vector2(212, 14)
     caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    caption.add_theme_font_size_override("font_size", 10)
+    caption.add_theme_font_size_override("font_size", 8)
     caption.add_theme_color_override("font_color", Color("#91a7bb"))
     caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
     dock.add_child(caption)
-    menu_record_disc = _make_vinyl_disc(dock, Vector2(91, 29), 104)
+    menu_record_disc = _make_vinyl_disc(dock, Vector2(78, 22), 72)
     var ticker_frame := Panel.new()
-    ticker_frame.position = Vector2(18, 140)
-    ticker_frame.size = Vector2(250, 27)
+    ticker_frame.position = Vector2(12, 99)
+    ticker_frame.size = Vector2(204, 22)
     ticker_frame.clip_contents = true
     ticker_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var ticker_style := StyleBoxFlat.new()
@@ -1028,19 +1028,19 @@ func _create_menu_record(parent: Control) -> void:
     ticker_frame.add_theme_stylebox_override("panel", ticker_style)
     dock.add_child(ticker_frame)
     music_ticker_label = Label.new()
-    music_ticker_label.position = Vector2(0, 2)
-    music_ticker_label.size = Vector2(520, 22)
+    music_ticker_label.position = Vector2(0, 1)
+    music_ticker_label.size = Vector2(460, 20)
     music_ticker_label.text = _current_music_title()
-    music_ticker_label.add_theme_font_size_override("font_size", 14)
+    music_ticker_label.add_theme_font_size_override("font_size", 11)
     music_ticker_label.add_theme_color_override("font_color", Color("#eaf2fb"))
     music_ticker_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     ticker_frame.add_child(music_ticker_label)
     var hint := Label.new()
-    hint.text = "НАЖМИ, ЧТОБЫ ОТКРЫТЬ ПЛЕЕР"
-    hint.position = Vector2(12, 170)
-    hint.size = Vector2(262, 14)
+    hint.text = "ОТКРЫТЬ ПЛЕЕР"
+    hint.position = Vector2(8, 122)
+    hint.size = Vector2(212, 9)
     hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    hint.add_theme_font_size_override("font_size", 8)
+    hint.add_theme_font_size_override("font_size", 7)
     hint.add_theme_color_override("font_color", Color("#71879a"))
     hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
     dock.add_child(hint)
