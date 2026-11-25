@@ -1598,7 +1598,7 @@ func _online_handle_message(data: Dictionary) -> void:
                 online_start_button.visible = online_is_host and room_players.size() == 2
             _online_set_status(str(room.get("name", "Комната")) + " • " + str(names), Color("#9be89b"))
         "match_started":
-            _start_online_match(str(data.get("hostId", "")))
+            _start_online_match(str(data.get("hostId", "")), int(data.get("roundsToWin", 5)))
         "game_input":
             if online_in_match and online_is_host:
                 var input_data: Dictionary = data.get("input", {})
@@ -1616,9 +1616,10 @@ func _online_handle_message(data: Dictionary) -> void:
 
 func _online_start_match() -> void:
     if online_connected and online_is_host:
-        _online_send({"type":"start_match"})
+        _online_send({"type":"start_match", "roundsToWin":match_rounds_to_win})
 
-func _start_online_match(host_id: String) -> void:
+func _start_online_match(host_id: String, rounds_to_win: int = 5) -> void:
+    match_rounds_to_win = clampi(rounds_to_win, 1, 15)
     online_is_host = host_id == online_player_id
     online_in_match = true
     online_sync_timer = 0.0
@@ -1964,10 +1965,11 @@ func _open_skins() -> void:
     fighter.skin_style = str(skin.get("style", "default"))
     fighter.facing = 1.0
     fighter.aim_input = Vector2(0.85, -0.16)
-    fighter.position = Vector2(250, 235)
-    fighter.scale = Vector2(1.18, 1.18)
+    fighter.position = Vector2(250, 265)
+    fighter.scale = Vector2(0.96, 0.96)
     fighter.set_physics_process(false)
     fighter.set_process(false)
+    fighter.velocity = Vector2.ZERO
     fighter.z_index = 2
     preview_area.add_child(fighter)
 
