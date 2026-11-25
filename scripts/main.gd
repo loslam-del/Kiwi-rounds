@@ -601,8 +601,7 @@ func _make_ui() -> void:
     fire_button.caption = "ВЫСТРЕЛ"
     fire_button.position = Vector2(32,490)
     fire_button.size = Vector2(116,52)
-    fire_button.button_down.connect(player.set_fire.bind(true))
-    fire_button.button_up.connect(player.set_fire.bind(false))
+    fire_button.pressed.connect(player.shoot_once)
     game_controls.add_child(fire_button)
     reload_button = ACTION_BUTTON_SCRIPT.new()
     reload_button.caption = "ПЕРЕЗАРЯДКА"
@@ -621,6 +620,7 @@ func _make_ui() -> void:
     aim_joystick.position = Vector2(1136,575)
     aim_joystick.size = Vector2(116,116)
     aim_joystick.value_changed.connect(player.set_aim)
+    aim_joystick.tapped.connect(player.shoot_once)
     game_controls.add_child(aim_joystick)
     jump_button = ACTION_BUTTON_SCRIPT.new()
     jump_button.caption = "ПРЫЖОК"
@@ -682,25 +682,26 @@ func _request_reload() -> void:
 func _apply_control_layout() -> void:
     if not is_instance_valid(movement_joystick) or not is_instance_valid(aim_joystick):
         return
-    # Consistent twin-stick layout: movement on the left, aiming on the right.
-    # All combat actions stay grouped around the right thumb.
+    # Two-thumb layout: left thumb moves, right thumb aims and fires once per touch.
     if controls_mirrored:
-        movement_joystick.position = Vector2(1100,548)
-        aim_joystick.position = Vector2(36,548)
-        fire_button.position = Vector2(36,462)
-        reload_button.position = Vector2(196,654)
-        jump_button.position = Vector2(930,548)
-        ammo_label.position = Vector2(930,620)
+        movement_joystick.position = Vector2(1090,526)
+        aim_joystick.position = Vector2(22,526)
+        fire_button.position = Vector2(22,448)
+        reload_button.position = Vector2(930,648)
+        jump_button.position = Vector2(930,526)
+        ammo_label.position = Vector2(930,618)
     else:
-        movement_joystick.position = Vector2(36,548)
-        aim_joystick.position = Vector2(1100,548)
-        fire_button.position = Vector2(1106,462)
-        reload_button.position = Vector2(930,654)
-        jump_button.position = Vector2(930,548)
-        ammo_label.position = Vector2(930,620)
-    movement_joystick.size = Vector2(144,144)
-    aim_joystick.size = Vector2(144,144)
-    fire_button.size = Vector2(132,62)
+        movement_joystick.position = Vector2(22,526)
+        aim_joystick.position = Vector2(1090,526)
+        fire_button.position = Vector2(1090,448)
+        reload_button.position = Vector2(930,648)
+        jump_button.position = Vector2(930,526)
+        ammo_label.position = Vector2(930,618)
+    movement_joystick.size = Vector2(168,168)
+    aim_joystick.size = Vector2(168,168)
+    # A tap on the aim stick fires once; holding it never auto-fires.
+    fire_button.size = Vector2(132,58)
+    fire_button.visible = false
     reload_button.size = Vector2(138,52)
     jump_button.size = Vector2(138,62)
     ammo_label.size = Vector2(152,26)
