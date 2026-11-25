@@ -111,24 +111,27 @@ var music_tracks: Array[String] = [
     "res://music/влад пиво, ЯРЧЕ СОЛНЦА, besoboy - Пообещай (hitmo.net).mp3",
     "res://music/rabzyyx - im so crazy for you [mp3uk.net].mp3",
     "res://music/dabbackwood - заново [mp3uk.net] (1).mp3",
-    "res://music/akkiemi_-_truth_yandere_(mp3.pm).aac",
+    "res://music/akkiemi_-_truth_yandere.mp3",
     "res://music/Moetwee, Differentwrld - Help Me (hitmo.net).mp3",
     "res://music/onda-andar-type-london (1).mp3",
     "res://music/zxcursed_x_shadowraze_-_metamorphosis_3_x_chronospher_(mp3.pm).mp3"
 ]
 var music_display_names: Array[String] = [
-    "Пообещай — besoboy, влад пиво, ЯРЧЕ СОЛНЦА",
-    "I'm so crazy for youuu — Rebzyyx",
-    "заново (slowed) — dabbackwood",
-    "truth yandere^^ — akkiemi",
-    "help me — differentwrld, moetwee",
-    "type london — onda andar",
-    "METAMORPHOSIS 3 — zxcursed, Sadfriendd, INTERWORLD"
+    "Пообещай",
+    "I'm so crazy for youuu",
+    "заново",
+    "truth yandere^^",
+    "help me",
+    "type london",
+    "METAMORPHOSIS 3"
 ]
 var music_last_index := -1
 var menu_record_needle: Control
 var menu_record_disc: Control
 var music_track_button: Button
+var music_ticker_label: Label
+var music_modal: Control
+var music_modal_disc: Control
 var music_visualizer_bars: Array[ColorRect] = []
 var online_player_id := ""
 var online_host_id := ""
@@ -658,17 +661,22 @@ func _setup_music() -> void:
     _play_round_music()
 
 func _play_next_music() -> void:
+    _play_random_music()
+
+func _play_random_music() -> void:
     if not is_instance_valid(music_player) or music_tracks.is_empty():
         return
-    _play_music_index((music_last_index + 1) % music_tracks.size())
+    var choices: Array[int] = []
+    for i in range(music_tracks.size()):
+        if i != music_last_index:
+            choices.append(i)
+    if choices.is_empty():
+        choices.append(0)
+    choices.shuffle()
+    _play_music_index(choices[0])
 
 func _play_round_music() -> void:
-    if music_tracks.is_empty():
-        return
-    var index := posmod(round_index - 1, music_tracks.size())
-    if index == music_last_index and is_instance_valid(music_player) and music_player.playing:
-        return
-    _play_music_index(index)
+    _play_random_music()
 
 func _play_music_index(index: int) -> void:
     if not is_instance_valid(music_player) or music_tracks.is_empty():
@@ -677,20 +685,24 @@ func _play_music_index(index: int) -> void:
     var stream := load(music_tracks[music_last_index]) as AudioStream
     if stream == null:
         push_warning("Не удалось загрузить музыку: " + music_tracks[music_last_index])
-        if music_last_index == 3:
-            # AAC import is not available on every Godot Android export; skip it gracefully.
-            _play_music_index((music_last_index + 1) % music_tracks.size())
         return
     music_player.stream = stream
     music_player.play()
     _update_music_track_button()
 
+func _current_music_title() -> String:
+    if music_last_index < 0 or music_last_index >= music_tracks.size():
+        return "Музыка"
+    return music_display_names[music_last_index] if music_last_index < music_display_names.size() else "Трек"
+
 func _update_music_track_button() -> void:
-    if not is_instance_valid(music_track_button) or music_last_index < 0 or music_last_index >= music_tracks.size():
-        return
-    var track_name := music_display_names[music_last_index] if music_last_index < music_display_names.size() else "Трек"
-    music_track_button.text = "♫  " + track_name + "   ›"
-    music_track_button.tooltip_text = "Нажми, чтобы переключить трек"
+    var track_name := _current_music_title()
+    if is_instance_valid(music_track_button):
+        music_track_button.text = "♫  " + track_name
+        music_track_button.tooltip_text = "Открыть музыкальный плеер"
+    if is_instance_valid(music_ticker_label):
+        music_ticker_label.text = track_name
+        music_ticker_label.position.x = 0.0
 
 func _apply_audio_settings() -> void:
     if AudioServer.bus_count > 0:
@@ -791,7 +803,13 @@ func _process(delta: float) -> void:
     _online_sync_tick(delta)
     background_time += delta
     if is_instance_valid(menu_record_disc):
-        menu_record_disc.rotation = background_time * 0.38
+        menu_record_disc.rotation = background_time * 0.72
+    if is_instance_valid(music_modal_disc):
+        music_modal_disc.rotation = background_time * 0.72
+    if is_instance_valid(music_ticker_label):
+        music_ticker_label.position.x -= delta * 42.0
+        if music_ticker_label.position.x + music_ticker_label.size.x < 0.0:
+            music_ticker_label.position.x = 0.0
     for i in range(music_visualizer_bars.size()):
         var bar := music_visualizer_bars[i]
         if is_instance_valid(bar):
@@ -889,6 +907,7 @@ func _reset_player_stats(who: ArenaPlayer) -> void:
     who.health = who.max_health
 
 func _show_main_menu() -> void:
+    _play_random_music()
     phase = "menu"
     skin_return_to_game = false
     player.set_physics_process(false)
@@ -969,113 +988,182 @@ func _create_menu_banner(parent: Control) -> void:
     parent.add_child(banner)
 
 func _create_menu_record(parent: Control) -> void:
-    # Compact Yandex Music-inspired player with a centered, steady vinyl.
     var dock := Panel.new()
     dock.name = "MusicPlayerDock"
-    dock.position = Vector2(24, 250)
-    dock.size = Vector2(300, 300)
-    dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    var dock_style := StyleBoxFlat.new()
-    dock_style.bg_color = Color("#0b1422", 0.94)
-    dock_style.border_color = Color("#36e6df", 0.58)
-    dock_style.set_border_width_all(1)
-    dock_style.set_corner_radius_all(22)
-    dock_style.shadow_color = Color("#000000", 0.34)
-    dock_style.shadow_size = 14
-    dock.add_theme_stylebox_override("panel", dock_style)
+    dock.position = Vector2(970, 24)
+    dock.size = Vector2(286, 190)
+    dock.clip_contents = true
+    dock.mouse_filter = Control.MOUSE_FILTER_STOP
+    var style := StyleBoxFlat.new()
+    style.bg_color = Color("#0b1422", 0.94)
+    style.border_color = Color("#36e6df", 0.68)
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(20)
+    style.shadow_color = Color("#000000", 0.38)
+    style.shadow_size = 16
+    dock.add_theme_stylebox_override("panel", style)
+    dock.gui_input.connect(func(event: InputEvent):
+        if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+            _open_music_player()
+    )
     parent.add_child(dock)
-
     var caption := Label.new()
-    caption.text = "СЕЙЧАС ИГРАЕТ"
-    caption.position = Vector2(14, 10)
-    caption.size = Vector2(272, 20)
+    caption.text = "NOW PLAYING"
+    caption.position = Vector2(12, 8)
+    caption.size = Vector2(262, 18)
     caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    caption.add_theme_font_size_override("font_size", 11)
+    caption.add_theme_font_size_override("font_size", 10)
     caption.add_theme_color_override("font_color", Color("#91a7bb"))
+    caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
     dock.add_child(caption)
+    menu_record_disc = _make_vinyl_disc(dock, Vector2(91, 29), 104)
+    var ticker_frame := Panel.new()
+    ticker_frame.position = Vector2(18, 140)
+    ticker_frame.size = Vector2(250, 27)
+    ticker_frame.clip_contents = true
+    ticker_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var ticker_style := StyleBoxFlat.new()
+    ticker_style.bg_color = Color("#111e2c")
+    ticker_style.set_corner_radius_all(8)
+    ticker_frame.add_theme_stylebox_override("panel", ticker_style)
+    dock.add_child(ticker_frame)
+    music_ticker_label = Label.new()
+    music_ticker_label.position = Vector2(0, 2)
+    music_ticker_label.size = Vector2(520, 22)
+    music_ticker_label.text = _current_music_title()
+    music_ticker_label.add_theme_font_size_override("font_size", 14)
+    music_ticker_label.add_theme_color_override("font_color", Color("#eaf2fb"))
+    music_ticker_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    ticker_frame.add_child(music_ticker_label)
+    var hint := Label.new()
+    hint.text = "НАЖМИ, ЧТОБЫ ОТКРЫТЬ ПЛЕЕР"
+    hint.position = Vector2(12, 170)
+    hint.size = Vector2(262, 14)
+    hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    hint.add_theme_font_size_override("font_size", 8)
+    hint.add_theme_color_override("font_color", Color("#71879a"))
+    hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    dock.add_child(hint)
+    _update_music_track_button()
 
-    # Explicit center pivot prevents the previous top-left orbiting rotation.
+func _make_vinyl_disc(parent: Control, pos: Vector2, diameter: float) -> Control:
     var record := Panel.new()
-    record.name = "MenuVinylRecord"
-    record.position = Vector2(76, 34)
-    record.size = Vector2(148, 148)
+    record.position = pos
+    record.size = Vector2(diameter, diameter)
     record.pivot_offset = record.size * 0.5
-    record.rotation = 0.0
     record.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var disc_style := StyleBoxFlat.new()
     disc_style.bg_color = Color("#101820")
     disc_style.border_color = Color("#526779")
     disc_style.set_border_width_all(2)
-    disc_style.set_corner_radius_all(74)
+    disc_style.set_corner_radius_all(diameter * 0.5)
     record.add_theme_stylebox_override("panel", disc_style)
-    dock.add_child(record)
-    menu_record_disc = record
-
-    # Three concentric grooves, all with positive dimensions and shared center.
+    parent.add_child(record)
     for i in range(3):
-        var diameter := 126.0 - float(i) * 27.0
-        var groove := Panel.new()
-        groove.position = Vector2((148.0 - diameter) * 0.5, (148.0 - diameter) * 0.5)
-        groove.size = Vector2(diameter, diameter)
-        groove.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        var groove_style := StyleBoxFlat.new()
-        groove_style.bg_color = Color(0, 0, 0, 0)
-        groove_style.border_color = Color("#718095", 0.32 + float(i) * 0.08)
-        groove_style.set_border_width_all(1)
-        groove_style.set_corner_radius_all(diameter * 0.5)
-        groove.add_theme_stylebox_override("panel", groove_style)
-        record.add_child(groove)
+        var ring_size := diameter - 18.0 - float(i) * 20.0
+        var ring := Panel.new()
+        ring.position = Vector2((diameter - ring_size) * 0.5, (diameter - ring_size) * 0.5)
+        ring.size = Vector2(ring_size, ring_size)
+        ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        var ring_style := StyleBoxFlat.new()
+        ring_style.bg_color = Color(0, 0, 0, 0)
+        ring_style.border_color = Color("#718095", 0.4)
+        ring_style.set_border_width_all(1)
+        ring_style.set_corner_radius_all(ring_size * 0.5)
+        ring.add_theme_stylebox_override("panel", ring_style)
+        record.add_child(ring)
+    var center_size := diameter * 0.34
+    var center := Panel.new()
+    center.position = Vector2((diameter - center_size) * 0.5, (diameter - center_size) * 0.5)
+    center.size = Vector2(center_size, center_size)
+    center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var center_style := StyleBoxFlat.new()
+    center_style.bg_color = Color("#36bfc0")
+    center_style.border_color = Color("#b5fff4")
+    center_style.set_border_width_all(2)
+    center_style.set_corner_radius_all(center_size * 0.5)
+    center.add_theme_stylebox_override("panel", center_style)
+    record.add_child(center)
+    return record
 
-    var label_disc := Panel.new()
-    label_disc.position = Vector2(49, 49)
-    label_disc.size = Vector2(50, 50)
-    label_disc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    var label_style := StyleBoxFlat.new()
-    label_style.bg_color = Color("#36bfc0")
-    label_style.border_color = Color("#b5fff4")
-    label_style.set_border_width_all(2)
-    label_style.set_corner_radius_all(25)
-    label_disc.add_theme_stylebox_override("panel", label_style)
-    record.add_child(label_disc)
+func _open_music_player() -> void:
+    if is_instance_valid(music_modal):
+        return
+    music_modal = ColorRect.new()
+    music_modal.name = "MusicPlayerOverlay"
+    music_modal.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    music_modal.color = Color(0.015, 0.025, 0.045, 0.88)
+    music_modal.mouse_filter = Control.MOUSE_FILTER_STOP
+    music_modal.z_index = 50
+    ui.add_child(music_modal)
+    var panel := Panel.new()
+    panel.position = Vector2(390, 118)
+    panel.size = Vector2(500, 484)
+    var panel_style := StyleBoxFlat.new()
+    panel_style.bg_color = Color("#101b2a")
+    panel_style.border_color = Color("#36e6df", 0.72)
+    panel_style.set_border_width_all(2)
+    panel_style.set_corner_radius_all(24)
+    panel.add_theme_stylebox_override("panel", panel_style)
+    music_modal.add_child(panel)
+    var close := Button.new()
+    close.text = "✕"
+    close.position = Vector2(444, 14)
+    close.size = Vector2(38, 38)
+    close.pressed.connect(_close_music_player)
+    panel.add_child(close)
+    var heading := Label.new()
+    heading.text = "МУЗЫКА"
+    heading.position = Vector2(30, 20)
+    heading.size = Vector2(420, 30)
+    heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    heading.add_theme_font_size_override("font_size", 17)
+    heading.add_theme_color_override("font_color", Color("#a9bdce"))
+    panel.add_child(heading)
+    music_modal_disc = _make_vinyl_disc(panel, Vector2(184, 72), 132)
+    var title := Label.new()
+    title.position = Vector2(34, 220)
+    title.size = Vector2(432, 34)
+    title.text = _current_music_title()
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 22)
+    title.add_theme_color_override("font_color", Color("#f4f7fb"))
+    title.clip_text = true
+    panel.add_child(title)
+    var sub := Label.new()
+    sub.text = "KIWI ROUNDS • PLAYLIST"
+    sub.position = Vector2(34, 258)
+    sub.size = Vector2(432, 22)
+    sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    sub.add_theme_font_size_override("font_size", 10)
+    sub.add_theme_color_override("font_color", Color("#71879a"))
+    panel.add_child(sub)
+    var skip := Button.new()
+    skip.text = "⏭  СЛЕДУЮЩИЙ ТРЕК"
+    skip.position = Vector2(112, 376)
+    skip.size = Vector2(276, 54)
+    skip.add_theme_font_size_override("font_size", 16)
+    skip.add_theme_stylebox_override("normal", _menu_button_style(Color("#36e6df"), Color("#b5fff4")))
+    skip.add_theme_color_override("font_color", Color("#07151d"))
+    skip.pressed.connect(func():
+        _play_next_music()
+        title.text = _current_music_title()
+    )
+    panel.add_child(skip)
+    var footer := Label.new()
+    footer.text = "Случайный трек при входе в меню и каждом раунде"
+    footer.position = Vector2(24, 448)
+    footer.size = Vector2(452, 20)
+    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    footer.add_theme_font_size_override("font_size", 10)
+    footer.add_theme_color_override("font_color", Color("#71879a"))
+    panel.add_child(footer)
 
-    var label_dot := ColorRect.new()
-    label_dot.position = Vector2(22, 22)
-    label_dot.size = Vector2(6, 6)
-    label_dot.color = Color("#eafff7")
-    label_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    label_disc.add_child(label_dot)
-
-    var visualizer := HBoxContainer.new()
-    visualizer.position = Vector2(26, 190)
-    visualizer.size = Vector2(248, 24)
-    visualizer.alignment = BoxContainer.ALIGNMENT_CENTER
-    visualizer.add_theme_constant_override("separation", 5)
-    visualizer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    dock.add_child(visualizer)
-    music_visualizer_bars.clear()
-    for i in range(18):
-        var bar := ColorRect.new()
-        bar.custom_minimum_size = Vector2(7, 20)
-        bar.size = Vector2(7, 20)
-        bar.color = Color("#36e6df") if i % 4 != 0 else Color("#d9ef70")
-        bar.pivot_offset = Vector2(3.5, 10)
-        bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        visualizer.add_child(bar)
-        music_visualizer_bars.append(bar)
-
-    music_track_button = Button.new()
-    music_track_button.position = Vector2(14, 228)
-    music_track_button.size = Vector2(272, 54)
-    music_track_button.text = "♫  Загрузка музыки..."
-    music_track_button.tooltip_text = "Нажми, чтобы переключить трек"
-    music_track_button.add_theme_font_size_override("font_size", 12)
-    music_track_button.add_theme_color_override("font_color", Color("#eaf2fb"))
-    music_track_button.add_theme_stylebox_override("normal", _menu_button_style(Color("#172536"), Color("#405a70")))
-    music_track_button.add_theme_stylebox_override("hover", _menu_button_style(Color("#20394c"), Color("#36e6df")))
-    music_track_button.add_theme_stylebox_override("pressed", _menu_button_style(Color("#101923"), Color("#d9ef70")))
-    music_track_button.pressed.connect(_play_next_music)
-    dock.add_child(music_track_button)
-    _update_music_track_button()
+func _close_music_player() -> void:
+    if is_instance_valid(music_modal):
+        music_modal.queue_free()
+    music_modal = null
+    music_modal_disc = null
 
 func _create_menu_bot_preview(parent: Control) -> void:
     # Full-screen background sparring match, independent from the real match state.
