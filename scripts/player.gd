@@ -508,8 +508,8 @@ func _draw() -> void:
     var foot_back := knee_back + Vector2(sin(foot_back_angle) * leg_len, cos(foot_back_angle) * leg_len)
     var foot_front := knee_front + Vector2(sin(foot_front_angle) * leg_len, cos(foot_front_angle) * leg_len)
     if is_on_floor():
-        foot_back.y = minf(foot_back.y, 51.5)
-        foot_front.y = minf(foot_front.y, 51.5)
+        foot_back.y = minf(foot_back.y, 60.5)
+        foot_front.y = minf(foot_front.y, 60.5)
     draw_line(hip_back, knee_back, outline, 10.0, true)
     draw_line(hip_back, knee_back, dark, 6.0, true)
     draw_line(knee_back, foot_back, outline, 9.0, true)
