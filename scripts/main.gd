@@ -140,6 +140,11 @@ var online_in_match := false
 var online_sync_timer := 0.0
 var online_reload_pending := false
 var online_start_button: Button
+var control_edit_mode := false
+var control_drag_target: Control
+var control_drag_offset := Vector2.ZERO
+var control_positions: Dictionary = {}
+var control_editor_overlay: Control
 
 
 
@@ -160,6 +165,7 @@ func _load_settings() -> void:
     shake_enabled = bool(config.get_value("settings","shake_enabled",true))
     controls_mirrored = bool(config.get_value("settings","controls_mirrored",false))
     skin_index = maxi(0,int(config.get_value("settings","skin_index",0)))
+    control_positions = config.get_value("controls","positions",{})
 
 func _save_settings() -> void:
     var config := ConfigFile.new()
@@ -168,6 +174,7 @@ func _save_settings() -> void:
     config.set_value("settings","shake_enabled",shake_enabled)
     config.set_value("settings","controls_mirrored",controls_mirrored)
     config.set_value("settings","skin_index",skin_index)
+    config.set_value("controls","positions",control_positions)
     config.save("user://settings.cfg")
 
 func _boot_game() -> void:
@@ -681,7 +688,6 @@ func _request_reload() -> void:
 func _apply_control_layout() -> void:
     if not is_instance_valid(movement_joystick) or not is_instance_valid(aim_joystick):
         return
-    # Two-thumb layout: left thumb moves; right thumb aims and taps a separate single-shot button.
     if controls_mirrored:
         movement_joystick.position = Vector2(1090,526)
         aim_joystick.position = Vector2(22,526)
@@ -698,14 +704,136 @@ func _apply_control_layout() -> void:
         ammo_label.position = Vector2(930,618)
     movement_joystick.size = Vector2(168,168)
     aim_joystick.size = Vector2(168,168)
-    # Dedicated fire button: exactly one shot per press, no automatic fire.
     fire_button.size = Vector2(132,58)
     fire_button.visible = true
     reload_button.size = Vector2(138,52)
     jump_button.size = Vector2(138,62)
     ammo_label.size = Vector2(152,26)
+    for entry in [
+        ["move", movement_joystick], ["aim", aim_joystick],
+        ["fire", fire_button], ["jump", jump_button], ["reload", reload_button]
+    ]:
+        var saved: Variant = control_positions.get(entry[0], null)
+        if saved is Vector2 and saved.x >= 0.0:
+            entry[1].position = saved
     menu_button.position = Vector2(18,18)
     cards_button.position = Vector2(150,18)
+
+func _open_control_editor() -> void:
+    if control_edit_mode:
+        return
+    if phase == "fight":
+        phase = "paused"
+        player.set_physics_process(false)
+        rival.set_physics_process(false)
+    _clear_control_inputs()
+    _close_overlay()
+    control_edit_mode = true
+    game_controls.visible = true
+    for control in [movement_joystick, aim_joystick, fire_button, jump_button, reload_button]:
+        control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color(0.015,0.035,0.065,0.58)
+    shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    ui.add_child(shade)
+    control_editor_overlay = shade
+    var title := Label.new()
+    title.text = "НАСТРОЙКА УПРАВЛЕНИЯ"
+    title.position = Vector2(0,22)
+    title.size = Vector2(1280,42)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",28)
+    title.add_theme_color_override("font_color",Color("#f4f7ff"))
+    shade.add_child(title)
+    var hint := Label.new()
+    hint.text = "ПЕРЕТАСКИВАЙ СТИКИ И КНОПКИ ПАЛЬЦЕМ. РАСПОЛОЖИ КАК УДОБНО."
+    hint.position = Vector2(180,68)
+    hint.size = Vector2(920,34)
+    hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    hint.add_theme_font_size_override("font_size",15)
+    hint.add_theme_color_override("font_color",Color("#8feee3"))
+    shade.add_child(hint)
+    var done := Button.new()
+    done.text = "СОХРАНИТЬ РАСКЛАДКУ"
+    done.position = Vector2(460,650)
+    done.size = Vector2(360,48)
+    done.add_theme_font_size_override("font_size",18)
+    done.add_theme_stylebox_override("normal",_menu_button_style(Color("#244d58"),Color("#63eee0")))
+    done.pressed.connect(_close_control_editor)
+    shade.add_child(done)
+    var reset := Button.new()
+    reset.text = "СБРОСИТЬ"
+    reset.position = Vector2(850,650)
+    reset.size = Vector2(170,48)
+    reset.add_theme_font_size_override("font_size",16)
+    reset.add_theme_stylebox_override("normal",_menu_button_style(Color("#303644"),Color("#ff9b72")))
+    reset.pressed.connect(_reset_control_layout)
+    shade.add_child(reset)
+
+func _input(event: InputEvent) -> void:
+    if not control_edit_mode:
+        return
+    if event is InputEventScreenTouch:
+        if event.pressed:
+            _begin_control_drag(event.position)
+        else:
+            _end_control_drag()
+    elif event is InputEventScreenDrag and control_drag_target != null:
+        _move_control_drag(event.position)
+    elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+        if event.pressed:
+            _begin_control_drag(event.position)
+        else:
+            _end_control_drag()
+    elif event is InputEventMouseMotion and control_drag_target != null and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+        _move_control_drag(event.position)
+
+func _begin_control_drag(point: Vector2) -> void:
+    var candidates: Array[Control] = [fire_button, reload_button, jump_button, aim_joystick, movement_joystick]
+    for item in candidates:
+        if is_instance_valid(item) and item.get_global_rect().has_point(point):
+            control_drag_target = item
+            control_drag_offset = point - item.position
+            get_viewport().set_input_as_handled()
+            return
+
+func _move_control_drag(point: Vector2) -> void:
+    if not is_instance_valid(control_drag_target):
+        return
+    var next_pos := point - control_drag_offset
+    next_pos.x = clampf(next_pos.x, 0.0, 1280.0 - control_drag_target.size.x)
+    next_pos.y = clampf(next_pos.y, 110.0, 720.0 - control_drag_target.size.y)
+    control_drag_target.position = next_pos
+    get_viewport().set_input_as_handled()
+
+func _end_control_drag() -> void:
+    if is_instance_valid(control_drag_target):
+        var key := "move"
+        if control_drag_target == aim_joystick: key = "aim"
+        elif control_drag_target == fire_button: key = "fire"
+        elif control_drag_target == jump_button: key = "jump"
+        elif control_drag_target == reload_button: key = "reload"
+        control_positions[key] = control_drag_target.position
+    control_drag_target = null
+
+func _close_control_editor() -> void:
+    _end_control_drag()
+    control_edit_mode = false
+    for control in [movement_joystick, aim_joystick, fire_button, jump_button, reload_button]:
+        control.mouse_filter = Control.MOUSE_FILTER_STOP
+    if is_instance_valid(control_editor_overlay):
+        control_editor_overlay.queue_free()
+    control_editor_overlay = null
+    _save_settings()
+    if phase == "paused":
+        _resume_game()
+    else:
+        _show_settings()
+
+func _reset_control_layout() -> void:
+    control_positions.clear()
+    _apply_control_layout()
 
 func _setup_music() -> void:
     music_player = AudioStreamPlayer.new()
@@ -2109,6 +2237,7 @@ func _show_settings() -> void:
         ["ВИБРАЦИЯ: " + ("ВКЛ" if vibration_enabled else "ВЫКЛ"),Callable(self,"_toggle_vibration")],
         ["ТРЯСКА КАМЕРЫ: " + ("ВКЛ" if shake_enabled else "ВЫКЛ"),Callable(self,"_toggle_shake")],
         ["РАСКЛАДКА: " + ("ЛЕВША" if controls_mirrored else "ПРАВША"),Callable(self,"_toggle_controls")],
+        ["НАСТРОИТЬ РАСПОЛОЖЕНИЕ КНОПОК",Callable(self,"_open_control_editor")],
         ["НАЗАД",Callable(self,"_show_main_menu")]
     ],"Настройки применяются сразу. Нажми на громкость, чтобы переключить уровень.")
 
