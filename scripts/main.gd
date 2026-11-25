@@ -63,6 +63,7 @@ var skin_index := 0
 var score_player := 0
 var score_bot := 0
 var round_index := 1
+var match_rounds_to_win := 5
 var phase := "menu"
 var game_mode := "bot"
 var bot_difficulty := "normal"
@@ -616,22 +617,22 @@ func _apply_control_layout() -> void:
     if not is_instance_valid(movement_joystick) or not is_instance_valid(aim_joystick):
         return
     if controls_mirrored:
-        movement_joystick.position = Vector2(1092,530)
-        aim_joystick.position = Vector2(28,530)
-        fire_button.position = Vector2(1098,448)
-        reload_button.position = Vector2(948,626)
-        jump_button.position = Vector2(28,448)
+        movement_joystick.position = Vector2(1090,548)
+        aim_joystick.position = Vector2(34,548)
+        fire_button.position = Vector2(1098,474)
+        reload_button.position = Vector2(930,635)
+        jump_button.position = Vector2(34,474)
     else:
-        movement_joystick.position = Vector2(28,530)
-        aim_joystick.position = Vector2(1092,530)
-        fire_button.position = Vector2(28,448)
-        reload_button.position = Vector2(164,626)
-        jump_button.position = Vector2(1098,448)
-    movement_joystick.size = Vector2(160,160)
-    aim_joystick.size = Vector2(160,160)
-    fire_button.size = Vector2(144,64)
-    reload_button.size = Vector2(148,56)
-    jump_button.size = Vector2(144,64)
+        movement_joystick.position = Vector2(34,548)
+        aim_joystick.position = Vector2(1090,548)
+        fire_button.position = Vector2(34,474)
+        reload_button.position = Vector2(196,635)
+        jump_button.position = Vector2(1098,474)
+    movement_joystick.size = Vector2(144,144)
+    aim_joystick.size = Vector2(144,144)
+    fire_button.size = Vector2(132,58)
+    reload_button.size = Vector2(138,52)
+    jump_button.size = Vector2(132,58)
     ammo_label.position = Vector2(160 if not controls_mirrored else 970,592)
     ammo_label.size = Vector2(152,30)
     menu_button.position = Vector2(18,18)
@@ -902,8 +903,8 @@ func _show_main_menu() -> void:
     var banner := TextureRect.new()
     banner.name = "KiwiNeonBanner"
     banner.texture = load("res://assets/1795552443370.jpg") as Texture2D
-    banner.position = Vector2(204, 0)
-    banner.size = Vector2(720, 405)
+    banner.position = Vector2(320, 18)
+    banner.size = Vector2(640, 340)
     banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
     banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
     banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -950,10 +951,32 @@ func _show_main_menu() -> void:
     mods.pressed.connect(_open_mods)
 
 func _create_menu_record(parent: Control) -> void:
+    var dock := Panel.new()
+    dock.name = "MusicPlayerDock"
+    dock.position = Vector2(930, 270)
+    dock.size = Vector2(320, 270)
+    dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var dock_style := StyleBoxFlat.new()
+    dock_style.bg_color = Color("#091321", 0.82)
+    dock_style.border_color = Color("#36e6df", 0.72)
+    dock_style.set_border_width_all(2)
+    dock_style.set_corner_radius_all(20)
+    dock.add_theme_stylebox_override("panel", dock_style)
+    parent.add_child(dock)
+
+    var music_caption := Label.new()
+    music_caption.text = "СЕЙЧАС ИГРАЕТ"
+    music_caption.position = Vector2(18, 12)
+    music_caption.size = Vector2(284, 24)
+    music_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    music_caption.add_theme_font_size_override("font_size", 13)
+    music_caption.add_theme_color_override("font_color", Color("#a9bdcb"))
+    dock.add_child(music_caption)
+
     var record := Panel.new()
     record.name = "MenuVinylRecord"
-    record.position = Vector2(1120, 64)
-    record.size = Vector2(96, 96)
+    record.position = Vector2(1030, 292)
+    record.size = Vector2(116, 116)
     record.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var outer := StyleBoxFlat.new()
     outer.bg_color = Color("#101923")
@@ -965,7 +988,7 @@ func _create_menu_record(parent: Control) -> void:
 
     var ring := Panel.new()
     ring.position = Vector2(12, 12)
-    ring.size = Vector2(72, 72)
+    ring.size = Vector2(92, 92)
     ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var ring_style := StyleBoxFlat.new()
     ring_style.bg_color = Color("#172536")
@@ -977,9 +1000,9 @@ func _create_menu_record(parent: Control) -> void:
 
     for i in range(3):
         var groove := Panel.new()
-        var inset := 20.0 + float(i) * 10.0
+        var inset := 25.0 + float(i) * 12.0
         groove.position = Vector2(inset, inset)
-        groove.size = Vector2(72.0 - inset * 2.0, 72.0 - inset * 2.0)
+        groove.size = Vector2(92.0 - inset * 2.0, 92.0 - inset * 2.0)
         groove.mouse_filter = Control.MOUSE_FILTER_IGNORE
         var groove_style := StyleBoxFlat.new()
         groove_style.bg_color = Color(0, 0, 0, 0)
@@ -991,16 +1014,16 @@ func _create_menu_record(parent: Control) -> void:
 
     menu_record_needle = ColorRect.new()
     menu_record_needle.name = "MenuRecordNeedle"
-    menu_record_needle.position = Vector2(47, 46)
-    menu_record_needle.size = Vector2(35, 4)
+    menu_record_needle.position = Vector2(58, 56)
+    menu_record_needle.size = Vector2(42, 4)
     menu_record_needle.pivot_offset = Vector2(2, 2)
     menu_record_needle.color = Color("#36e6df")
     menu_record_needle.mouse_filter = Control.MOUSE_FILTER_IGNORE
     record.add_child(menu_record_needle)
 
     var visualizer := HBoxContainer.new()
-    visualizer.position = Vector2(1000, 172)
-    visualizer.size = Vector2(190, 24)
+    visualizer.position = Vector2(970, 430)
+    visualizer.size = Vector2(230, 26)
     visualizer.add_theme_constant_override("separation", 5)
     visualizer.mouse_filter = Control.MOUSE_FILTER_IGNORE
     parent.add_child(visualizer)
@@ -1016,11 +1039,11 @@ func _create_menu_record(parent: Control) -> void:
         music_visualizer_bars.append(bar)
 
     music_track_button = Button.new()
-    music_track_button.position = Vector2(885, 202)
-    music_track_button.size = Vector2(340, 42)
+    music_track_button.position = Vector2(950, 472)
+    music_track_button.size = Vector2(276, 48)
     music_track_button.text = "♫  Загрузка музыки..."
     music_track_button.tooltip_text = "Нажми, чтобы переключить трек"
-    music_track_button.add_theme_font_size_override("font_size", 11)
+    music_track_button.add_theme_font_size_override("font_size", 13)
     music_track_button.add_theme_color_override("font_color", Color("#eaf2fb"))
     music_track_button.add_theme_stylebox_override("normal", _menu_button_style(Color("#172536"), Color("#526779")))
     music_track_button.add_theme_stylebox_override("hover", _menu_button_style(Color("#20394c"), Color("#36e6df")))
@@ -1348,8 +1371,9 @@ func _show_mode_menu() -> void:
         ["ОНЛАЙН",Callable(self,"_show_online_info")],
         ["ПРОТИВ БОТОВ",Callable(self,"_show_difficulty_menu")],
         ["ТРЕНИРОВКА",Callable(self,"_start_training")],
+        ["НАСТРОЙКА МАТЧА",Callable(self,"_show_match_settings")],
         ["НАЗАД",Callable(self,"_show_main_menu")]
-    ],"Выбери, как хочешь играть")
+    ],"До победы в матче: %d раундов" % match_rounds_to_win)
 
 func _show_difficulty_menu() -> void:
     _show_panel("СЛОЖНОСТЬ БОТОВ",[
@@ -1358,6 +1382,19 @@ func _show_difficulty_menu() -> void:
         ["СЛОЖНАЯ",Callable(self,"_set_hard")],
         ["НАЗАД",Callable(self,"_show_mode_menu")]
     ],"Сейчас: " + bot_difficulty.to_upper())
+
+func _show_match_settings() -> void:
+    _show_panel("НАСТРОЙКА МАТЧА",[
+        ["3 РАУНДА",Callable(self,"_set_match_rounds").bind(3)],
+        ["5 РАУНДОВ",Callable(self,"_set_match_rounds").bind(5)],
+        ["7 РАУНДОВ",Callable(self,"_set_match_rounds").bind(7)],
+        ["9 РАУНДОВ",Callable(self,"_set_match_rounds").bind(9)],
+        ["НАЗАД",Callable(self,"_show_mode_menu")]
+    ],"Сейчас: до %d побед" % match_rounds_to_win)
+
+func _set_match_rounds(value: int) -> void:
+    match_rounds_to_win = clampi(value, 1, 15)
+    _show_match_settings()
 
 func _set_easy() -> void:
     bot_difficulty = "easy"
@@ -2643,7 +2680,7 @@ func _finish_round(player_won: bool) -> void:
     _update_hud()
     if game_mode == "training":
         _show_training_round_end()
-    elif score_player >= 5 or score_bot >= 5:
+    elif score_player >= match_rounds_to_win or score_bot >= match_rounds_to_win:
         if game_mode == "online":
             phase = "match_end"
         _show_match_end()
