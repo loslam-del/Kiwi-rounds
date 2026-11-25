@@ -963,6 +963,7 @@ func _show_main_menu() -> void:
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     shade.color = Color(0, 0, 0, 0)
     shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    shade.modulate.a = 0.0
     ui.add_child(shade)
     overlay = shade
 
@@ -1040,6 +1041,17 @@ func _show_main_menu() -> void:
     footer.add_theme_color_override("font_color", Color("#7890a6"))
     footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
     shade.add_child(footer)
+    _animate_overlay_in(shade)
+
+
+func _animate_overlay_in(target: Control) -> void:
+    if not is_instance_valid(target):
+        return
+    target.modulate.a = 0.0
+    var entrance := create_tween()
+    entrance.set_trans(Tween.TRANS_CUBIC)
+    entrance.set_ease(Tween.EASE_OUT)
+    entrance.tween_property(target, "modulate:a", 1.0, 0.24)
 
 
 func _create_menu_banner(parent: Control) -> void:
@@ -2793,6 +2805,7 @@ func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> v
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     shade.color = Color("#0b1019")
+    shade.modulate.a = 0.0
     ui.add_child(shade)
     overlay = shade
     _add_menu_ornaments(shade)
@@ -2863,6 +2876,7 @@ func _show_panel(title_text: String, buttons: Array, subtitle: String = "") -> v
     footer.add_theme_font_size_override("font_size",12)
     footer.add_theme_color_override("font_color",Color("#626875"))
     shade.add_child(footer)
+    _animate_overlay_in(shade)
 
 func _menu_button_style(fill: Color, outline: Color) -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
