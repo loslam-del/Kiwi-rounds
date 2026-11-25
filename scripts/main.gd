@@ -616,24 +616,24 @@ func _apply_control_layout() -> void:
     if not is_instance_valid(movement_joystick) or not is_instance_valid(aim_joystick):
         return
     if controls_mirrored:
-        movement_joystick.position = Vector2(1136,575)
-        aim_joystick.position = Vector2(28,575)
-        fire_button.position = Vector2(1132,490)
-        reload_button.position = Vector2(984,625)
-        jump_button.position = Vector2(32,490)
+        movement_joystick.position = Vector2(1092,530)
+        aim_joystick.position = Vector2(28,530)
+        fire_button.position = Vector2(1098,448)
+        reload_button.position = Vector2(948,626)
+        jump_button.position = Vector2(28,448)
     else:
-        movement_joystick.position = Vector2(28,575)
-        aim_joystick.position = Vector2(1136,575)
-        fire_button.position = Vector2(32,490)
-        reload_button.position = Vector2(164,625)
-        jump_button.position = Vector2(1136,490)
-    movement_joystick.size = Vector2(116,116)
-    aim_joystick.size = Vector2(116,116)
-    fire_button.size = Vector2(116,52)
-    reload_button.size = Vector2(132,48)
-    jump_button.size = Vector2(112,52)
-    ammo_label.position = Vector2(158 if not controls_mirrored else 972,590)
-    ammo_label.size = Vector2(150,28)
+        movement_joystick.position = Vector2(28,530)
+        aim_joystick.position = Vector2(1092,530)
+        fire_button.position = Vector2(28,448)
+        reload_button.position = Vector2(164,626)
+        jump_button.position = Vector2(1098,448)
+    movement_joystick.size = Vector2(160,160)
+    aim_joystick.size = Vector2(160,160)
+    fire_button.size = Vector2(144,64)
+    reload_button.size = Vector2(148,56)
+    jump_button.size = Vector2(144,64)
+    ammo_label.position = Vector2(160 if not controls_mirrored else 970,592)
+    ammo_label.size = Vector2(152,30)
     menu_button.position = Vector2(18,18)
     cards_button.position = Vector2(150,18)
 
@@ -898,34 +898,36 @@ func _show_main_menu() -> void:
     _create_menu_bot_preview(shade)
     _create_menu_record(shade)
 
-    var logo := Label.new()
-    logo.name = "MenuLogo"
-    logo.text = "KIWI  ROUNDS"
-    logo.position = Vector2(390, 22)
-    logo.size = Vector2(500, 66)
-    logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    logo.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    logo.add_theme_font_size_override("font_size", 42)
-    logo.add_theme_color_override("font_color", Color("#f4f7ff"))
-    logo.add_theme_color_override("font_shadow_color", Color("#36e6df", 0.65))
-    logo.add_theme_constant_override("shadow_offset_x", 0)
-    logo.add_theme_constant_override("shadow_offset_y", 2)
-    logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    shade.add_child(logo)
+    # Transparent black key lets the original neon logo sit over the animated arena.
+    var banner := TextureRect.new()
+    banner.name = "KiwiNeonBanner"
+    banner.texture = load("res://assets/1795552443370.jpg") as Texture2D
+    banner.position = Vector2(300, 22)
+    banner.size = Vector2(680, 382)
+    banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+    banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var key_shader := Shader.new()
+    key_shader.code = "shader_type canvas_item;\nvoid fragment() { vec4 c = texture(TEXTURE, UV) * COLOR; float v = max(max(c.r, c.g), c.b); float a = smoothstep(0.012, 0.105, v); COLOR = vec4(c.rgb, c.a * a); }"
+    var key_material := ShaderMaterial.new()
+    key_material.shader = key_shader
+    banner.material = key_material
+    shade.add_child(banner)
 
-    var subtitle := Label.new()
-    subtitle.text = "NEON BOT ARENA  •  RANDOM MAPS  •  RANDOM BUILDS"
-    subtitle.position = Vector2(300, 105)
-    subtitle.size = Vector2(680, 24)
-    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    subtitle.add_theme_font_size_override("font_size", 13)
-    subtitle.add_theme_color_override("font_color", Color("#a9e9ee"))
-    shade.add_child(subtitle)
+    var alpha_tag := Label.new()
+    alpha_tag.text = "ALPHA  •  EARLY ACCESS BUILD"
+    alpha_tag.position = Vector2(450, 392)
+    alpha_tag.size = Vector2(380, 26)
+    alpha_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    alpha_tag.add_theme_font_size_override("font_size", 15)
+    alpha_tag.add_theme_color_override("font_color", Color("#d9ef70"))
+    alpha_tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    shade.add_child(alpha_tag)
 
-    # Centered translucent menu keeps the live fight visible around it.
+    # Lower menu dock keeps the logo and arena visible.
     var menu_panel := Panel.new()
-    menu_panel.position = Vector2(425, 155)
-    menu_panel.size = Vector2(430, 390)
+    menu_panel.position = Vector2(350, 430)
+    menu_panel.size = Vector2(580, 264)
     var menu_style := StyleBoxFlat.new()
     menu_style.bg_color = Color("#091321", 0.78)
     menu_style.border_color = Color("#36e6df", 0.82)
@@ -936,31 +938,31 @@ func _show_main_menu() -> void:
     menu_panel.add_theme_stylebox_override("panel", menu_style)
     shade.add_child(menu_panel)
 
-    var play := _add_button("▶   ИГРАТЬ", Vector2(465, 238), Vector2(350, 66), shade)
-    play.add_theme_font_size_override("font_size", 25)
+    var play := _add_button("▶   ИГРАТЬ", Vector2(385, 452), Vector2(510, 48), shade)
+    play.add_theme_font_size_override("font_size", 23)
     play.add_theme_stylebox_override("normal", _menu_button_style(Color("#36e6df"), Color("#b5fff4")))
     play.add_theme_color_override("font_color", Color("#07151d"))
     play.pressed.connect(_show_mode_menu)
 
-    var skins := _add_button("✦   СКИНЫ", Vector2(465, 322), Vector2(350, 58), shade)
+    var skins := _add_button("✦   СКИНЫ", Vector2(385, 510), Vector2(245, 48), shade)
     skins.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
     skins.add_theme_color_override("font_color", Color("#e8f6ff"))
     skins.pressed.connect(_open_skins)
 
-    var settings := _add_button("⚙   НАСТРОЙКИ", Vector2(465, 394), Vector2(350, 58), shade)
+    var settings := _add_button("⚙   НАСТРОЙКИ", Vector2(650, 510), Vector2(245, 48), shade)
     settings.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#36e6df")))
     settings.add_theme_color_override("font_color", Color("#e8f6ff"))
     settings.pressed.connect(_show_settings)
 
-    var mods := _add_button("▣   МОДЫ", Vector2(465, 466), Vector2(350, 58), shade)
+    var mods := _add_button("▣   МОДЫ", Vector2(385, 568), Vector2(510, 48), shade)
     mods.add_theme_stylebox_override("normal", _menu_button_style(Color("#172b43"), Color("#8b67ff")))
     mods.add_theme_color_override("font_color", Color("#e8f6ff"))
     mods.pressed.connect(_open_mods)
 
     var footer := Label.new()
     footer.text = "KIWI LABS   •   BUILD. FIGHT. REPEAT."
-    footer.position = Vector2(425, 508)
-    footer.size = Vector2(430, 22)
+    footer.position = Vector2(425, 646)
+    footer.size = Vector2(430, 20)
     footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     footer.add_theme_font_size_override("font_size", 12)
     footer.add_theme_color_override("font_color", Color("#9bb8c9"))
