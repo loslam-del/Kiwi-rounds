@@ -67,6 +67,10 @@ var ground_accel_scale := 1.0
 var wall_jump_scale := 1.0
 var kiwi_aura := false
 var menu_preview_mode := false
+var menu_spawn_position := Vector2.ZERO
+var menu_respawn_timer := 0.0
+var menu_jump_cooldown := 0.0
+var menu_strafe_phase := 0.0
 var menu_mascot := false
 var remote_controlled := false
 var remote_move := 0.0
@@ -153,6 +157,30 @@ func clear_touch_controls() -> void:
     jump_hold_timer = 0.0
 
 func _physics_process(delta: float) -> void:
+    if menu_preview_mode:
+        if menu_respawn_timer > 0.0:
+            menu_respawn_timer = maxf(0.0, menu_respawn_timer - delta)
+            velocity = Vector2.ZERO
+            if menu_respawn_timer <= 0.0:
+                global_position = menu_spawn_position
+                velocity = Vector2.ZERO
+                health = max_health
+                ammo = magazine_size
+                reload_timer = 0.0
+                reload_visual = 0.0
+                pulse_cooldown = 0.55
+                collision_layer = 1
+                visible = true
+            else:
+                queue_redraw()
+                return
+        elif health <= 0 or global_position.y > 900.0:
+            menu_respawn_timer = 0.85
+            collision_layer = 0
+            visible = false
+            velocity = Vector2.ZERO
+            queue_redraw()
+            return
     animation_time += delta * (8.5 if absf(velocity.x) > 35.0 and is_on_floor() else 2.2)
     pulse_cooldown = maxf(0.0, pulse_cooldown - delta)
     recoil_kick = move_toward(recoil_kick, 0.0, delta * 38.0)
@@ -325,15 +353,38 @@ func _read_keyboard() -> void:
 func _think_bot(delta: float) -> void:
     if not is_instance_valid(target):
         move_input = 0.0
+        jump_held = false
         return
 
     var delta_x := target.global_position.x - global_position.x
     var distance_x := absf(delta_x)
+    var direct_vector := target.global_position - global_position
+    var travel_time := absf(direct_vector.x) / maxf(projectile_speed, 1.0)
+    var predicted_target: Vector2 = target.global_position + target.velocity * minf(travel_time, 0.32)
+    # Compensate for the projectile's gravity so shots lead moving targets.
+    var gravity_compensation := Vector2(0.0, 525.0 * travel_time * travel_time)
+    var aim_vector: Vector2 = (predicted_target - global_position - gravity_compensation).normalized()
+    set_aim(aim_vector)
+
     if menu_preview_mode:
-        # Menu fighters deliberately approach, then create space and approach again.
-        # This avoids the old position-dependent sine that could cancel their movement.
-        var patrol := sin(float(Time.get_ticks_msec()) * 0.00135 + (0.0 if name == "MenuBotKiwi" else PI))
-        move_input = patrol
+        # Menu fighters alternate between closing distance, retreating and strafing.
+        # The phase offset makes the two bots behave independently rather than mirror-lock.
+        menu_jump_cooldown = maxf(0.0, menu_jump_cooldown - delta)
+        var strafe := sin(float(Time.get_ticks_msec()) * 0.00072 + menu_strafe_phase)
+        if distance_x > 390.0:
+            move_input = signf(delta_x)
+        elif distance_x < 175.0:
+            move_input = -signf(delta_x)
+        else:
+            move_input = strafe * 0.72
+
+        # Occasional short hops keep the preview lively without constant bunny-hopping.
+        if is_on_floor() and menu_jump_cooldown <= 0.0 and randf() < delta * 0.42:
+            bot_jump_hold_timer = 0.16
+            menu_jump_cooldown = randf_range(1.5, 2.8)
+        else:
+            bot_jump_hold_timer = maxf(0.0, bot_jump_hold_timer - delta)
+        jump_held = bot_jump_hold_timer > 0.0
     else:
         if distance_x > 235.0:
             move_input = signf(delta_x)
@@ -341,18 +392,6 @@ func _think_bot(delta: float) -> void:
             move_input = -signf(delta_x)
         else:
             move_input = 0.0
-    var direct_vector := target.global_position - global_position
-    var travel_time := absf(direct_vector.x) / maxf(projectile_speed, 1.0)
-    var predicted_target: Vector2 = target.global_position + target.velocity * minf(travel_time, 0.32)
-    # Preview shots have a gentle downward arc; aim slightly above the predicted position.
-    var gravity_compensation := Vector2(0.0, 525.0 * travel_time * travel_time)
-    var aim_vector: Vector2 = (predicted_target - global_position - gravity_compensation).normalized()
-    set_aim(aim_vector)
-    if menu_preview_mode:
-        # Menu sparring is deliberately grounded: no repeated jump loops or floating bots.
-        bot_jump_hold_timer = 0.0
-        jump_held = false
-    else:
         bot_jump_hold_timer = maxf(0.0,bot_jump_hold_timer-delta)
         if is_on_floor() and bot_jump_hold_timer <= 0.0 and (target.global_position.y < global_position.y - 70.0 or (distance_x < 100.0 and randf() < 0.018)):
             bot_jump_hold_timer = 0.23
@@ -362,7 +401,7 @@ func _think_bot(delta: float) -> void:
     if ammo <= 0 and reload_timer <= 0.0:
         start_reload()
     if bot_think <= 0.0:
-        bot_think = 0.18
+        bot_think = 0.18 if menu_preview_mode else 0.18
         if ammo > 0 and reload_timer <= 0.0 and aim_vector.length() > 0.0 and randf() < bot_accuracy:
             _fire_pulse()
 
