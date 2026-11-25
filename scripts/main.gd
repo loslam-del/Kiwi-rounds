@@ -364,63 +364,63 @@ func _add_platform(at: Vector2, dimensions: Vector2) -> void:
     body.add_child(shape_node)
     add_child(body)
     platform_nodes.append(body)
-    var visual := Polygon2D.new()
-    visual.polygon = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(-dimensions.x/2,dimensions.y/2)])
-    visual.color = arena_platform_color
-    body.add_child(visual)
-    # Layered bevels and small illuminated insets give platforms a machined
-    # arcade-hardware look without changing their collision geometry.
-    var top_face := Polygon2D.new()
-    top_face.polygon = PackedVector2Array([
-        Vector2(-dimensions.x * 0.5 + 3.0, -dimensions.y * 0.5 + 3.0),
-        Vector2(dimensions.x * 0.5 - 3.0, -dimensions.y * 0.5 + 3.0),
-        Vector2(dimensions.x * 0.5 - 8.0, -dimensions.y * 0.5 + dimensions.y * 0.42),
-        Vector2(-dimensions.x * 0.5 + 8.0, -dimensions.y * 0.5 + dimensions.y * 0.42)
+
+    # Painted anime-fantasy platform: dark stone underside, warm lacquer top,
+    # soft pink rim light and small decorative gold seams. Physics stays identical.
+    var w := dimensions.x
+    var h := dimensions.y
+    var base := Polygon2D.new()
+    base.polygon = PackedVector2Array([
+        Vector2(-w*0.5,-h*0.5),Vector2(w*0.5,-h*0.5),
+        Vector2(w*0.5,h*0.5),Vector2(-w*0.5,h*0.5)
     ])
-    top_face.color = Color(arena_accent.lightened(0.35), 0.10)
-    body.add_child(top_face)
-    var side_bevel := Line2D.new()
-    side_bevel.points = PackedVector2Array([
-        Vector2(-dimensions.x * 0.5 + 2.0, dimensions.y * 0.5 - 2.0),
-        Vector2(dimensions.x * 0.5 - 2.0, dimensions.y * 0.5 - 2.0)
+    base.color = Color("#28334d")
+    body.add_child(base)
+
+    var front_face := Polygon2D.new()
+    front_face.polygon = PackedVector2Array([
+        Vector2(-w*0.5,h*0.5-2),Vector2(w*0.5,h*0.5-2),
+        Vector2(w*0.5+8,h*0.5+9),Vector2(-w*0.5-8,h*0.5+9)
     ])
-    side_bevel.width = 1.4
-    side_bevel.default_color = Color("#d9faff", 0.16)
-    side_bevel.antialiased = true
-    body.add_child(side_bevel)
-    var inset_count := clampi(int(dimensions.x / 62.0), 1, 8)
-    for inset_index in range(inset_count):
-        var inset_x := -dimensions.x * 0.5 + 18.0 + float(inset_index) * ((dimensions.x - 36.0) / float(maxi(1, inset_count - 1)))
-        var inset := Line2D.new()
-        inset.points = PackedVector2Array([
-            Vector2(inset_x, -dimensions.y * 0.5 + 5.0),
-            Vector2(inset_x + 7.0, -dimensions.y * 0.5 + 5.0)
-        ])
-        inset.width = 2.0
-        inset.default_color = Color(arena_accent.lightened(0.45), 0.48)
-        body.add_child(inset)
-    var lower_glow := Polygon2D.new()
-    lower_glow.polygon = PackedVector2Array([Vector2(-dimensions.x/2,dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2+5),Vector2(-dimensions.x/2,dimensions.y/2+5)])
-    lower_glow.color = Color(arena_accent.darkened(0.18),0.55)
-    body.add_child(lower_glow)
-    var glow := Line2D.new()
-    glow.points = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2)])
-    glow.width = 12.0
-    glow.default_color = Color(arena_accent,0.15)
-    glow.antialiased = true
-    body.add_child(glow)
-    var stripe := Line2D.new()
-    stripe.points = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2)])
-    stripe.width = 3.5
-    stripe.default_color = arena_accent
-    stripe.antialiased = true
-    body.add_child(stripe)
-    var edge := Line2D.new()
-    edge.points = PackedVector2Array([Vector2(-dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,-dimensions.y/2),Vector2(dimensions.x/2,dimensions.y/2),Vector2(-dimensions.x/2,dimensions.y/2),Vector2(-dimensions.x/2,-dimensions.y/2)])
-    edge.width = 1.2
-    edge.default_color = Color(arena_accent.lightened(0.18),0.45)
-    edge.antialiased = true
-    body.add_child(edge)
+    front_face.color = Color("#171f35")
+    body.add_child(front_face)
+
+    var top := Polygon2D.new()
+    top.polygon = PackedVector2Array([
+        Vector2(-w*0.5+3,-h*0.5+2),Vector2(w*0.5-3,-h*0.5+2),
+        Vector2(w*0.5-9,-h*0.5+h*0.48),Vector2(-w*0.5+9,-h*0.5+h*0.48)
+    ])
+    top.color = Color("#52627d")
+    body.add_child(top)
+
+    var rim_glow := Line2D.new()
+    rim_glow.points = PackedVector2Array([Vector2(-w*0.5,-h*0.5),Vector2(w*0.5,-h*0.5)])
+    rim_glow.width = 10.0
+    rim_glow.default_color = Color("#ffb9d1",0.18)
+    rim_glow.antialiased = true
+    body.add_child(rim_glow)
+
+    var rim := Line2D.new()
+    rim.points = PackedVector2Array([Vector2(-w*0.5,-h*0.5+1),Vector2(w*0.5,-h*0.5+1)])
+    rim.width = 3.0
+    rim.default_color = Color("#f3c6d6",0.92)
+    rim.antialiased = true
+    body.add_child(rim)
+
+    var lower_edge := Line2D.new()
+    lower_edge.points = PackedVector2Array([Vector2(-w*0.5-6,h*0.5+8),Vector2(w*0.5+6,h*0.5+8)])
+    lower_edge.width = 2.0
+    lower_edge.default_color = Color("#a8c9ec",0.45)
+    lower_edge.antialiased = true
+    body.add_child(lower_edge)
+
+    for mark in range(clampi(int(w / 110.0),1,6)):
+        var px := -w*0.5 + 28.0 + float(mark) * (w - 56.0) / float(maxi(1,clampi(int(w / 110.0),1,6)-1))
+        var seam := Line2D.new()
+        seam.points = PackedVector2Array([Vector2(px,-h*0.5+5),Vector2(px+12,-h*0.5+5)])
+        seam.width = 2.0
+        seam.default_color = Color("#ffe1ac",0.62)
+        body.add_child(seam)
 
 func _make_players() -> void:
     player = PLAYER_SCRIPT.new()
