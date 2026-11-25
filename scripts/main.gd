@@ -1073,6 +1073,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     var stage := Node2D.new()
     stage.name = "MenuBotPreview"
     stage.position = Vector2.ZERO
+    stage.process_mode = Node.PROCESS_MODE_ALWAYS
     parent.add_child(stage)
 
     var map_data: Dictionary = all_maps.pick_random() if not all_maps.is_empty() else DEFAULT_MAPS[0]
@@ -1133,7 +1134,9 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_a.body_color = Color("#e8bd9c")
     bot_a.skin_style = "kiwi_human"
     bot_a.position = Vector2(360, 577)
-    bot_a.bot_accuracy = 0.86
+    bot_a.menu_spawn_position = bot_a.position
+    bot_a.menu_strafe_phase = 0.35
+    bot_a.bot_accuracy = 0.82
     bot_a.move_speed = 430.0
     bot_a.pulse_force = 610.0
     bot_a.pulse_interval = 0.56
@@ -1144,6 +1147,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     stage.add_child(bot_a)
     bot_a.process_mode = Node.PROCESS_MODE_ALWAYS
     bot_a.set_physics_process(true)
+    bot_a.set_process(true)
 
     var bot_b: ArenaPlayer = PLAYER_SCRIPT.new()
     bot_b.name = "MenuBotPink"
@@ -1151,7 +1155,9 @@ func _create_menu_bot_preview(parent: Control) -> void:
     bot_b.menu_preview_mode = true
     bot_b.body_color = Color("#ff6fae")
     bot_b.position = Vector2(920, 577)
-    bot_b.bot_accuracy = 0.86
+    bot_b.menu_spawn_position = bot_b.position
+    bot_b.menu_strafe_phase = 2.65
+    bot_b.bot_accuracy = 0.82
     bot_b.move_speed = 430.0
     bot_b.pulse_force = 610.0
     bot_b.pulse_interval = 0.56
@@ -1162,6 +1168,7 @@ func _create_menu_bot_preview(parent: Control) -> void:
     stage.add_child(bot_b)
     bot_b.process_mode = Node.PROCESS_MODE_ALWAYS
     bot_b.set_physics_process(true)
+    bot_b.set_process(true)
     bot_a.target = bot_b
     bot_b.target = bot_a
     bot_a.pulse_requested.connect(_spawn_menu_preview_pulse.bind(stage))
