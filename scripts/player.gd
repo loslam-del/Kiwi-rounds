@@ -100,6 +100,11 @@ var leg_back_angular_velocity := 0.0
 var leg_front_angular_velocity := 0.0
 var knee_back_angular_velocity := 0.0
 var knee_front_angular_velocity := 0.0
+var ragdoll_timer := 0.0
+var ragdoll_strength := 0.0
+var torso_lean := 0.0
+var torso_angular_velocity := 0.0
+var ragdoll_spin := 0.0
 
 
 func _ready() -> void:
@@ -297,8 +302,22 @@ func _step_limb_physics(delta: float, horizontal_acceleration: float) -> void:
     var knee_back_target := (0.02 + maxf(0.0, gait_cos) * 0.95 if moving else -0.08) + absf(jump_drive) * 0.28
     var knee_front_target := (0.02 + maxf(0.0, -gait_cos) * 0.95 if moving else -0.08) + absf(jump_drive) * 0.28
 
-    var spring_k := 58.0
-    var damping_rate := 13.5
+    # Strong impacts temporarily release the limb springs into a loose ragdoll pose.
+    ragdoll_timer = maxf(0.0, ragdoll_timer - delta)
+    ragdoll_strength = move_toward(ragdoll_strength, 1.0 if ragdoll_timer > 0.0 else 0.0, delta * (2.8 if ragdoll_timer > 0.0 else 1.65))
+    var ragdoll_drive := ragdoll_strength
+    var fall_drive := clampf(velocity.y / 900.0, -0.5, 1.0)
+    arm_back_target = lerpf(arm_back_target, -1.35 + fall_drive * 1.15 + ragdoll_spin * 0.35, ragdoll_drive)
+    arm_front_target = lerpf(arm_front_target, 1.35 + fall_drive * 1.15 - ragdoll_spin * 0.35, ragdoll_drive)
+    elbow_back_target = lerpf(elbow_back_target, -1.1 + fall_drive * 0.9, ragdoll_drive)
+    elbow_front_target = lerpf(elbow_front_target, 1.1 + fall_drive * 0.9, ragdoll_drive)
+    leg_back_target = lerpf(leg_back_target, -0.8 + fall_drive * 0.7 + ragdoll_spin * 0.28, ragdoll_drive)
+    leg_front_target = lerpf(leg_front_target, 0.8 + fall_drive * 0.7 - ragdoll_spin * 0.28, ragdoll_drive)
+    knee_back_target = lerpf(knee_back_target, 0.9, ragdoll_drive)
+    knee_front_target = lerpf(knee_front_target, 0.9, ragdoll_drive)
+    ragdoll_spin = move_toward(ragdoll_spin, 0.0, delta * 1.8)
+    var spring_k := lerpf(58.0, 17.0, ragdoll_drive)
+    var damping_rate := lerpf(13.5, 3.8, ragdoll_drive)
     arm_back_angular_velocity += ((arm_back_target - arm_back_angle) * spring_k - arm_back_angular_velocity * damping_rate - accel_swing * 1.0) * delta
     arm_front_angular_velocity += ((arm_front_target - arm_front_angle) * spring_k - arm_front_angular_velocity * damping_rate - accel_swing * 1.0) * delta
     elbow_back_angular_velocity += ((elbow_back_target - elbow_back_angle) * 72.0 - elbow_back_angular_velocity * 15.0) * delta
@@ -334,7 +353,10 @@ func apply_hit_impulse(direction: Vector2, force: float) -> void:
     arm_front_angular_velocity -= side * 4.6 * kick
     leg_back_angular_velocity -= side * 2.2 * kick
     leg_front_angular_velocity -= side * 2.8 * kick
-    hitstun_timer = maxf(hitstun_timer, 0.16)
+    hitstun_timer = maxf(hitstun_timer, 0.32)
+    ragdoll_timer = maxf(ragdoll_timer, clampf(force / 780.0 * 0.48, 0.28, 0.9))
+    ragdoll_spin += direction.x * clampf(force / 780.0, 0.55, 1.9) * 1.15
+    torso_angular_velocity += -side * clampf(force / 780.0, 0.55, 1.9) * 2.8
 
 
 func _read_keyboard() -> void:
@@ -558,13 +580,15 @@ func _draw() -> void:
     if is_on_floor():
         foot_back.y = minf(foot_back.y, 63.0)
         foot_front.y = minf(foot_front.y, 63.0)
-    draw_line(hip_back, knee_back, outline, 11.5, true)
-    draw_line(hip_back, knee_back, dark, 7.0, true)
-    draw_circle(knee_back, 4.2, dark)
-    draw_line(knee_back, foot_back, outline, 10.5, true)
-    draw_line(knee_back, foot_back, dark, 6.5, true)
-    draw_line(foot_back + Vector2(-6,0), foot_back + Vector2(8,0), outline, 8.0, true)
-    draw_line(foot_back + Vector2(-5,0), foot_back + Vector2(7,0), dark, 4.8, true)
+    # Soft rounded upper legs, padded knees and chunky sneakers.
+    draw_line(hip_back, knee_back, outline, 13.0, true)
+    draw_line(hip_back, knee_back, dark, 9.0, true)
+    draw_circle(knee_back, 5.8, outline)
+    draw_circle(knee_back, 4.1, dark)
+    draw_line(knee_back, foot_back, outline, 11.5, true)
+    draw_line(knee_back, foot_back, dark, 7.8, true)
+    draw_line(foot_back + Vector2(-7,0), foot_back + Vector2(9,0), outline, 9.5, true)
+    draw_line(foot_back + Vector2(-6,-1), foot_back + Vector2(8,-1), dark, 6.0, true)
 
     var shoulder_back := Vector2(-12.0, -7.0)
     var shoulder_front := Vector2(12.0, -7.0)
@@ -585,14 +609,15 @@ func _draw() -> void:
         draw_line(center + Vector2(-2.5,5.0), center + Vector2(2.5,5.0), Color("#102536"), 1.5, true)
 
     # Near-side leg is in front of the torso, with a visible knee and foot.
-    draw_line(hip_front, knee_front, outline, 11.5, true)
-    draw_line(hip_front, knee_front, light, 7.0, true)
-    draw_circle(knee_front, 3.8, body_color.lightened(0.05))
-    draw_line(knee_front, foot_front, outline, 10.5, true)
-    draw_line(knee_front, foot_front, body_color, 6.5, true)
-    draw_line(foot_front + Vector2(-6,0), foot_front + Vector2(9,0), outline, 8.0, true)
-    draw_line(foot_front + Vector2(-5,0), foot_front + Vector2(8,0), light, 4.8, true)
-    draw_circle(hip_front, 4.0, light)
+    draw_line(hip_front, knee_front, outline, 13.0, true)
+    draw_line(hip_front, knee_front, light, 9.0, true)
+    draw_circle(knee_front, 5.8, outline)
+    draw_circle(knee_front, 4.1, body_color.lightened(0.05))
+    draw_line(knee_front, foot_front, outline, 11.5, true)
+    draw_line(knee_front, foot_front, body_color, 7.8, true)
+    draw_line(foot_front + Vector2(-7,0), foot_front + Vector2(10,0), outline, 9.5, true)
+    draw_line(foot_front + Vector2(-6,-1), foot_front + Vector2(9,-1), light, 6.0, true)
+    draw_circle(hip_front, 5.0, light)
 
     if kiwi_aura:
         for leaf_index in range(4):
@@ -865,15 +890,15 @@ func _draw_two_hand_blaster(center: Vector2) -> void:
     var arm_outline := Color("#142333")
     var arm_color := body_color.lightened(0.12)
     for arm_points in [[shoulder_a, elbow_a, grip_hand], [shoulder_b, elbow_b, support_hand]]:
-        draw_line(arm_points[0], arm_points[1], arm_outline, 9.0, true)
-        draw_line(arm_points[0], arm_points[1], arm_color, 5.8, true)
-        draw_line(arm_points[1], arm_points[2], arm_outline, 8.0, true)
-        draw_line(arm_points[1], arm_points[2], arm_color, 5.2, true)
-        draw_circle(arm_points[1], 4.0, arm_outline)
-        draw_circle(arm_points[1], 2.8, arm_color)
-        draw_circle(arm_points[2], 3.6, Color("#e9c9aa"))
-    draw_circle(shoulder_a, 3.8, arm_color)
-    draw_circle(shoulder_b, 3.8, arm_color)
+        draw_line(arm_points[0], arm_points[1], arm_outline, 11.5, true)
+        draw_line(arm_points[0], arm_points[1], arm_color, 8.0, true)
+        draw_line(arm_points[1], arm_points[2], arm_outline, 10.0, true)
+        draw_line(arm_points[1], arm_points[2], arm_color, 7.0, true)
+        draw_circle(arm_points[1], 5.8, arm_outline)
+        draw_circle(arm_points[1], 4.0, arm_color)
+        draw_circle(arm_points[2], 5.0, Color("#e9c9aa"))
+    draw_circle(shoulder_a, 5.0, arm_color)
+    draw_circle(shoulder_b, 5.0, arm_color)
     var screen_origin := Vector2(gun_origin.x * facing, gun_origin.y)
     draw_set_transform(screen_origin, aim_input.angle(), Vector2.ONE)
     var outline := Color("#142333")
