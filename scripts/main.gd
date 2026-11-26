@@ -1718,8 +1718,8 @@ func _add_menu_battle_scene(parent: Control) -> void:
 
     var character_3: ArenaPlayer = PLAYER_SCRIPT.new()
     character_3.name = "MenuCharacter3Hiding"
-    character_3.body_color = Color("#79d85d")
-    character_3.skin_style = "kiwi"
+    character_3.body_color = Color("#b9d9bd")
+    character_3.skin_style = "kiwi_human"
     character_3.position = Vector2(780, 435)
     character_3.facing = -1.0
     character_3.aim_input = Vector2(-1, -0.15)
@@ -1767,8 +1767,8 @@ func _add_menu_battle_scene(parent: Control) -> void:
 
     var shooter: ArenaPlayer = PLAYER_SCRIPT.new()
     shooter.name = "MenuForegroundShooter"
-    shooter.body_color = Color("#ff786f")
-    shooter.skin_style = "kiwi"
+    shooter.body_color = Color("#ffb39a")
+    shooter.skin_style = "kiwi_human"
     shooter.position = Vector2(1015, 545)
     shooter.facing = -1.0
     shooter.aim_input = Vector2(-0.88, -0.30)
