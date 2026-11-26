@@ -459,7 +459,6 @@ func _get_skins() -> Array[Dictionary]:
         mods_loaded = true
     var skins: Array[Dictionary] = [
         {"id":"kiwi_araga","name":"Киви Арага","color":"#e9c5a8","style":"kiwi_human"},
-        {"id":"kiwi_mascot","name":"Киви-маскот","color":"#75d65a","style":"kiwi"},
         {"name":"Неон","color":"#39d6c5"},{"name":"Лазурь","color":"#4b9cff"},
         {"name":"Аметист","color":"#b47cff"},{"name":"Золото","color":"#ffc857"},
         {"name":"Пульс","color":"#ff78b7"},{"name":"Коралловый","color":"#ff765e"},
@@ -485,7 +484,12 @@ func _get_skins() -> Array[Dictionary]:
         {"name":"Галактика","color":"#7b65d8"},{"name":"Хром","color":"#b8c5ce"},
         {"name":"Вулкан","color":"#e64b32"},{"name":"Северное сияние","color":"#56d8bd"}
     ]
-    skins.append_array(mod_loader.skins)
+    for mod_skin in mod_loader.skins:
+        var skin_id := str(mod_skin.get("id", "")).to_lower()
+        var skin_name := str(mod_skin.get("name", "")).to_lower()
+        if skin_id in ["kiwi_araga", "kiwi_mascot"] or skin_name in ["киви арага", "киви-маскот"]:
+            continue
+        skins.append(mod_skin)
     return skins
 
 func _apply_skin() -> void:
@@ -1081,158 +1085,187 @@ func _show_main_menu() -> void:
 
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color("#18263e")
+    shade.color = Color("#070b18")
     shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
     shade.modulate.a = 0.0
     ui.add_child(shade)
     overlay = shade
 
-    # Main menu stage uses only the game's own Kiwi characters.
     _create_menu_bot_preview(shade)
     _create_menu_record(shade)
 
-    var tint := ColorRect.new()
-    tint.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    tint.color = Color(0.025,0.045,0.085,0.48)
-    tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    shade.add_child(tint)
-
-    var top := Panel.new()
-    top.position = Vector2(26,20)
-    top.size = Vector2(900,72)
-    var top_style := StyleBoxFlat.new()
-    top_style.bg_color = Color("#263653",0.94)
-    top_style.border_color = Color("#f2bfd0",0.90)
-    top_style.set_border_width_all(2)
-    top_style.set_corner_radius_all(20)
-    top.add_theme_stylebox_override("panel",top_style)
-    shade.add_child(top)
+    # Brawl-like layout: one dominant play action, compact navigation, no mode picker.
+    var logo_shadow := Label.new()
+    logo_shadow.text = "KIWI"
+    logo_shadow.position = Vector2(46, 34)
+    logo_shadow.size = Vector2(430, 92)
+    logo_shadow.add_theme_font_size_override("font_size", 76)
+    logo_shadow.add_theme_color_override("font_color", Color("#020711", 0.8))
+    shade.add_child(logo_shadow)
 
     var logo := Label.new()
-    logo.text = "KIWI  ROUNDS"
-    logo.position = Vector2(52,30)
-    logo.size = Vector2(300,48)
-    logo.add_theme_font_size_override("font_size",34)
-    logo.add_theme_color_override("font_color",Color("#fff0e8"))
+    logo.text = "KIWI"
+    logo.position = Vector2(40, 26)
+    logo.size = Vector2(430, 92)
+    logo.add_theme_font_size_override("font_size", 76)
+    logo.add_theme_color_override("font_color", Color("#f4fbff"))
     shade.add_child(logo)
 
+    var subtitle := Label.new()
+    subtitle.text = "ROUNDS"
+    subtitle.position = Vector2(54, 105)
+    subtitle.size = Vector2(240, 32)
+    subtitle.add_theme_font_size_override("font_size", 22)
+    subtitle.add_theme_color_override("font_color", Color("#52f6ef"))
+    shade.add_child(subtitle)
+
     var season := Label.new()
-    season.text = "АРЕНА • СЕЗОН 01"
-    season.position = Vector2(360,39)
-    season.size = Vector2(260,30)
-    season.add_theme_font_size_override("font_size",15)
-    season.add_theme_color_override("font_color",Color("#f6c3d5"))
+    season.text = "NEON CITY  •  SEASON 01"
+    season.position = Vector2(44, 151)
+    season.size = Vector2(300, 24)
+    season.add_theme_font_size_override("font_size", 13)
+    season.add_theme_color_override("font_color", Color("#b6c9e6"))
     shade.add_child(season)
 
-    var play_panel := Panel.new()
-    play_panel.position = Vector2(300,470)
-    play_panel.size = Vector2(600,205)
-    var play_style := StyleBoxFlat.new()
-    play_style.bg_color = Color("#35435f",0.96)
-    play_style.border_color = Color("#f4bfd0",0.95)
-    play_style.set_border_width_all(2)
-    play_style.set_corner_radius_all(26)
-    play_style.shadow_color = Color("#000000",0.5)
-    play_style.shadow_size = 24
-    play_panel.add_theme_stylebox_override("panel",play_style)
-    shade.add_child(play_panel)
+    var play_shadow := Panel.new()
+    play_shadow.position = Vector2(420, 552)
+    play_shadow.size = Vector2(440, 104)
+    var shadow_style := StyleBoxFlat.new()
+    shadow_style.bg_color = Color("#08101e", 0.94)
+    shadow_style.border_color = Color("#07101b")
+    shadow_style.set_border_width_all(3)
+    shadow_style.set_corner_radius_all(24)
+    play_shadow.add_theme_stylebox_override("panel", shadow_style)
+    shade.add_child(play_shadow)
 
-    var callout := Label.new()
-    callout.text = "ГОТОВ К СЛЕДУЮЩЕМУ РАУНДУ?"
-    callout.position = Vector2(320,480)
-    callout.size = Vector2(560,28)
-    callout.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    callout.add_theme_font_size_override("font_size",15)
-    callout.add_theme_color_override("font_color",Color("#ffe0a6"))
-    shade.add_child(callout)
+    var play := _add_button("ИГРАТЬ", Vector2(430, 540), Vector2(420, 96), shade)
+    play.add_theme_font_size_override("font_size", 38)
+    play.add_theme_color_override("font_color", Color("#07141e"))
+    play.add_theme_stylebox_override("normal", _menu_button_style(Color("#48f2dc"), Color("#c5fff7")))
+    play.add_theme_stylebox_override("hover", _menu_button_style(Color("#8affee"), Color.WHITE))
+    play.add_theme_stylebox_override("pressed", _menu_button_style(Color("#22cbbd"), Color("#e1fffa")))
+    play.pressed.connect(func(): _start_game("bot"))
 
-    var play := _add_button("ИГРАТЬ",Vector2(350,518),Vector2(500,72),shade)
-    play.add_theme_font_size_override("font_size",30)
-    play.add_theme_stylebox_override("normal",_menu_button_style(Color("#f4b8cc"),Color("#ffe5ed")))
-    play.add_theme_stylebox_override("hover",_menu_button_style(Color("#ffd7e2"),Color.WHITE))
-    play.add_theme_color_override("font_color",Color("#28334d"))
-    play.pressed.connect(_show_mode_menu)
-
-    var cards := _add_button("КАРТОЧКИ",Vector2(350,605),Vector2(240,48),shade)
-    cards.add_theme_font_size_override("font_size",17)
-    cards.add_theme_stylebox_override("normal",_menu_button_style(Color("#40506e"),Color("#b9c9ed")))
-    cards.add_theme_color_override("font_color",Color.WHITE)
-    cards.pressed.connect(_open_training_cards)
-
-    var shop := _add_button("МАГАЗИН СКИНОВ",Vector2(610,605),Vector2(240,48),shade)
-    shop.add_theme_font_size_override("font_size",16)
-    shop.add_theme_stylebox_override("normal",_menu_button_style(Color("#263b5c"),Color("#f4ce58")))
-    shop.add_theme_color_override("font_color",Color.WHITE)
-    shop.pressed.connect(_open_skins)
-
-    var news_panel := Panel.new()
-    news_panel.position = Vector2(950,190)
-    news_panel.size = Vector2(300,450)
-    var news_style := StyleBoxFlat.new()
-    news_style.bg_color = Color("#101d31",0.94)
-    news_style.border_color = Color("#f0bdd0",0.88)
-    news_style.set_border_width_all(2)
-    news_style.set_corner_radius_all(22)
-    news_panel.add_theme_stylebox_override("panel",news_style)
-    shade.add_child(news_panel)
-
-    var news_title := Label.new()
-    news_title.text = "НОВОСТИ"
-    news_title.position = Vector2(972,210)
-    news_title.size = Vector2(256,42)
-    news_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    news_title.add_theme_font_size_override("font_size",25)
-    news_title.add_theme_color_override("font_color",Color("#ffe0aa"))
-    shade.add_child(news_title)
-
-    var news_items := [
-        ["01  •  НОВЫЙ СЕЗОН","Арена открыта! Собирай карточки и готовься к новым боям."],
-        ["02  •  МАГАЗИН","В коллекции уже 50 оригинальных обликов Kiwi Rounds."],
-        ["03  •  ОБНОВЛЕНИЕ","Аниме-арены, воздушные эффекты и мобильное управление."]
+    var nav_y := 650.0
+    var nav_specs := [
+        ["НОВОСТИ", Vector2(270, nav_y), Vector2(170, 48), Callable(self, "_open_news")],
+        ["КАРТОЧКИ", Vector2(455, nav_y), Vector2(170, 48), Callable(self, "_open_training_cards")],
+        ["ОБЛИКИ", Vector2(640, nav_y), Vector2(170, 48), Callable(self, "_open_skins")],
+        ["НАСТРОЙКИ", Vector2(825, nav_y), Vector2(170, 48), Callable(self, "_show_settings")]
     ]
-    var news_y := 270.0
-    for item in news_items:
-        var card := Panel.new()
-        card.position = Vector2(970,news_y)
-        card.size = Vector2(260,100)
-        var card_style := StyleBoxFlat.new()
-        card_style.bg_color = Color("#354561",0.96)
-        card_style.border_color = Color("#a8b9d6",0.55)
-        card_style.set_border_width_all(1)
-        card_style.set_corner_radius_all(14)
-        card.add_theme_stylebox_override("panel",card_style)
-        shade.add_child(card)
-        var heading := Label.new()
-        heading.text = item[0]
-        heading.position = Vector2(985,news_y+9)
-        heading.size = Vector2(230,24)
-        heading.add_theme_font_size_override("font_size",13)
-        heading.add_theme_color_override("font_color",Color("#f4c4d6"))
-        shade.add_child(heading)
-        var body := Label.new()
-        body.text = item[1]
-        body.position = Vector2(985,news_y+34)
-        body.size = Vector2(230,58)
-        body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-        body.add_theme_font_size_override("font_size",12)
-        body.add_theme_color_override("font_color",Color("#f4eaf0"))
-        shade.add_child(body)
-        news_y += 112.0
+    for spec in nav_specs:
+        var nav := _add_button(spec[0], spec[1], spec[2], shade)
+        nav.add_theme_font_size_override("font_size", 14)
+        nav.add_theme_color_override("font_color", Color("#edf8ff"))
+        nav.add_theme_stylebox_override("normal", _menu_button_style(Color("#111c30", 0.94), Color("#36d9e8", 0.78)))
+        nav.add_theme_stylebox_override("hover", _menu_button_style(Color("#1b3150"), Color("#ff4fd8")))
+        nav.pressed.connect(spec[3])
 
-    var settings := _add_button("⚙",Vector2(850,30),Vector2(58,52),shade)
-    settings.add_theme_font_size_override("font_size",24)
-    settings.add_theme_stylebox_override("normal",_menu_button_style(Color("#1b2b45"),Color("#f2bfd0")))
-    settings.pressed.connect(_show_settings)
+    var profile_tag := Label.new()
+    profile_tag.text = "PLAYER 01"
+    profile_tag.position = Vector2(44, 202)
+    profile_tag.size = Vector2(180, 22)
+    profile_tag.add_theme_font_size_override("font_size", 12)
+    profile_tag.add_theme_color_override("font_color", Color("#ff66d9"))
+    shade.add_child(profile_tag)
 
-    var footer := Label.new()
-    footer.text = "KIWI ROUNDS  •  ВЫБИРАЙ КАРТЫ, СОБИРАЙ ОБЛИКИ, ПОБЕЖДАЙ"
-    footer.position = Vector2(300,685)
-    footer.size = Vector2(600,20)
-    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    footer.add_theme_font_size_override("font_size",10)
-    footer.add_theme_color_override("font_color",Color("#9db2c9"))
-    shade.add_child(footer)
+    var settings_hint := Label.new()
+    settings_hint.text = "NEON ARENA  /  READY TO FIGHT"
+    settings_hint.position = Vector2(0, 704)
+    settings_hint.size = Vector2(1280, 12)
+    settings_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    settings_hint.add_theme_font_size_override("font_size", 9)
+    settings_hint.add_theme_color_override("font_color", Color("#7894b5"))
+    shade.add_child(settings_hint)
     _animate_overlay_in(shade)
+
+
+func _open_news() -> void:
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#080d1b")
+    ui.add_child(shade)
+    overlay = shade
+    _add_menu_ornaments(shade)
+
+    var title := Label.new()
+    title.text = "НОВОСТИ"
+    title.position = Vector2(0, 34)
+    title.size = Vector2(1280, 64)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 42)
+    title.add_theme_color_override("font_color", Color("#f3f8ff"))
+    shade.add_child(title)
+
+    var subtitle := Label.new()
+    subtitle.text = "ПОСЛЕДНИЕ СОБЫТИЯ KIWI ROUNDS"
+    subtitle.position = Vector2(0, 100)
+    subtitle.size = Vector2(1280, 26)
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size", 13)
+    subtitle.add_theme_color_override("font_color", Color("#4fe8e2"))
+    shade.add_child(subtitle)
+
+    var news_data := [
+        ["01  /  NEON CITY", "НОВАЯ АРЕНА", "Неоновые улицы, светящиеся вывески и новые места для перестрелок."],
+        ["02  /  COMBAT", "БОЕВАЯ СИСТЕМА", "Карточки усилений меняют каждый раунд. Собирай комбинации и адаптируйся."],
+        ["03  /  CUSTOM", "ОБЛИКИ", "Выбирай внешний вид бойца и собирай свою коллекцию."]
+    ]
+    for i in range(news_data.size()):
+        var x := 120.0 + float(i) * 350.0
+        var card := Panel.new()
+        card.position = Vector2(x, 205)
+        card.size = Vector2(320, 330)
+        var style := StyleBoxFlat.new()
+        style.bg_color = Color("#101d32", 0.98)
+        style.border_color = [Color("#40f0df"), Color("#ff4fd8"), Color("#7d8cff")][i]
+        style.set_border_width_all(2)
+        style.set_corner_radius_all(20)
+        style.shadow_color = Color("#000000", 0.42)
+        style.shadow_size = 18
+        card.add_theme_stylebox_override("panel", style)
+        shade.add_child(card)
+
+        var stripe := ColorRect.new()
+        stripe.position = Vector2(18, 18)
+        stripe.size = Vector2(284, 5)
+        stripe.color = [Color("#40f0df"), Color("#ff4fd8"), Color("#7d8cff")][i]
+        card.add_child(stripe)
+
+        var number := Label.new()
+        number.text = news_data[i][0]
+        number.position = Vector2(22, 46)
+        number.size = Vector2(276, 24)
+        number.add_theme_font_size_override("font_size", 12)
+        number.add_theme_color_override("font_color", Color("#9cb2d1"))
+        card.add_child(number)
+
+        var heading := Label.new()
+        heading.text = news_data[i][1]
+        heading.position = Vector2(22, 105)
+        heading.size = Vector2(276, 70)
+        heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        heading.add_theme_font_size_override("font_size", 24)
+        heading.add_theme_color_override("font_color", Color("#f5fbff"))
+        card.add_child(heading)
+
+        var body := Label.new()
+        body.text = news_data[i][2]
+        body.position = Vector2(22, 190)
+        body.size = Vector2(276, 112)
+        body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        body.add_theme_font_size_override("font_size", 16)
+        body.add_theme_color_override("font_color", Color("#b9c9df"))
+        card.add_child(body)
+
+    var back := _add_button("НАЗАД", Vector2(510, 600), Vector2(260, 58), shade)
+    back.add_theme_font_size_override("font_size", 18)
+    back.add_theme_stylebox_override("normal", _menu_button_style(Color("#14243a"), Color("#40e9e1")))
+    back.pressed.connect(_show_main_menu)
+    _animate_overlay_in(shade)
+
 
 func _animate_overlay_in(target: Control) -> void:
     if not is_instance_valid(target):
@@ -1479,7 +1512,7 @@ func _close_music_player() -> void:
     music_modal_disc = null
 
 func _create_menu_bot_preview(parent: Control) -> void:
-    # Painted anime landscape backdrop. Character nodes and their appearance are untouched.
+    # Three rotating neon-city backdrops, built from layered geometry for a faux-3D scene.
     var backdrop := Control.new()
     backdrop.name = "MenuBattleBackdrop"
     backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1487,76 +1520,153 @@ func _create_menu_bot_preview(parent: Control) -> void:
     parent.add_child(backdrop)
     parent.move_child(backdrop, 0)
 
+    var variant := randi_range(0, 2)
+    var palettes := [
+        [Color("#070b1c"), Color("#101b38"), Color("#162d4c"), Color("#35f0e2"), Color("#ff4fd8")],
+        [Color("#10091f"), Color("#25143f"), Color("#351b50"), Color("#a56bff"), Color("#42e9ff")],
+        [Color("#06151d"), Color("#0c2935"), Color("#123c4b"), Color("#40f0bd"), Color("#ffb64a")]
+    ]
+    var p: Array = palettes[variant]
+
     var sky := ColorRect.new()
-    sky.size = Vector2(1280,720)
-    sky.color = Color("#283b5b")
+    sky.size = Vector2(1280, 720)
+    sky.color = p[0]
     sky.mouse_filter = Control.MOUSE_FILTER_IGNORE
     backdrop.add_child(sky)
 
-    var sunset := ColorRect.new()
-    sunset.position = Vector2(0,170)
-    sunset.size = Vector2(1280,360)
-    sunset.color = Color("#77516f")
-    sunset.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    backdrop.add_child(sunset)
+    for y in range(8):
+        var haze := ColorRect.new()
+        haze.position = Vector2(0, float(y) * 42.0 + 100.0)
+        haze.size = Vector2(1280, 48)
+        haze.color = Color(p[1], 0.12 - float(y) * 0.009)
+        haze.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        backdrop.add_child(haze)
 
-    var sun := ColorRect.new()
-    sun.position = Vector2(515,165)
-    sun.size = Vector2(250,250)
-    sun.color = Color("#f4b7c8")
-    sun.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    backdrop.add_child(sun)
-
-    for layer in range(3):
-        var mountain := Polygon2D.new()
-        var base_y := 445.0 + float(layer) * 55.0
-        mountain.polygon = PackedVector2Array([
-            Vector2(0,base_y),Vector2(145,base_y-105-float(layer)*12),
-            Vector2(310,base_y-30),Vector2(490,base_y-145),
-            Vector2(680,base_y-20),Vector2(865,base_y-125),
-            Vector2(1050,base_y-35),Vector2(1190,base_y-110),
-            Vector2(1280,base_y-55),Vector2(1280,720),Vector2(0,720)
+    # Distant skyline with glowing windows.
+    for i in range(12):
+        var w := 58.0 + float((i * 19) % 54)
+        var h := 150.0 + float((i * 47) % 170)
+        var x := float(i) * 112.0 - 20.0
+        var building := Polygon2D.new()
+        building.polygon = PackedVector2Array([
+            Vector2(x, 420.0-h), Vector2(x+w, 420.0-h-22.0),
+            Vector2(x+w+10.0, 420.0), Vector2(x-8.0, 420.0)
         ])
-        mountain.color = [Color("#40506b"),Color("#34435f"),Color("#27344f")][layer]
-        backdrop.add_child(mountain)
+        building.color = p[1].darkened(0.25)
+        backdrop.add_child(building)
+        for row in range(4):
+            for col in range(2):
+                var window := ColorRect.new()
+                window.position = Vector2(x + 10.0 + float(col)*22.0, 270.0 - h*0.42 + float(row)*27.0)
+                window.size = Vector2(8, 13)
+                window.color = Color(p[3] if (i+row+col)%2==0 else p[4], 0.52)
+                window.mouse_filter = Control.MOUSE_FILTER_IGNORE
+                backdrop.add_child(window)
 
-    # Sakura branches at the edges frame the fight and keep the center clear.
-    for side in [-1,1]:
-        var root := Vector2(0.0 if side < 0 else 1280.0, 245.0)
-        var branch := Line2D.new()
-        branch.points = PackedVector2Array([
-            root,root+Vector2(62.0 if side < 0 else -62.0,-52.0),
-            root+Vector2(125.0 if side < 0 else -125.0,-94.0),
-            root+Vector2(205.0 if side < 0 else -205.0,-138.0)
-        ])
-        branch.width = 9.0
-        branch.default_color = Color("#49384f",0.9)
-        branch.antialiased = true
-        backdrop.add_child(branch)
-        for blossom in range(18):
-            var bx := float((blossom * 37) % 205)
-            var by := float((blossom * 23) % 130)
-            var petal := ColorRect.new()
-            petal.position = Vector2(bx if side < 0 else 1280.0-bx-7.0, 115.0+by)
-            petal.size = Vector2(8,5)
-            petal.color = Color("#ffd3df",0.76)
-            petal.rotation = float(blossom % 4) * 0.45
-            petal.mouse_filter = Control.MOUSE_FILTER_IGNORE
-            backdrop.add_child(petal)
+    # Giant neon architecture frames the combat without hiding the fighters.
+    var left_wall := Polygon2D.new()
+    left_wall.polygon = PackedVector2Array([Vector2(0,0),Vector2(250,0),Vector2(385,570),Vector2(0,650)])
+    left_wall.color = Color("#0b1427", 0.96)
+    backdrop.add_child(left_wall)
+    var right_wall := Polygon2D.new()
+    right_wall.polygon = PackedVector2Array([Vector2(1010,0),Vector2(1280,0),Vector2(1280,650),Vector2(895,570)])
+    right_wall.color = Color("#0a1325", 0.96)
+    backdrop.add_child(right_wall)
 
-    for cloud in range(5):
-        var cloud_line := Line2D.new()
-        var cx := float(cloud) * 285.0 - 20.0
-        var cy := 145.0 + float((cloud * 31) % 95)
-        cloud_line.points = PackedVector2Array([
-            Vector2(cx,cy),Vector2(cx+55,cy-5),Vector2(cx+105,cy+1),Vector2(cx+165,cy-4)
+    for side in [-1, 1]:
+        var glow := Line2D.new()
+        glow.points = PackedVector2Array([
+            Vector2(20 if side < 0 else 1260, 30),
+            Vector2(115 if side < 0 else 1165, 270),
+            Vector2(185 if side < 0 else 1095, 520)
         ])
-        cloud_line.width = 4.0
-        cloud_line.default_color = Color("#f2d5e4",0.24)
-        cloud_line.antialiased = true
-        backdrop.add_child(cloud_line)
+        glow.width = 8.0
+        glow.default_color = Color(p[3], 0.88)
+        glow.antialiased = true
+        backdrop.add_child(glow)
+        var glow_core := Line2D.new()
+        glow_core.points = glow.points
+        glow_core.width = 2.0
+        glow_core.default_color = Color.WHITE
+        glow_core.antialiased = true
+        backdrop.add_child(glow_core)
+
+    # Perspective floor converges behind the firefight.
+    var floor := Polygon2D.new()
+    floor.polygon = PackedVector2Array([
+        Vector2(0, 490), Vector2(1280, 490), Vector2(1280, 720), Vector2(0, 720)
+    ])
+    floor.color = Color("#080f20")
+    backdrop.add_child(floor)
+
+    for i in range(17):
+        var x := float(i) * 80.0
+        var grid_line := Line2D.new()
+        grid_line.points = PackedVector2Array([Vector2(640, 490), Vector2(x, 720)])
+        grid_line.width = 2.0
+        grid_line.default_color = Color(p[3], 0.28)
+        grid_line.antialiased = true
+        backdrop.add_child(grid_line)
+    for i in range(6):
+        var horizon := Line2D.new()
+        var y := 500.0 + float(i*i) * 6.0
+        horizon.points = PackedVector2Array([Vector2(0, y), Vector2(1280, y)])
+        horizon.width = 1.5
+        horizon.default_color = Color(p[4], 0.16)
+        horizon.antialiased = true
+        backdrop.add_child(horizon)
+
+    # Floating signs and light panels create a layered cyberpunk city depth.
+    for i in range(4):
+        var sign := Panel.new()
+        sign.position = Vector2(70.0 + float(i)*300.0, 115.0 + float(i%2)*62.0)
+        sign.size = Vector2(150, 48)
+        var sign_style := StyleBoxFlat.new()
+        sign_style.bg_color = Color("#091322", 0.9)
+        sign_style.border_color = p[4] if i%2==0 else p[3]
+        sign_style.set_border_width_all(2)
+        sign_style.set_corner_radius_all(7)
+        sign.add_theme_stylebox_override("panel", sign_style)
+        backdrop.add_child(sign)
+        var sign_text := Label.new()
+        sign_text.text = ["KIWI", "NEON", "ROUNDS", "CITY"][i]
+        sign_text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+        sign_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        sign_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        sign_text.add_theme_font_size_override("font_size", 17)
+        sign_text.add_theme_color_override("font_color", Color("#f4fbff"))
+        sign.add_child(sign_text)
+
+    # Neon cover blocks make the hiding position readable.
+    var cover_shadow := Polygon2D.new()
+    cover_shadow.polygon = PackedVector2Array([
+        Vector2(670, 440), Vector2(890, 405), Vector2(925, 520), Vector2(695, 560)
+    ])
+    cover_shadow.color = Color("#030711", 0.86)
+    backdrop.add_child(cover_shadow)
+    var cover_face := Polygon2D.new()
+    cover_face.polygon = PackedVector2Array([
+        Vector2(680, 420), Vector2(880, 390), Vector2(905, 500), Vector2(700, 535)
+    ])
+    cover_face.color = Color("#13243d")
+    backdrop.add_child(cover_face)
+    var cover_edge := Line2D.new()
+    cover_edge.points = PackedVector2Array([Vector2(680,420),Vector2(880,390),Vector2(905,500)])
+    cover_edge.width = 5.0
+    cover_edge.default_color = Color(p[3])
+    cover_edge.antialiased = true
+    backdrop.add_child(cover_edge)
+
+    for i in range(28):
+        var spark := ColorRect.new()
+        spark.position = Vector2(float((i*97)%1280), float((i*53)%460)+35.0)
+        spark.size = Vector2(3,3)
+        spark.color = Color(p[4] if i%2==0 else p[3], 0.7)
+        spark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        backdrop.add_child(spark)
 
     _add_menu_battle_scene(backdrop)
+
 
 func _add_menu_battle_scene(parent: Control) -> void:
     # Character 1 is under fire; character 3 keeps low behind cover farther back.
