@@ -2138,7 +2138,7 @@ func _choose_bot_difficulty(value: String) -> void:
             bot_accuracy = 0.88
         _:
             bot_accuracy = 0.64
-    _show_difficulty_menu)
+    _show_difficulty_menu()
 
 func _show_match_settings() -> void:
     _close_overlay()
@@ -2231,7 +2231,7 @@ func _show_match_settings() -> void:
 
 func _set_match_rounds(value: int) -> void:
     match_rounds_to_win = clampi(value, 1, 15)
-    _show_match_settings)
+    _show_match_settings()
 
 
 
