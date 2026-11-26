@@ -1144,7 +1144,7 @@ func _show_main_menu() -> void:
     play.add_theme_stylebox_override("normal", _menu_button_style(Color("#48f2dc"), Color("#c5fff7")))
     play.add_theme_stylebox_override("hover", _menu_button_style(Color("#8affee"), Color.WHITE))
     play.add_theme_stylebox_override("pressed", _menu_button_style(Color("#22cbbd"), Color("#e1fffa")))
-    play.pressed.connect(func(): _start_game("bot"))
+    play.pressed.connect(_show_mode_menu)
 
     var nav_y := 650.0
     var nav_specs := [
@@ -1185,87 +1185,118 @@ func _open_news() -> void:
     game_controls.visible = false
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color("#080d1b")
+    shade.color = Color("#070d19")
     ui.add_child(shade)
     overlay = shade
     _add_menu_ornaments(shade)
 
+    var eyebrow := Label.new()
+    eyebrow.text = "KIWI ROUNDS  /  UPDATE CENTER"
+    eyebrow.position = Vector2(70, 25)
+    eyebrow.size = Vector2(1140, 24)
+    eyebrow.add_theme_font_size_override("font_size", 13)
+    eyebrow.add_theme_color_override("font_color", Color("#4de9df"))
+    shade.add_child(eyebrow)
     var title := Label.new()
-    title.text = "НОВОСТИ"
-    title.position = Vector2(0, 34)
-    title.size = Vector2(1280, 64)
-    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size", 42)
-    title.add_theme_color_override("font_color", Color("#f3f8ff"))
+    title.text = "НОВОСТИ И ОБНОВЛЕНИЯ"
+    title.position = Vector2(70, 55)
+    title.size = Vector2(1140, 54)
+    title.add_theme_font_size_override("font_size", 38)
+    title.add_theme_color_override("font_color", Color("#f4f8ff"))
     shade.add_child(title)
 
-    var subtitle := Label.new()
-    subtitle.text = "ПОСЛЕДНИЕ СОБЫТИЯ KIWI ROUNDS"
-    subtitle.position = Vector2(0, 100)
-    subtitle.size = Vector2(1280, 26)
-    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    subtitle.add_theme_font_size_override("font_size", 13)
-    subtitle.add_theme_color_override("font_color", Color("#4fe8e2"))
-    shade.add_child(subtitle)
+    var feature := Panel.new()
+    feature.position = Vector2(70, 135)
+    feature.size = Vector2(1140, 190)
+    var feature_style := StyleBoxFlat.new()
+    feature_style.bg_color = Color("#14263b")
+    feature_style.border_color = Color("#42e9dc")
+    feature_style.set_border_width_all(2)
+    feature_style.set_corner_radius_all(22)
+    feature_style.shadow_color = Color("#42e9dc", 0.12)
+    feature_style.shadow_size = 20
+    feature.add_theme_stylebox_override("panel", feature_style)
+    shade.add_child(feature)
+    var feature_tag := Label.new()
+    feature_tag.text = "ГЛАВНОЕ ОБНОВЛЕНИЕ  •  NEON SEASON"
+    feature_tag.position = Vector2(28, 22)
+    feature_tag.size = Vector2(760, 24)
+    feature_tag.add_theme_font_size_override("font_size", 13)
+    feature_tag.add_theme_color_override("font_color", Color("#55f0e2"))
+    feature.add_child(feature_tag)
+    var feature_title := Label.new()
+    feature_title.text = "НОВОЕ ЛИЦО АРЕНЫ"
+    feature_title.position = Vector2(28, 55)
+    feature_title.size = Vector2(700, 48)
+    feature_title.add_theme_font_size_override("font_size", 30)
+    feature_title.add_theme_color_override("font_color", Color("#ffffff"))
+    feature.add_child(feature_title)
+    var feature_body := Label.new()
+    feature_body.text = "Обновлённое лобби, неоновые декорации, отдельные разделы и более удобная подготовка к матчу."
+    feature_body.position = Vector2(30, 112)
+    feature_body.size = Vector2(760, 48)
+    feature_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    feature_body.add_theme_font_size_override("font_size", 16)
+    feature_body.add_theme_color_override("font_color", Color("#bdcde0"))
+    feature.add_child(feature_body)
+    var version := Label.new()
+    version.text = "SEASON\n01"
+    version.position = Vector2(850, 35)
+    version.size = Vector2(240, 115)
+    version.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    version.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    version.add_theme_font_size_override("font_size", 42)
+    version.add_theme_color_override("font_color", Color("#ff78d8"))
+    feature.add_child(version)
 
-    var news_data := [
-        ["01  /  NEON CITY", "НОВАЯ АРЕНА", "Неоновые улицы, светящиеся вывески и новые места для перестрелок."],
-        ["02  /  COMBAT", "БОЕВАЯ СИСТЕМА", "Карточки усилений меняют каждый раунд. Собирай комбинации и адаптируйся."],
-        ["03  /  CUSTOM", "ОБЛИКИ", "Выбирай внешний вид бойца и собирай свою коллекцию."]
+    var section := Label.new()
+    section.text = "ЧТО ИЗМЕНИЛОСЬ"
+    section.position = Vector2(75, 350)
+    section.size = Vector2(500, 30)
+    section.add_theme_font_size_override("font_size", 18)
+    section.add_theme_color_override("font_color", Color("#eaf3ff"))
+    shade.add_child(section)
+    var updates := [
+        ["01  /  ЛОББИ", "Выбор режима", "Отдельные карточки режимов: дуэль, онлайн и тренировка.", Color("#4de9df")],
+        ["02  /  КАСТОМИЗАЦИЯ", "Облики бойцов", "Обновлённый просмотр, быстрый выбор и экипировка скинов.", Color("#bd83ff")],
+        ["03  /  МАТЧ", "Настройки боя", "Выбор сложности соперника и количества побед для матча.", Color("#ff9c70")]
     ]
-    for i in range(news_data.size()):
-        var x := 120.0 + float(i) * 350.0
+    for i in range(updates.size()):
+        var x := 70.0 + float(i) * 385.0
+        var accent: Color = updates[i][3]
         var card := Panel.new()
-        card.position = Vector2(x, 205)
-        card.size = Vector2(320, 330)
-        var style := StyleBoxFlat.new()
-        style.bg_color = Color("#101d32", 0.98)
-        style.border_color = [Color("#40f0df"), Color("#ff4fd8"), Color("#7d8cff")][i]
-        style.set_border_width_all(2)
-        style.set_corner_radius_all(20)
-        style.shadow_color = Color("#000000", 0.42)
-        style.shadow_size = 18
-        card.add_theme_stylebox_override("panel", style)
+        card.position = Vector2(x, 390)
+        card.size = Vector2(360, 185)
+        card.add_theme_stylebox_override("panel", _menu_button_style(Color("#111e30"), accent))
         shade.add_child(card)
-
-        var stripe := ColorRect.new()
-        stripe.position = Vector2(18, 18)
-        stripe.size = Vector2(284, 5)
-        stripe.color = [Color("#40f0df"), Color("#ff4fd8"), Color("#7d8cff")][i]
-        card.add_child(stripe)
-
-        var number := Label.new()
-        number.text = news_data[i][0]
-        number.position = Vector2(22, 46)
-        number.size = Vector2(276, 24)
-        number.add_theme_font_size_override("font_size", 12)
-        number.add_theme_color_override("font_color", Color("#9cb2d1"))
-        card.add_child(number)
-
+        var tag := Label.new()
+        tag.text = str(updates[i][0])
+        tag.position = Vector2(18, 18)
+        tag.size = Vector2(324, 22)
+        tag.add_theme_font_size_override("font_size", 12)
+        tag.add_theme_color_override("font_color", accent)
+        card.add_child(tag)
         var heading := Label.new()
-        heading.text = news_data[i][1]
-        heading.position = Vector2(22, 105)
-        heading.size = Vector2(276, 70)
-        heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-        heading.add_theme_font_size_override("font_size", 24)
-        heading.add_theme_color_override("font_color", Color("#f5fbff"))
+        heading.text = str(updates[i][1])
+        heading.position = Vector2(18, 52)
+        heading.size = Vector2(324, 35)
+        heading.add_theme_font_size_override("font_size", 21)
+        heading.add_theme_color_override("font_color", Color("#f4f8ff"))
         card.add_child(heading)
-
         var body := Label.new()
-        body.text = news_data[i][2]
-        body.position = Vector2(22, 190)
-        body.size = Vector2(276, 112)
+        body.text = str(updates[i][2])
+        body.position = Vector2(18, 96)
+        body.size = Vector2(324, 70)
         body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-        body.add_theme_font_size_override("font_size", 16)
-        body.add_theme_color_override("font_color", Color("#b9c9df"))
+        body.add_theme_font_size_override("font_size", 14)
+        body.add_theme_color_override("font_color", Color("#aebfd3"))
         card.add_child(body)
 
-    var back := _add_button("НАЗАД", Vector2(510, 600), Vector2(260, 58), shade)
-    back.add_theme_font_size_override("font_size", 18)
-    back.add_theme_stylebox_override("normal", _menu_button_style(Color("#14243a"), Color("#40e9e1")))
+    var back := _add_button("←  В ЛОББИ", Vector2(510, 615), Vector2(260, 54), shade)
+    back.add_theme_font_size_override("font_size", 16)
+    back.add_theme_stylebox_override("normal", _menu_button_style(Color("#17283e"), Color("#4de9df")))
     back.pressed.connect(_show_main_menu)
     _animate_overlay_in(shade)
-
 
 func _animate_overlay_in(target: Control) -> void:
     if not is_instance_valid(target):
@@ -1891,49 +1922,329 @@ func _add_kiwi_mascot(parent: Control, center: Vector2) -> void:
     parent.add_child(collar_edge)
 
 func _show_mode_menu() -> void:
-    _show_panel("ВЫБОР РЕЖИМА",[
-        ["ОНЛАЙН",Callable(self,"_show_online_info")],
-        ["ПРОТИВ БОТОВ",Callable(self,"_show_difficulty_menu")],
-        ["ТРЕНИРОВКА",Callable(self,"_start_training")],
-        ["НАСТРОЙКА МАТЧА",Callable(self,"_show_match_settings")],
-        ["НАЗАД",Callable(self,"_show_main_menu")]
-    ],"До победы в матче: %d раундов" % match_rounds_to_win)
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#070d1a")
+    ui.add_child(shade)
+    overlay = shade
+    _add_menu_ornaments(shade)
+
+    var eyebrow := Label.new()
+    eyebrow.text = "KIWI ROUNDS  /  BATTLE LOBBY"
+    eyebrow.position = Vector2(70, 32)
+    eyebrow.size = Vector2(1140, 24)
+    eyebrow.add_theme_font_size_override("font_size", 13)
+    eyebrow.add_theme_color_override("font_color", Color("#50e9df"))
+    shade.add_child(eyebrow)
+
+    var title := Label.new()
+    title.text = "ВЫБЕРИ СВОЙ БОЙ"
+    title.position = Vector2(70, 62)
+    title.size = Vector2(1140, 62)
+    title.add_theme_font_size_override("font_size", 42)
+    title.add_theme_color_override("font_color", Color("#f4f8ff"))
+    shade.add_child(title)
+
+    var subtitle := Label.new()
+    subtitle.text = "Три способа играть. Один неоновый хаос."
+    subtitle.position = Vector2(74, 124)
+    subtitle.size = Vector2(900, 28)
+    subtitle.add_theme_font_size_override("font_size", 17)
+    subtitle.add_theme_color_override("font_color", Color("#a9bad0"))
+    shade.add_child(subtitle)
+
+    var modes := [
+        ["DUEL", "ПРОТИВ БОТА", "Сразись с противником и проверь свою сборку.", Color("#42eadb"), "1 VS 1"],
+        ["ONLINE", "СЕТЕВАЯ ИГРА", "Создай комнату или присоединись к другой.", Color("#bd83ff"), "ONLINE"],
+        ["PRACTICE", "ТРЕНИРОВКА", "Изучи арену, попробуй карточки и механику.", Color("#ff9c70"), "FREE PLAY"]
+    ]
+    var callbacks := [Callable(self, "_show_difficulty_menu"), Callable(self, "_show_online_info"), Callable(self, "_start_training")]
+    for i in range(modes.size()):
+        var x := 72.0 + float(i) * 382.0
+        var accent: Color = modes[i][3]
+        var card := Panel.new()
+        card.position = Vector2(x, 205)
+        card.size = Vector2(350, 310)
+        var panel_style := StyleBoxFlat.new()
+        panel_style.bg_color = Color("#111d30", 0.98)
+        panel_style.border_color = Color(accent, 0.72)
+        panel_style.set_border_width_all(2)
+        panel_style.set_corner_radius_all(22)
+        panel_style.shadow_color = Color(accent, 0.12)
+        panel_style.shadow_size = 18
+        card.add_theme_stylebox_override("panel", panel_style)
+        shade.add_child(card)
+
+        var code := Label.new()
+        code.text = str(modes[i][0])
+        code.position = Vector2(22, 20)
+        code.size = Vector2(300, 24)
+        code.add_theme_font_size_override("font_size", 13)
+        code.add_theme_color_override("font_color", accent)
+        card.add_child(code)
+
+        var emblem := Panel.new()
+        emblem.position = Vector2(22, 62)
+        emblem.size = Vector2(306, 112)
+        var emblem_style := StyleBoxFlat.new()
+        emblem_style.bg_color = Color(accent, 0.10)
+        emblem_style.border_color = Color(accent, 0.35)
+        emblem_style.set_border_width_all(1)
+        emblem_style.set_corner_radius_all(16)
+        emblem.add_theme_stylebox_override("panel", emblem_style)
+        card.add_child(emblem)
+
+        var symbol := Label.new()
+        symbol.text = ["⚔", "⌁", "✦"][i]
+        symbol.position = Vector2(0, 8)
+        symbol.size = Vector2(306, 92)
+        symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        symbol.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        symbol.add_theme_font_size_override("font_size", 64)
+        symbol.add_theme_color_override("font_color", accent)
+        emblem.add_child(symbol)
+
+        var name_label := Label.new()
+        name_label.text = str(modes[i][1])
+        name_label.position = Vector2(22, 190)
+        name_label.size = Vector2(306, 38)
+        name_label.add_theme_font_size_override("font_size", 23)
+        name_label.add_theme_color_override("font_color", Color("#f4f8ff"))
+        card.add_child(name_label)
+
+        var desc := Label.new()
+        desc.text = str(modes[i][2])
+        desc.position = Vector2(22, 232)
+        desc.size = Vector2(306, 48)
+        desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        desc.add_theme_font_size_override("font_size", 14)
+        desc.add_theme_color_override("font_color", Color("#aabbd0"))
+        card.add_child(desc)
+
+        var choose := _add_button("ВЫБРАТЬ  →", Vector2(x + 22, 535), Vector2(306, 54), shade)
+        choose.add_theme_font_size_override("font_size", 17)
+        choose.add_theme_color_override("font_color", Color("#07121e"))
+        choose.add_theme_stylebox_override("normal", _menu_button_style(accent, accent.lightened(0.25)))
+        choose.add_theme_stylebox_override("hover", _menu_button_style(accent.lightened(0.16), Color.WHITE))
+        choose.pressed.connect(callbacks[i])
+
+    var settings := _add_button("НАСТРОИТЬ РЕЖИМ", Vector2(430, 620), Vector2(250, 54), shade)
+    settings.add_theme_font_size_override("font_size", 15)
+    settings.add_theme_stylebox_override("normal", _menu_button_style(Color("#17243a"), Color("#7895b5")))
+    settings.pressed.connect(_show_match_settings)
+
+    var back := _add_button("←  ГЛАВНОЕ МЕНЮ", Vector2(700, 620), Vector2(250, 54), shade)
+    back.add_theme_font_size_override("font_size", 15)
+    back.add_theme_stylebox_override("normal", _menu_button_style(Color("#17243a"), Color("#7895b5")))
+    back.pressed.connect(_show_main_menu)
+    _animate_overlay_in(shade)
 
 func _show_difficulty_menu() -> void:
-    _show_panel("СЛОЖНОСТЬ БОТОВ",[
-        ["ЛЁГКАЯ",Callable(self,"_set_easy")],
-        ["ОБЫЧНАЯ",Callable(self,"_set_normal")],
-        ["СЛОЖНАЯ",Callable(self,"_set_hard")],
-        ["НАЗАД",Callable(self,"_show_mode_menu")]
-    ],"Сейчас: " + bot_difficulty.to_upper())
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#080e1b")
+    ui.add_child(shade)
+    overlay = shade
+    _add_menu_ornaments(shade)
+
+    var title := Label.new()
+    title.text = "ПОДГОТОВКА К ДУЭЛИ"
+    title.position = Vector2(0, 48)
+    title.size = Vector2(1280, 56)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 38)
+    title.add_theme_color_override("font_color", Color("#f5f8ff"))
+    shade.add_child(title)
+
+    var subtitle := Label.new()
+    subtitle.text = "Выбери уровень соперника и запускай матч"
+    subtitle.position = Vector2(0, 108)
+    subtitle.size = Vector2(1280, 28)
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size", 16)
+    subtitle.add_theme_color_override("font_color", Color("#9eb2cc"))
+    shade.add_child(subtitle)
+
+    var difficulties := [
+        ["НОВИЧОК", "Для спокойной разминки", "easy", Color("#5ce3a2")],
+        ["СТАНДАРТ", "Сбалансированный бой", "normal", Color("#52d9ef")],
+        ["ЭЛИТА", "Быстрый и меткий соперник", "hard", Color("#ff718e")]
+    ]
+    for i in range(difficulties.size()):
+        var x := 125.0 + float(i) * 350.0
+        var accent: Color = difficulties[i][3]
+        var card := Panel.new()
+        card.position = Vector2(x, 205)
+        card.size = Vector2(300, 245)
+        var style := StyleBoxFlat.new()
+        style.bg_color = Color("#121f32", 0.98)
+        style.border_color = Color(accent, 0.7)
+        style.set_border_width_all(2)
+        style.set_corner_radius_all(20)
+        card.add_theme_stylebox_override("panel", style)
+        shade.add_child(card)
+        var name_label := Label.new()
+        name_label.text = str(difficulties[i][0])
+        name_label.position = Vector2(18, 38)
+        name_label.size = Vector2(264, 42)
+        name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        name_label.add_theme_font_size_override("font_size", 24)
+        name_label.add_theme_color_override("font_color", accent)
+        card.add_child(name_label)
+        var desc := Label.new()
+        desc.text = str(difficulties[i][1])
+        desc.position = Vector2(20, 100)
+        desc.size = Vector2(260, 42)
+        desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        desc.add_theme_font_size_override("font_size", 15)
+        desc.add_theme_color_override("font_color", Color("#b5c5d8"))
+        card.add_child(desc)
+        var active := bot_difficulty == str(difficulties[i][2])
+        var choose := _add_button("ВЫБРАНО ✓" if active else "ВЫБРАТЬ", Vector2(x + 25, 365), Vector2(250, 54), shade)
+        choose.add_theme_font_size_override("font_size", 16)
+        choose.add_theme_stylebox_override("normal", _menu_button_style(accent if active else Color("#1b2b42"), accent))
+        choose.pressed.connect(_choose_bot_difficulty.bind(str(difficulties[i][2])))
+    var rounds := Label.new()
+    rounds.text = "МАТЧ ДО %d ПОБЕД" % match_rounds_to_win
+    rounds.position = Vector2(0, 485)
+    rounds.size = Vector2(1280, 30)
+    rounds.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    rounds.add_theme_font_size_override("font_size", 17)
+    rounds.add_theme_color_override("font_color", Color("#b5c7dc"))
+    shade.add_child(rounds)
+
+    var settings := _add_button("НАСТРОИТЬ МАТЧ", Vector2(350, 550), Vector2(260, 56), shade)
+    settings.add_theme_stylebox_override("normal", _menu_button_style(Color("#192941"), Color("#6f91b8")))
+    settings.pressed.connect(_show_match_settings)
+    var start := _add_button("НАЧАТЬ БОЙ  →", Vector2(670, 550), Vector2(260, 56), shade)
+    start.add_theme_color_override("font_color", Color("#07141e"))
+    start.add_theme_stylebox_override("normal", _menu_button_style(Color("#4ce8d7"), Color("#c2fff6")))
+    start.pressed.connect(func(): _start_game("bot"))
+    var back := _add_button("НАЗАД", Vector2(510, 630), Vector2(260, 48), shade)
+    back.add_theme_stylebox_override("normal", _menu_button_style(Color("#17243a"), Color("#7895b5")))
+    back.pressed.connect(_show_mode_menu)
+    _animate_overlay_in(shade)
+
+func _choose_bot_difficulty(value: String) -> void:
+    bot_difficulty = value
+    match value:
+        "easy":
+            bot_accuracy = 0.38
+        "hard":
+            bot_accuracy = 0.88
+        _:
+            bot_accuracy = 0.64
+    _show_difficulty_menu)
 
 func _show_match_settings() -> void:
-    _show_panel("НАСТРОЙКА МАТЧА",[
-        ["3 РАУНДА",Callable(self,"_set_match_rounds").bind(3)],
-        ["5 РАУНДОВ",Callable(self,"_set_match_rounds").bind(5)],
-        ["7 РАУНДОВ",Callable(self,"_set_match_rounds").bind(7)],
-        ["9 РАУНДОВ",Callable(self,"_set_match_rounds").bind(9)],
-        ["НАЗАД",Callable(self,"_show_mode_menu")]
-    ],"Сейчас: до %d побед" % match_rounds_to_win)
+    _close_overlay()
+    game_controls.visible = false
+    var shade := ColorRect.new()
+    shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    shade.color = Color("#080e1b")
+    ui.add_child(shade)
+    overlay = shade
+    _add_menu_ornaments(shade)
+
+    var title := Label.new()
+    title.text = "ПРАВИЛА МАТЧА"
+    title.position = Vector2(0, 38)
+    title.size = Vector2(1280, 56)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 40)
+    title.add_theme_color_override("font_color", Color("#f4f8ff"))
+    shade.add_child(title)
+    var subtitle := Label.new()
+    subtitle.text = "Настрой длительность матча и вернись к выбору режима"
+    subtitle.position = Vector2(0, 98)
+    subtitle.size = Vector2(1280, 28)
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size", 16)
+    subtitle.add_theme_color_override("font_color", Color("#a8bad0"))
+    shade.add_child(subtitle)
+
+    var rounds_panel := Panel.new()
+    rounds_panel.position = Vector2(170, 175)
+    rounds_panel.size = Vector2(940, 170)
+    rounds_panel.add_theme_stylebox_override("panel", _menu_button_style(Color("#111e31"), Color("#42dcd5")))
+    shade.add_child(rounds_panel)
+    var rounds_title := Label.new()
+    rounds_title.text = "СКОЛЬКО ПОБЕД НУЖНО ДЛЯ ЗАВЕРШЕНИЯ МАТЧА?"
+    rounds_title.position = Vector2(190, 195)
+    rounds_title.size = Vector2(900, 30)
+    rounds_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    rounds_title.add_theme_font_size_override("font_size", 17)
+    rounds_title.add_theme_color_override("font_color", Color("#eaf3ff"))
+    shade.add_child(rounds_title)
+    var values := [3, 5, 7, 9]
+    for i in range(values.size()):
+        var value: int = values[i]
+        var x := 280.0 + float(i) * 185.0
+        var selected := match_rounds_to_win == value
+        var button := _add_button(str(value) + ("  ✓" if selected else ""), Vector2(x, 250), Vector2(145, 58), shade)
+        button.add_theme_font_size_override("font_size", 21)
+        button.add_theme_stylebox_override("normal", _menu_button_style(Color("#43e2d4") if selected else Color("#1a2a40"), Color("#9efff3") if selected else Color("#536d8c")))
+        button.add_theme_color_override("font_color", Color("#07141e") if selected else Color("#f1f7ff"))
+        button.pressed.connect(_set_match_rounds.bind(value))
+
+    var info_panel := Panel.new()
+    info_panel.position = Vector2(170, 375)
+    info_panel.size = Vector2(940, 115)
+    info_panel.add_theme_stylebox_override("panel", _menu_button_style(Color("#111e31"), Color("#a46dff")))
+    shade.add_child(info_panel)
+    var mode_info := Label.new()
+    mode_info.text = "РЕЖИМ ПРОТИВ БОТА"
+    mode_info.position = Vector2(190, 390)
+    mode_info.size = Vector2(900, 28)
+    mode_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    mode_info.add_theme_font_size_override("font_size", 16)
+    mode_info.add_theme_color_override("font_color", Color("#c59bff"))
+    shade.add_child(mode_info)
+    var difficulty_info := Label.new()
+    difficulty_info.text = "Сложность: %s    •    Точность бота: %d%%" % [bot_difficulty.to_upper(), roundi(bot_accuracy * 100.0)]
+    difficulty_info.position = Vector2(190, 425)
+    difficulty_info.size = Vector2(900, 30)
+    difficulty_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    difficulty_info.add_theme_font_size_override("font_size", 18)
+    difficulty_info.add_theme_color_override("font_color", Color("#e5edf8"))
+    shade.add_child(difficulty_info)
+
+    var difficulty := _add_button("ИЗМЕНИТЬ СЛОЖНОСТЬ", Vector2(365, 530), Vector2(250, 54), shade)
+    difficulty.add_theme_stylebox_override("normal", _menu_button_style(Color("#1b2b42"), Color("#a46dff")))
+    difficulty.pressed.connect(_show_difficulty_menu)
+    var back := _add_button("НАЗАД К РЕЖИМАМ", Vector2(665, 530), Vector2(250, 54), shade)
+    back.add_theme_stylebox_override("normal", _menu_button_style(Color("#1b2b42"), Color("#7895b5")))
+    back.pressed.connect(_show_mode_menu)
+    var footer := Label.new()
+    footer.text = "НАСТРОЙКИ СОХРАНЯЮТСЯ ДЛЯ СЛЕДУЮЩЕГО МАТЧА"
+    footer.position = Vector2(0, 635)
+    footer.size = Vector2(1280, 24)
+    footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    footer.add_theme_font_size_override("font_size", 12)
+    footer.add_theme_color_override("font_color", Color("#7189a8"))
+    shade.add_child(footer)
+    _animate_overlay_in(shade)
 
 func _set_match_rounds(value: int) -> void:
     match_rounds_to_win = clampi(value, 1, 15)
-    _show_match_settings()
+    _show_match_settings)
+
+
 
 func _set_easy() -> void:
-    bot_difficulty = "easy"
-    bot_accuracy = 0.38
-    _start_game("bot")
+    _choose_bot_difficulty("easy")
 
 func _set_normal() -> void:
-    bot_difficulty = "normal"
-    bot_accuracy = 0.64
-    _start_game("bot")
+    _choose_bot_difficulty("normal")
 
 func _set_hard() -> void:
-    bot_difficulty = "hard"
-    bot_accuracy = 0.88
-    _start_game("bot")
+    _choose_bot_difficulty("hard")
+
+
 
 func _start_training() -> void:
     # Training begins immediately. Cards are opened only from the dedicated CARDS menu.
@@ -2445,94 +2756,154 @@ func _open_skins() -> void:
 
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color("#0b111b")
+    shade.color = Color("#080e1b")
     ui.add_child(shade)
     overlay = shade
     _add_menu_ornaments(shade)
 
+    var eyebrow := Label.new()
+    eyebrow.text = "KIWI ROUNDS  /  CUSTOMIZATION"
+    eyebrow.position = Vector2(65, 22)
+    eyebrow.size = Vector2(1150, 22)
+    eyebrow.add_theme_font_size_override("font_size", 12)
+    eyebrow.add_theme_color_override("font_color", Color("#55eadd"))
+    shade.add_child(eyebrow)
     var title := Label.new()
-    title.text = "МАГАЗИН ОБЛИКОВ"
-    title.position = Vector2(0, 28)
-    title.size = Vector2(1280, 54)
-    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size", 38)
-    title.add_theme_color_override("font_color", Color("#f3f1e8"))
+    title.text = "МАСТЕРСКАЯ ОБЛИКОВ"
+    title.position = Vector2(65, 48)
+    title.size = Vector2(1150, 52)
+    title.add_theme_font_size_override("font_size", 36)
+    title.add_theme_color_override("font_color", Color("#f4f8ff"))
     shade.add_child(title)
 
-    var skin: Dictionary = skins[skin_index]
-    var skin_color := Color.from_string(str(skin.get("color", "#39d6c5")), Color("#39d6c5"))
-
-    var preview_panel := Panel.new()
-    preview_panel.position = Vector2(380, 105)
-    preview_panel.size = Vector2(520, 380)
+    var preview := Panel.new()
+    preview.position = Vector2(65, 125)
+    preview.size = Vector2(425, 470)
     var preview_style := StyleBoxFlat.new()
-    preview_style.bg_color = Color("#172333")
-    preview_style.border_color = skin_color
+    preview_style.bg_color = Color("#121f32")
+    preview_style.border_color = Color("#49e6dc")
     preview_style.set_border_width_all(2)
     preview_style.set_corner_radius_all(22)
-    preview_panel.add_theme_stylebox_override("panel", preview_style)
-    shade.add_child(preview_panel)
+    preview_style.shadow_color = Color("#49e6dc", 0.12)
+    preview_style.shadow_size = 18
+    preview.add_theme_stylebox_override("panel", preview_style)
+    shade.add_child(preview)
 
-    var preview_area := Control.new()
-    preview_area.position = Vector2(10, 10)
-    preview_area.size = Vector2(500, 360)
-    preview_area.clip_contents = false
-    preview_panel.add_child(preview_area)
+    var preview_caption := Label.new()
+    preview_caption.text = "ПРЕДПРОСМОТР"
+    preview_caption.position = Vector2(20, 18)
+    preview_caption.size = Vector2(385, 24)
+    preview_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    preview_caption.add_theme_font_size_override("font_size", 13)
+    preview_caption.add_theme_color_override("font_color", Color("#55eadd"))
+    preview.add_child(preview_caption)
 
-    var floor_line := ColorRect.new()
-    floor_line.position = Vector2(45, 325)
-    floor_line.size = Vector2(410, 3)
-    floor_line.color = Color(skin_color, 0.75)
-    preview_area.add_child(floor_line)
+    var stage := Control.new()
+    stage.position = Vector2(12, 55)
+    stage.size = Vector2(401, 320)
+    stage.clip_contents = true
+    preview.add_child(stage)
+    var stage_bg := ColorRect.new()
+    stage_bg.size = Vector2(401, 320)
+    stage_bg.color = Color("#0b1628")
+    stage.add_child(stage_bg)
+    for i in range(7):
+        var grid_line := ColorRect.new()
+        grid_line.position = Vector2(0, 70.0 + float(i) * 34.0)
+        grid_line.size = Vector2(401, 1)
+        grid_line.color = Color("#42d9d2", 0.09)
+        stage.add_child(grid_line)
+    var stage_glow := Polygon2D.new()
+    stage_glow.polygon = PackedVector2Array([Vector2(70,250),Vector2(330,250),Vector2(375,290),Vector2(25,290)])
+    stage_glow.color = Color(selected_skin_color, 0.12)
+    stage.add_child(stage_glow)
 
     var fighter: ArenaPlayer = PLAYER_SCRIPT.new()
-    fighter.body_color = skin_color
-    fighter.skin_style = str(skin.get("style", "default"))
+    fighter.body_color = selected_skin_color
+    fighter.skin_style = selected_skin_style
     fighter.facing = 1.0
     fighter.aim_input = Vector2(0.85, -0.16)
-    fighter.position = Vector2(250, 265)
-    fighter.scale = Vector2(0.96, 0.96)
+    fighter.position = Vector2(200, 245)
+    fighter.scale = Vector2(1.05, 1.05)
     fighter.set_physics_process(false)
     fighter.set_process(false)
     fighter.velocity = Vector2.ZERO
     fighter.z_index = 2
-    preview_area.add_child(fighter)
+    stage.add_child(fighter)
 
-    var name_label := Label.new()
-    name_label.text = str(skin.get("name", skin.get("id", "MOD"))).to_upper() + "  •  ОБЛИК " + str(skin_index + 1)
-    name_label.position = Vector2(300, 490)
-    name_label.size = Vector2(680, 48)
-    name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    name_label.add_theme_font_size_override("font_size", 28)
-    name_label.add_theme_color_override("font_color", Color("#f3f1e8"))
-    shade.add_child(name_label)
+    var selected_name := Label.new()
+    selected_name.text = str(skins[skin_index].get("name", "ОБЛИК")).to_upper()
+    selected_name.position = Vector2(18, 385)
+    selected_name.size = Vector2(389, 36)
+    selected_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    selected_name.add_theme_font_size_override("font_size", 24)
+    selected_name.add_theme_color_override("font_color", Color("#f4f8ff"))
+    preview.add_child(selected_name)
+    var selected_count := Label.new()
+    selected_count.text = "ВЫБРАНО  •  %d / %d" % [skin_index + 1, skins.size()]
+    selected_count.position = Vector2(18, 425)
+    selected_count.size = Vector2(389, 22)
+    selected_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    selected_count.add_theme_font_size_override("font_size", 12)
+    selected_count.add_theme_color_override("font_color", Color("#9fb3ca"))
+    preview.add_child(selected_count)
 
-    var count_label := Label.new()
-    count_label.text = "%d / %d" % [skin_index + 1, skins.size()]
-    count_label.position = Vector2(0, 535)
-    count_label.size = Vector2(1280, 28)
-    count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    count_label.add_theme_font_size_override("font_size", 15)
-    count_label.add_theme_color_override("font_color", Color("#9baabd"))
-    shade.add_child(count_label)
+    var collection := Panel.new()
+    collection.position = Vector2(525, 125)
+    collection.size = Vector2(690, 470)
+    collection.add_theme_stylebox_override("panel", _menu_button_style(Color("#101c2e"), Color("#354c68")))
+    shade.add_child(collection)
+    var collection_title := Label.new()
+    collection_title.text = "КОЛЛЕКЦИЯ"
+    collection_title.position = Vector2(22, 16)
+    collection_title.size = Vector2(640, 28)
+    collection_title.add_theme_font_size_override("font_size", 18)
+    collection_title.add_theme_color_override("font_color", Color("#eaf3ff"))
+    collection.add_child(collection_title)
+    var collection_count := Label.new()
+    collection_count.text = "%d ОБЛИКОВ" % skins.size()
+    collection_count.position = Vector2(470, 18)
+    collection_count.size = Vector2(190, 24)
+    collection_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    collection_count.add_theme_font_size_override("font_size", 12)
+    collection_count.add_theme_color_override("font_color", Color("#8fa7c3"))
+    collection.add_child(collection_count)
 
-    var previous := _add_button("‹", Vector2(260, 245), Vector2(100, 76), shade)
-    previous.add_theme_font_size_override("font_size", 42)
-    previous.add_theme_stylebox_override("normal", _menu_button_style(Color("#253446"), Color("#b9e36c")))
-    previous.pressed.connect(_select_skin.bind(posmod(skin_index - 1, skins.size())))
+    var scroll := ScrollContainer.new()
+    scroll.position = Vector2(16, 55)
+    scroll.size = Vector2(658, 395)
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    collection.add_child(scroll)
+    var grid := GridContainer.new()
+    grid.columns = 4
+    grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    grid.add_theme_constant_override("h_separation", 10)
+    grid.add_theme_constant_override("v_separation", 10)
+    scroll.add_child(grid)
 
-    var next := _add_button("›", Vector2(920, 245), Vector2(100, 76), shade)
-    next.add_theme_font_size_override("font_size", 42)
-    next.add_theme_stylebox_override("normal", _menu_button_style(Color("#253446"), Color("#b9e36c")))
-    next.pressed.connect(_select_skin.bind(posmod(skin_index + 1, skins.size())))
+    for i in range(skins.size()):
+        var skin: Dictionary = skins[i]
+        var tint := Color.from_string(str(skin.get("color", "#39d6c5")), Color("#39d6c5"))
+        var is_selected := i == skin_index
+        var tile := Button.new()
+        tile.custom_minimum_size = Vector2(155, 72)
+        tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        tile.text = str(skin.get("name", skin.get("id", "MOD"))).to_upper() + ("\n✓ НАДЕТО" if is_selected else "")
+        tile.add_theme_font_size_override("font_size", 13)
+        tile.add_theme_color_override("font_color", Color("#07131f") if is_selected else Color("#eaf3ff"))
+        tile.add_theme_stylebox_override("normal", _menu_button_style(tint if is_selected else Color("#17263b"), tint))
+        tile.add_theme_stylebox_override("hover", _menu_button_style(tint.darkened(0.12), tint.lightened(0.25)))
+        tile.pressed.connect(_select_skin.bind(i))
+        grid.add_child(tile)
 
-    var back := _add_button("НАЗАД", Vector2(360, 600), Vector2(250, 58), shade)
-    back.add_theme_stylebox_override("normal", _menu_button_style(Color("#303d4d"), Color("#718ba1")))
+    var back := _add_button("←  НАЗАД", Vector2(350, 625), Vector2(230, 54), shade)
+    back.add_theme_stylebox_override("normal", _menu_button_style(Color("#17263b"), Color("#7895b5")))
     back.pressed.connect(_apply_skin_and_return)
-
-    var equip := _add_button("НАДЕТО  ✓", Vector2(670, 600), Vector2(250, 58), shade)
-    equip.add_theme_stylebox_override("normal", _menu_button_style(Color("#596b32"), Color("#d9ef70")))
+    var equip := _add_button("НАДЕТЬ ОБЛИК  ✓", Vector2(700, 625), Vector2(280, 54), shade)
+    equip.add_theme_color_override("font_color", Color("#07141e"))
+    equip.add_theme_stylebox_override("normal", _menu_button_style(Color("#4ce8d7"), Color("#c2fff6")))
     equip.pressed.connect(_apply_skin_and_return)
+    _animate_overlay_in(shade)
 
 func _select_skin(index: int) -> void:
     skin_index = index
